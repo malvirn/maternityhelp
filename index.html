@@ -1,0 +1,107 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Maternity Help</title>
+<style>
+:root{color-scheme:light dark}
+body{margin:0;font:16px/1.45 system-ui,sans-serif}
+main{max-width:640px;margin:0 auto;padding:14px}
+h1{font-size:20px;margin:0}h2{font-size:16px;margin:18px 0 8px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+.card{border:1px solid GrayText;border-radius:10px;padding:12px;margin-bottom:10px}
+button,input,select,textarea{font:inherit;padding:10px;border-radius:8px;max-width:100%;box-sizing:border-box}
+input,select{width:100%;margin:4px 0 10px}
+.b{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.full{width:100%;justify-content:center;font-weight:700;padding:14px}
+.row{display:flex;gap:6px;flex-wrap:wrap}.row input{flex:1;min-width:140px;margin:0}
+.mu{opacity:.7;font-size:14px}.big{font-size:32px;font-weight:800}
+.bar{height:10px;border:1px solid GrayText;border-radius:6px;overflow:hidden;margin:8px 0}.bar i{display:block;height:100%;background:GrayText}
+label.ck{display:flex;gap:8px;align-items:center;padding:6px 0}label.ck input{width:auto;margin:0}
+.seg{display:flex;gap:6px;margin-bottom:12px}.seg button{flex:1}.seg .on{font-weight:800;border-width:2px}
+svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.err{font-weight:700}
+</style></head><body><main id="app"></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const sb=supabase.createClient('https://swbvlpplhuezdlbzuuhh.supabase.co','sb_publishable_yNNbCu6kVC00rZ-qKzT0ew_JOK77dEZ');
+const I={
+alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
+user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+heart:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/>',
+send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+check:'<path d="M20 6 9 17l-5-5"/>',
+msg:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'};
+const ic=n=>`<svg viewBox="0 0 24 24">${I[n]}</svg>`;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=id=>document.getElementById(id),app=$('app');
+const SYM=[['Regular contractions',0],['Waters broke',1],['Vaginal bleeding',1],['Baby moving less',1],['Severe headache or blurred vision',1],['Severe belly pain',1]];
+const wk=p=>Math.max(1,Math.floor((Date.now()-new Date(p.lmp+'T00:00:00'))/864e5/7)+1);
+const due=p=>new Date(new Date(p.lmp+'T00:00:00').getTime()+280*864e5).toDateString();
+const pn=p=>Math.floor((Date.now()-new Date(p.delivered_on+'T00:00:00'))/864e5/7)+1;
+const tri=w=>w<=13?'1st trimester':w<=27?'2nd trimester':'3rd trimester';
+const visit=w=>w<28?'every 4 weeks':w<36?'every 2 weeks':'every week';
+const tip=w=>w<=13?'Take folic acid, rest, and book your first antenatal visit. Avoid alcohol and unprescribed medicine.':w<=27?'Keep up your clinic visits, eat iron-rich food and sleep under a treated net.':'Pack your hospital bag and count baby movements daily. Know the warning signs below.';
+let me=null,chans=[],mode='login',role='patient';
+const top=(t)=>`<div class="top"><h1>${ic('heart')} Maternity Help</h1><button class="b" onclick="logout()">${ic('out')} Log out</button></div><div class="mu">${t}</div>`;
+async function logout(){chans.forEach(c=>sb.removeChannel(c));chans=[];me=null;await sb.auth.signOut();authView()}
+function authView(msg=''){
+ const reg=mode==='reg',pat=role==='patient';
+ app.innerHTML=`<div class="top"><h1>${ic('heart')} Maternity Help</h1></div>
+ <div class="seg"><button class="b ${!reg?'on':''}" onclick="mode='login';authView()">Log in</button><button class="b ${reg?'on':''}" onclick="mode='reg';authView()">Register</button></div>
+ ${reg?`<div class="seg"><button class="b ${pat?'on':''}" onclick="role='patient';authView()">${ic('user')} Patient</button><button class="b ${!pat?'on':''}" onclick="role='doctor';authView()">${ic('heart')} Maternity doctor</button></div>
+ <label>Full name<input id="fn" autocomplete="name"></label>
+ ${pat?`<label>Phone<input id="ph" type="tel" autocomplete="tel"></label><label>Weeks pregnant now (1-40)<input id="wk" type="number" min="1" max="40"></label>`:''}`:''}
+ <label>Email<input id="em" type="email" autocomplete="email"></label>
+ <label>Password<input id="pw" type="password" minlength="8" autocomplete="${reg?'new-password':'current-password'}"></label>
+ <button class="b full" onclick="submitAuth()">${reg?'Create account':'Log in'}</button><p class="err" id="msg">${esc(msg)}</p>`}
+async function submitAuth(){
+ const em=$('em').value.trim(),pw=$('pw').value,m=$('msg');m.textContent='';
+ if(!em||pw.length<8)return m.textContent='Enter your email and a password of at least 8 characters.';
+ if(mode==='reg'){
+  const fn=$('fn').value.trim(),pat=role==='patient',w=pat?+$('wk').value:0;
+  if(!fn||(pat&&!(w>=1&&w<=40)))return m.textContent='Fill in every field. Weeks must be 1 to 40.';
+  const {data,error}=await sb.auth.signUp({email:em,password:pw,options:{data:{full_name:fn,phone:pat?$('ph').value.trim():'',weeks:pat?w:'',wants:role}}});
+  if(error)return m.textContent=error.message;
+  if(!data.session){mode='login';return authView('Account created. Check your email to confirm it, then log in.')}
+ }else{const {error}=await sb.auth.signInWithPassword({email:em,password:pw});if(error)return m.textContent=error.message}
+ boot()}
+async function boot(){
+ const {data:{session}}=await sb.auth.getSession();if(!session)return authView();
+ let p=null;for(let i=0;i<3&&!p;i++){({data:p}=await sb.from('profiles').select('*').eq('id',session.user.id).maybeSingle());if(!p)await new Promise(r=>setTimeout(r,500))}
+ if(!p){await sb.auth.signOut();return authView('Could not load your account.')}
+ if(session.user.user_metadata?.wants==='doctor'&&p.role!=='doctor'){await sb.auth.signOut();return authView('This email is not an approved maternity doctor account.')}
+ me=p;p.role==='doctor'?doctorView():patientView()}
+async function patientView(){
+ const w=wk(me),d=me.status==='delivered';
+ app.innerHTML=top(esc(me.full_name))+(d?`<div class="card"><div class="mu">Postnatal care</div><div class="big">Week ${Math.min(pn(me),6)} of 6</div><div class="bar"><i style="width:${Math.min(100,pn(me)/6*100)}%"></i></div><div>Attend your 6-week check for you and baby. Report heavy bleeding, fever or breathing trouble straight away.</div></div>`
+ :`<div class="card"><div class="mu">${tri(w)} · due ${due(me)}</div><div class="big">Week ${Math.min(w,42)} of 40</div><div class="bar"><i style="width:${Math.min(100,w/40*100)}%"></i></div><div>${tip(w)}</div><div class="mu">Clinic visits: ${visit(w)}.</div></div>`)+
+ `<h2>${ic('alert')} Alert the labour ward</h2><div class="card">${SYM.map((s,i)=>`<label class="ck"><input type="checkbox" class="sy" data-i="${i}">${s[0]}</label>`).join('')}<button class="b full" onclick="sendAlert()">${ic('alert')} Send emergency alert</button><div class="mu" id="ast"></div></div>
+ <h2>${ic('msg')} Messages from the clinic</h2><div id="msgs"></div>`;
+ loadPatient();
+ chans.push(sb.channel('pm').on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:'patient_id=eq.'+me.id},loadPatient).on('postgres_changes',{event:'*',schema:'public',table:'alerts',filter:'patient_id=eq.'+me.id},loadPatient).subscribe())}
+async function loadPatient(){
+ const [{data:m},{data:a}]=await Promise.all([sb.from('messages').select('*').eq('patient_id',me.id).order('created_at',{ascending:false}),sb.from('alerts').select('*').eq('patient_id',me.id).order('created_at',{ascending:false}).limit(1)]);
+ if(!$('msgs'))return;
+ $('msgs').innerHTML=(m||[]).length?m.map(x=>`<div class="card">${esc(x.body)}<div class="mu">${new Date(x.created_at).toLocaleString()}</div></div>`).join(''):'<div class="mu">No messages yet.</div>';
+ $('ast').innerHTML=a&&a[0]?(a[0].acknowledged?ic('check')+' Staff have seen your last alert.':'Alert sent. Waiting for staff...'):''}
+async function sendAlert(){
+ const t=[...document.querySelectorAll('.sy:checked')].map(c=>+c.dataset.i);
+ const {error}=await sb.from('alerts').insert({patient_id:me.id,level:t.some(i=>SYM[i][1])?'EMERGENCY':'LABOUR',symptoms:t.map(i=>SYM[i][0])});
+ if(error)return alert('Alert failed: '+error.message+'. Call the clinic now.');loadPatient()}
+async function doctorView(){
+ app.innerHTML=top('Doctor dashboard: '+esc(me.full_name))+`<h2>${ic('alert')} Open alerts</h2><div id="al"></div><h2>${ic('user')} Patients</h2><div id="pl"></div>`;
+ await loadPatients();loadAlerts();
+ chans.push(sb.channel('da').on('postgres_changes',{event:'*',schema:'public',table:'alerts'},loadAlerts).on('postgres_changes',{event:'INSERT',schema:'public',table:'profiles'},loadPatients).subscribe())}
+let PT=[];
+async function loadAlerts(){
+ const {data}=await sb.from('alerts').select('*').eq('acknowledged',false).order('created_at',{ascending:false});
+ $('al').innerHTML=(data||[]).length?data.map(x=>{const p=PT.find(q=>q.id===x.patient_id)||{};return `<div class="card"><b>${x.level}</b> · ${esc(p.full_name)} <span class="mu">${esc(p.phone)}</span><div>${esc((x.symptoms||[]).join(', ')||'Requests help')}</div><div class="mu">${new Date(x.created_at).toLocaleString()}</div><button class="b" onclick="ack('${x.id}')">${ic('check')} Acknowledge</button></div>`}).join(''):'<div class="mu">No open alerts.</div>'}
+async function loadPatients(){
+ const {data}=await sb.from('profiles').select('*').eq('role','patient').order('created_at',{ascending:false});PT=data||[];
+ $('pl').innerHTML=PT.length?PT.map(p=>{const d=p.status==='delivered';return `<div class="card"><b>${esc(p.full_name)}</b> <span class="mu">${d?'Postnatal week '+pn(p):p.lmp?'Week '+wk(p)+' · '+tri(wk(p)):''}</span><div class="mu">${esc(p.phone)} ${d||!p.lmp?'':'· due '+due(p)}</div><div class="row" style="margin-top:8px"><input id="m${p.id}" placeholder="Message to patient"><button class="b" onclick="msg('${p.id}')">${ic('send')} Send</button>${d?'':`<button class="b" onclick="deliver('${p.id}')">Mark delivered</button>`}</div></div>`}).join(''):'<div class="mu">No patients registered yet.</div>'}
+async function ack(id){await sb.from('alerts').update({acknowledged:true}).eq('id',id);loadAlerts()}
+async function msg(id){const i=$('m'+id),t=i.value.trim();if(!t)return;const {error}=await sb.from('messages').insert({patient_id:id,body:t});if(error)return alert(error.message);i.value='';i.placeholder='Sent'}
+async function deliver(id){if(!confirm('Mark this patient as delivered?'))return;await sb.from('profiles').update({status:'delivered',delivered_on:new Date().toISOString().slice(0,10)}).eq('id',id);loadPatients()}
+boot();
+</script></body></html>
