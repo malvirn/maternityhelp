@@ -43,7 +43,7 @@ const tri=w=>w<=13?'1st trimester':w<=27?'2nd trimester':'3rd trimester';
 const visit=w=>w<28?'every 4 weeks':w<36?'every 2 weeks':'every week';
 const tip=w=>w<=13?'Take folic acid, rest, and book your first antenatal visit. Avoid alcohol and unprescribed medicine.':w<=27?'Keep up your clinic visits, eat iron-rich food and sleep under a treated net.':'Pack your hospital bag and count baby movements daily. Know the warning signs below.';
 let me=null,chans=[],mode='login',role='patient';
-const top=(t)=>`<div class="top"><h1>${ic('heart')} Maternity Help</h1><button class="b" onclick="logout()">${ic('out')} Log out</button></div><div class="mu">${t}</div>`;
+const hdr=(t)=>`<div class="top"><h1>${ic('heart')} Maternity Help</h1><button class="b" onclick="logout()">${ic('out')} Log out</button></div><div class="mu">${t}</div>`;
 async function logout(){chans.forEach(c=>sb.removeChannel(c));chans=[];me=null;await sb.auth.signOut();authView()}
 function authView(msg=''){
  const reg=mode==='reg',pat=role==='patient';
@@ -74,7 +74,7 @@ async function boot(){
  me=p;p.role==='doctor'?doctorView():patientView()}
 async function patientView(){
  const w=wk(me),d=me.status==='delivered';
- app.innerHTML=top(esc(me.full_name))+(d?`<div class="card"><div class="mu">Postnatal care</div><div class="big">Week ${Math.min(pn(me),6)} of 6</div><div class="bar"><i style="width:${Math.min(100,pn(me)/6*100)}%"></i></div><div>Attend your 6-week check for you and baby. Report heavy bleeding, fever or breathing trouble straight away.</div></div>`
+ app.innerHTML=hdr(esc(me.full_name))+(d?`<div class="card"><div class="mu">Postnatal care</div><div class="big">Week ${Math.min(pn(me),6)} of 6</div><div class="bar"><i style="width:${Math.min(100,pn(me)/6*100)}%"></i></div><div>Attend your 6-week check for you and baby. Report heavy bleeding, fever or breathing trouble straight away.</div></div>`
  :`<div class="card"><div class="mu">${tri(w)} · due ${due(me)}</div><div class="big">Week ${Math.min(w,42)} of 40</div><div class="bar"><i style="width:${Math.min(100,w/40*100)}%"></i></div><div>${tip(w)}</div><div class="mu">Clinic visits: ${visit(w)}.</div></div>`)+
  `<h2>${ic('alert')} Alert the labour ward</h2><div class="card">${SYM.map((s,i)=>`<label class="ck"><input type="checkbox" class="sy" data-i="${i}">${s[0]}</label>`).join('')}<button class="b full" onclick="sendAlert()">${ic('alert')} Send emergency alert</button><div class="mu" id="ast"></div></div>
  <h2>${ic('msg')} Messages from the clinic</h2><div id="msgs"></div>`;
@@ -90,7 +90,7 @@ async function sendAlert(){
  const {error}=await sb.from('alerts').insert({patient_id:me.id,level:t.some(i=>SYM[i][1])?'EMERGENCY':'LABOUR',symptoms:t.map(i=>SYM[i][0])});
  if(error)return alert('Alert failed: '+error.message+'. Call the clinic now.');loadPatient()}
 async function doctorView(){
- app.innerHTML=top('Doctor dashboard: '+esc(me.full_name))+`<h2>${ic('alert')} Open alerts</h2><div id="al"></div><h2>${ic('user')} Patients</h2><div id="pl"></div>`;
+ app.innerHTML=hdr('Doctor dashboard: '+esc(me.full_name))+`<h2>${ic('alert')} Open alerts</h2><div id="al"></div><h2>${ic('user')} Patients</h2><div id="pl"></div>`;
  await loadPatients();loadAlerts();
  chans.push(sb.channel('da').on('postgres_changes',{event:'*',schema:'public',table:'alerts'},loadAlerts).on('postgres_changes',{event:'INSERT',schema:'public',table:'profiles'},loadPatients).subscribe())}
 let PT=[];
