@@ -121,7 +121,7 @@ const sched=w=>w<28?'every 4 weeks':w<36?'every 2 weeks':'every week';
 const tip=w=>w<=13?'Take folic acid, rest, and book your first antenatal visit. Avoid alcohol and unprescribed medicine.':w<=27?'Keep up your clinic visits, eat iron-rich food and sleep under a treated net.':'Pack your hospital bag and count baby movements daily. Know the warning signs below.';
 let me=null,chans=[],mode='login',role='patient';
 const shell=id=>{document.body.classList.add('in');app.innerHTML=`<div class="lay"><aside class="side" id="side"></aside><div class="scrim" onclick="document.body.classList.remove('nav')"></div><div class="mainc"><div class="mob"><button class="ib" onclick="document.body.classList.add('nav')">${ic('menu')}</button><img class="logo" src="/logo.png" alt=""><span class="brand">Maternity Help</span><span class="sp"></span><button class="ib bell" title="Notifications" onclick="nav('${me.role==='doctor'?'overview':'notes'}')">${ic('bell')}<span class="bd" id="bellc" style="display:none"></span></button><button class="ib" data-tb="" title="Change theme" onclick="toggleTheme()">${tIc()}</button><button class="ib" title="Log out" onclick="logout()">${ic('out')}</button></div><div id="${id}"></div></div><div class="tabbar" id="tabbar"></div></div>`};
-function setTabs(items,active,bd){const tb=$('tabbar');if(!tb)return;const keys=me.role==='doctor'?['overview','patients','chat','bookings']:['home','book','chat','notes'];
+function setTabs(items,active,bd){const tb=$('tabbar');if(!tb)return;const keys=me.role==='doctor'?['queue','patients','chat','overview']:['home','book','chat','notes'];
  tb.innerHTML=keys.map(k=>items.find(i=>i[0]===k)).filter(Boolean).map(i=>`<button class="tb ${active===i[0]?'on':''}" onclick="nav('${i[0]}')">${ic(i[2])}<span>${i[1].replace('Book appointment','Book').replace('Notifications','Alerts')}</span>${bd&&bd[i[0]]?`<span class="bd">${bd[i[0]]}</span>`:''}</button>`).join('')+`<button class="tb" onclick="document.body.classList.add('nav')">${ic('menu')}<span>More</span></button>`}
 const navHtml=(items,active,bd)=>(setTabs(items,active,bd),`<div class="brand"><img class="logo" src="/logo.png" alt=""> Maternity Help</div><div class="who"><b>${esc(me.full_name)}</b><div class="mu">${me.role==='doctor'?esc(me.staff_title||'Doctor'):'Patient \u00b7 '+esc(me.patient_code)}</div></div>${items.map(i=>`<button class="nv ${active===i[0]?'on':''}" onclick="nav('${i[0]}')">${ic(i[2])}<span>${i[1]}</span>${bd&&bd[i[0]]?`<span class="bd">${bd[i[0]]}</span>`:''}</button>`).join('')}<div style="flex:1"></div><button class="nv" data-inst style="display:none" onclick="installApp()">${ic('dl')}<span>Install app</span></button><button class="nv" data-tb="1" onclick="toggleTheme()">${tIc()}<span>${tLb()}</span></button><button class="nv" onclick="logout()">${ic('out')}<span>Log out</span></button>`);
 let dip=null;const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone;
@@ -132,15 +132,15 @@ async function installApp(){if(!dip)return alert('To install: open the browser m
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
 function toast(msg,fn){document.querySelectorAll('.toast').forEach(t=>t.remove());const t=document.createElement('div');t.className='toast';t.innerHTML=ic('bell')+'<span>'+esc(msg)+'</span>';t.onclick=()=>{t.remove();fn&&fn()};document.body.appendChild(t);try{navigator.vibrate&&navigator.vibrate(200)}catch(e){}setTimeout(()=>t.remove(),8000)}
 function setBell(n){const b=$('bellc');if(b){b.textContent=n>9?'9+':n;b.style.display=n?'block':'none'}document.title=(n?'('+n+') ':'')+'Maternity Help'}
-let ptLoaded=false,lastAl=-1;
+let ptLoaded=false,lastAl=-1,lastQ={},qInit=false;
 function nav(k){document.body.classList.remove('nav');if(me.role==='doctor'){view=k;sel=null;if(k==='audit')loadAudit();if(k==='chat')chatPt=null;drawDoc()}else{ptab=k;bk={};conf='';drawPt()}}
-async function logout(){chans.forEach(c=>sb.removeChannel(c));chans=[];me=null;sel=null;view='overview';ptab='home';ptLoaded=false;lastAl=-1;CH.msgs=[];chatPt=null;if(CALL)endCall('me');await sb.auth.signOut();authView()}
+async function logout(){chans.forEach(c=>sb.removeChannel(c));chans=[];me=null;sel=null;view='overview';ptab='home';ptLoaded=false;lastAl=-1;lastQ={};qInit=false;CH.msgs=[];chatPt=null;if(CALL)endCall('me');await sb.auth.signOut();authView()}
 function authView(msg=''){
  document.body.classList.remove('in','nav');document.title='Maternity Help';
  const reg=mode==='reg',pat=role==='patient';
  app.innerHTML=`<div class="card auth"><div style="text-align:right"><button class="ib" data-tb="" title="Change theme" onclick="toggleTheme()">${tIc()}</button></div><div style="display:flex;justify-content:center"><img class="logo big" src="/logo.png" alt="Maternity Help"></div><h1>${reg?'Register':'Sign in'}</h1><p class="tag">Care for you and your baby, every week</p><div class="mu">${reg?'Create your account':'Use your Maternity Help account'}</div>
  <div class="seg"><button class="btn ${!reg?'on':''}" onclick="mode='login';authView()">Log in</button><button class="btn ${reg?'on':''}" onclick="mode='reg';authView()">Register</button></div>
- ${reg?`<div class="seg"><button class="btn ${pat?'on':''}" onclick="role='patient';authView()">${ic('user')} Patient</button><button class="btn ${!pat?'on':''}" onclick="role='doctor';authView()">${ic('heart')} Doctor / Midwife</button></div>
+ ${reg?`<div class="seg"><button class="btn ${pat?'on':''}" onclick="role='patient';authView()">${ic('user')} Patient</button><button class="btn ${!pat?'on':''}" onclick="role='doctor';authView()">${ic('heart')} Staff</button></div>
  <label class="l">Full name</label><div class="f">${ic('user')}<input id="fn" autocomplete="name"></div>
  ${pat?`<label class="l">Phone</label><div class="f">${ic('msg')}<input id="ph" type="tel" autocomplete="tel"></div><label class="l">Weeks pregnant now (1-40)</label><div class="f">${ic('cal')}<input id="wks" type="number" min="1" max="40"></div>`:''}`:''}
  <label class="l">Email</label><div class="f">${ic('mail')}<input id="em" type="email" autocomplete="email"></div>
@@ -161,7 +161,7 @@ async function boot(){
  const {data:{session}}=await sb.auth.getSession();if(!session)return authView();
  let p=null;for(let i=0;i<3&&!p;i++){({data:p}=await sb.from('profiles').select('*').eq('id',session.user.id).maybeSingle());if(!p)await new Promise(r=>setTimeout(r,500))}
  if(!p){await sb.auth.signOut();return authView('Could not load your account.')}
- if(session.user.user_metadata?.wants==='doctor'&&p.role!=='doctor'){await sb.auth.signOut();return authView('This email is not an approved maternity doctor account.')}
+ if(session.user.user_metadata?.wants==='doctor'&&p.role!=='doctor'){await sb.auth.signOut();return authView('This email is not an approved staff account.')}
  me=p;p.role==='doctor'?doctorView():patientView()}
 function modal(title,body,onSave){
  const m=document.createElement('div');m.className='ov';
@@ -268,7 +268,7 @@ async function sendAlert(){
  if(error)return alert('Alert failed: '+error.message+'. Call the clinic now.');loadPatient()}
 /* ---------- doctor ---------- */
 let D={pts:[],vis:[],ap:[],al:[],notes:[],plan:[],audit:[],staff:[],svc:[],se:[]},sel=null,view='overview';
-const DITEMS=()=>[['overview','Overview','home'],['patients','Patients','users'],['chat','Messages','msg'],['bookings','Bookings','cal']].concat(isAdmin()?[['staff','Staff','user'],['audit','Audit log','shield']]:[]);
+const DITEMS=()=>[['overview','Overview','home'],['queue','Queue','clock'],['patients','Patients','users'],['chat','Messages','msg'],['bookings','Bookings','cal']].concat(isAdmin()?[['staff','Staff','user'],['audit','Audit log','shield']]:[]);
 const dsn=a=>{const s=D.svc.find(x=>x.id===a.service_id),f=D.staff.find(x=>x.id===a.staff_id);return esc((s?s.name:a.kind)+(a.appt_time?' at '+String(a.appt_time).slice(0,5):'')+(f?' with '+(f.staff_title||'Doctor')+' '+f.full_name:''))};
 const P=id=>D.pts.find(p=>p.id===id),lastV=id=>D.vis.find(v=>v.patient_id===id);
 function flags(v){const f=[];if(!v)return f;
@@ -279,7 +279,7 @@ function flags(v){const f=[];if(!v)return f;
  const u=(v.urine_protein||'').toLowerCase();if(u&&!/^(neg|nil|-|0|trace)/.test(u))f.push('Protein in urine ('+v.urine_protein+')');
  return f}
 async function doctorView(){
- shell('doc');
+ shell('doc');view=isMD()?'overview':'queue';
  await loadDoc();await loadChatAll();
  const ch=sb.channel('da');['alerts','appointments','visits'].forEach(t=>ch.on('postgres_changes',{event:'*',schema:'public',table:t},loadDoc));
  ch.on('postgres_changes',{event:'INSERT',schema:'public',table:'profiles'},loadDoc);
@@ -293,8 +293,10 @@ async function loadDoc(){
   sb.from('alerts').select('*').eq('acknowledged',false).order('created_at',{ascending:false})]);
  const all=a.data||[];D.pts=all.filter(x=>x.role==='patient');D.staff=all.filter(x=>x.role==='doctor');D.vis=b.data||[];D.ap=c.data||[];D.al=d.data||[];
  if(lastAl>=0&&D.al.length>lastAl)toast('New emergency alert from a patient',()=>{view='overview';sel=null;drawDoc()});lastAl=D.al.length;
+ if(qInit)D.ap.forEach(a=>{if(a.appt_date!==today())return;const o=lastQ[a.id],nmx=(P(a.patient_id)||{}).full_name||'Patient';if(a.status==='with_doctor'&&(!o||o.s!=='with_doctor')&&isMD()&&a.handover_by!==me.id)toast('Handover: '+nmx+(a.triage_level?' ('+TL[a.triage_level]+')':''),()=>{view='queue';sel=null;drawDoc()});else if(a.triage_level==='emergency'&&(!o||o.t!=='emergency')&&a.triaged_at)toast('EMERGENCY triage: '+nmx,()=>{view='queue';sel=null;drawDoc()})});
+ lastQ={};D.ap.forEach(a=>{lastQ[a.id]={s:a.status,t:a.triage_level}});qInit=true;
  const [e,f]=await Promise.all([sb.from('services').select('*'),isAdmin()?sb.from('staff_emails').select('*').order('email'):{data:[]}]);D.svc=e.data||[];D.se=f.data||[];drawDoc()}
-function drawDoc(){if(!$('doc'))return;$('side').innerHTML=navHtml(DITEMS(),sel?'patients':view,{overview:D.al.length,chat:chatUn()});setBell(D.al.length);showInst();
+function drawDoc(){if(!$('doc'))return;$('side').innerHTML=navHtml(DITEMS(),sel?'patients':view,{overview:D.al.length,queue:qN(),chat:chatUn()});setBell(D.al.length);showInst();
  if(!sel&&view==='chat'&&chatPt&&$('chat')){paintChat();return}
  $('doc').innerHTML=sel&&P(sel)?detail(P(sel)):overview();if(!sel&&view==='chat'&&chatPt)afterChat()}
 function overview(){
@@ -307,13 +309,12 @@ function overview(){
  h+=cl.map(x=>`<div class="pr" onclick="openPt('${x.p.id}')"><div>${x.f.map(f=>`<div class="fl">${ic('alert')} ${esc(f)}</div>`).join('')}<div class="mu">${esc(x.p.full_name)} \u00b7 last visit ${fd(lastV(x.p.id).visit_date)}</div></div></div>`).join('');
  h+=missed.map(a=>`<div class="pr" onclick="openPt('${a.patient_id}')"><div class="fl">${ic('clock')} Missed appointment ${fd(a.appt_date)} \u00b7 ${esc((P(a.patient_id)||{}).full_name)}</div></div>`).join('');
  if(!hi)h+='<div class="mu">No alerts.</div>';
- h+='<h2>Today\u2019s queue</h2>';
- h+=qs.length?qs.map(a=>{const p=P(a.patient_id)||{};const b={scheduled:`<button class="btn g" onclick="qa('${a.id}','waiting')">Check in</button>`,waiting:`<button class="btn" onclick="consult('${a.patient_id}')">Start consultation</button>`,in_consult:`<button class="btn" onclick="openPt('${a.patient_id}')">Open</button>`,done:'<span class="pill">Done</span>',missed:'<span class="pill hot">Missed</span>'}[a.status];return `<div class="li"><div><b>${esc(p.full_name)}</b><div class="mu">${dsn(a)} \u00b7 ${a.status.replace('_',' ')}</div></div>${b}</div>`}).join(''):'<div class="mu">No appointments today.</div>';
+ h+=`<h2>Today\u2019s queue</h2><div class="pr" onclick="nav('queue')"><div><b>${qN()} in the queue</b><div class="mu">${qs.filter(a=>a.status==='waiting').length} waiting \u00b7 ${qs.filter(a=>a.status==='with_nurse').length} with nurse \u00b7 ${qs.filter(a=>a.status==='with_doctor').length} with doctor \u00b7 ${qs.filter(a=>a.status==='lab').length} in lab</div></div><span class="pill">Open queue</span></div>`;
  const H1=h;h='';const upc=D.ap.filter(a=>a.appt_date>t&&a.status==='scheduled').sort((x,y)=>(x.appt_date+(x.appt_time||'')).localeCompare(y.appt_date+(y.appt_time||''))).slice(0,15);
  h+='<h2 style="margin-top:0">Upcoming bookings</h2>'+(upc.length?upc.map(a=>`<div class="pr" onclick="openPt('${a.patient_id}')"><div><b>${esc((P(a.patient_id)||{}).full_name)}</b><div class="mu">${fd(a.appt_date)} \u00b7 ${dsn(a)}</div></div></div>`).join(''):'<div class="mu">No upcoming bookings.</div>');
  const H2=h;h='';h+=`<h2>Patients (${D.pts.length})</h2><input placeholder="Search name, ID or phone" oninput="filt(this.value)" style="margin-bottom:10px">`;
  h+=D.pts.map(p=>{const d=p.status==='delivered',n=flags(lastV(p.id)).length;return `<div class="pr" data-q="${esc((p.full_name+' '+p.patient_code+' '+p.phone).toLowerCase())}" onclick="openPt('${p.id}')"><div><b>${esc(p.full_name)}</b> <span class="mu">${esc(p.patient_code)}</span><div class="mu">${d?'Postnatal week '+pnw(p):p.lmp?'Week '+wk(p)+' \u00b7 EDD '+due(p):'No dates'}</div></div><div class="row">${p.admitted_at?'<span class="pill hot">Admitted</span>':''}${n?`<span class="pill hot">${n} flag${n>1?'s':''}</span>`:''}</div></div>`}).join('')||'<div class="mu">No patients registered yet.</div>';
- return {overview:H1,bookings:H2,patients:h,staff:staffPanel(),audit:auditPanel(),chat:staffChat()}[view]||H1}
+ return {overview:H1,bookings:H2,patients:h,staff:staffPanel(),audit:auditPanel(),chat:staffChat(),queue:queueView()}[view]||H1}
 function filt(q){q=q.toLowerCase();document.querySelectorAll('.pr[data-q]').forEach(r=>r.style.display=r.dataset.q.includes(q)?'':'none')}
 async function openPt(id){sel=id;D.notes=[];D.plan=[];drawDoc();scrollTo(0,0);sb.rpc('log_view',{p_patient:id});const [n,p]=await Promise.all([sb.from('clinical_notes').select('*').eq('patient_id',id).order('created_at',{ascending:false}),sb.from('care_plan_items').select('*').eq('patient_id',id).order('done').order('due_date',{ascending:true,nullsFirst:false})]);D.notes=n.data||[];D.plan=p.data||[];if(sel===id)drawDoc()}
 function timeline(p){
@@ -328,7 +329,7 @@ function detail(p){
  <div class="hd" style="margin:14px 0 4px"><h1>${esc(p.full_name)}</h1><div class="row">${p.admitted_at?'<span class="pill hot">Admitted</span>':''}<span class="pill">${d?'Postnatal week '+pnw(p):'Antenatal'}</span></div></div>
  <div class="mu">${esc(p.patient_code)} \u00b7 Age ${ageOf(p)} \u00b7 ${esc(p.phone||'no phone')} \u00b7 ${esc(p.email)}</div>
  ${f.length?`<div class="card" style="border-color:var(--ac);margin-top:12px">${f.map(x=>`<div class="fl">${ic('alert')} ${esc(x)}</div>`).join('')}<div class="mu">From the latest recorded visit. Review clinically.</div></div>`:''}
- <div class="row" style="margin:14px 0">${d?'':`<button class="btn" onclick="consult('${p.id}')">${ic('act')} Start consultation</button>`}<button class="btn g" onclick="recVisit('${p.id}')">${ic('act')} Record vitals</button><button class="btn g" onclick="addNote('${p.id}')">${ic('file')} Add clinical note</button><button class="btn g" onclick="followUp('${p.id}')">${ic('cal')} Schedule follow-up</button><button class="btn g" onclick="editPt('${p.id}')">${ic('edit')} Edit profile</button><button class="btn g" onclick="openChat('${p.id}')">${ic('msg')} Message</button><button class="btn g" onclick="startCall(true,'${p.id}')">${ic('video')} Video call</button>${d?'':`<button class="btn g" onclick="admit('${p.id}')">${ic('bed')} ${p.admitted_at?'Discharge':'Admit patient'}</button><button class="btn g" onclick="deliver('${p.id}')">${ic('check')} Mark delivered</button>`}</div>
+ <div class="row" style="margin:14px 0">${d?'':isMD()?`<button class="btn" onclick="consult('${p.id}')">${ic('act')} Start consultation</button>`:`<button class="btn" onclick="startTriage('${p.id}')">${ic('act')} Start triage</button>`}<button class="btn g" onclick="recVisit('${p.id}')">${ic('act')} Record vitals</button><button class="btn g" onclick="addNote('${p.id}')">${ic('file')} Add clinical note</button><button class="btn g" onclick="followUp('${p.id}')">${ic('cal')} Schedule follow-up</button><button class="btn g" onclick="editPt('${p.id}')">${ic('edit')} Edit profile</button><button class="btn g" onclick="openChat('${p.id}')">${ic('msg')} Message</button><button class="btn g" onclick="startCall(true,'${p.id}')">${ic('video')} Video call</button>${d||!isMD()?'':`<button class="btn g" onclick="admit('${p.id}')">${ic('bed')} ${p.admitted_at?'Discharge':'Admit patient'}</button><button class="btn g" onclick="deliver('${p.id}')">${ic('check')} Mark delivered</button>`}</div>
  <div class="card"><h3>Patient profile</h3><div class="grid">${g('Gestational age',d?'Delivered '+fd(p.delivered_on):p.lmp?'Week '+wk(p)+' ('+tri(wk(p))+')':'')}${g('Estimated due date',due(p))}${g('Gravida / Para',(p.gravida??'-')+' / '+(p.para??'-'))}${g('Date of birth',p.dob?fd(p.dob):'')}${g('Address',p.address)}${g('Blood group',p.blood_group)}${g('Allergies',p.allergies)}${g('Current medications',p.current_medications)}${g('Medical history',p.medical_history)}${g('Previous pregnancies and outcomes',p.previous_pregnancies)}</div></div>
  <div class="card"><h3>Pregnancy timeline</h3>${timeline(p)}${up.length?`<div class="mu" style="margin-top:8px">Next appointment: ${fd(up[0].appt_date)} (${esc(up[0].kind)})</div>`:''}</div>
  <h2>Care plan</h2><div class="card">${D.plan.map(x=>`<div class="li" style="margin-bottom:6px"><div class="fl" style="color:${x.done?'var(--tx)':'var(--mu)'}">${ic(x.done?'check':'clock')}<div><b>${esc(x.title)}</b><div class="mu">${x.due_date?fd(x.due_date)+(x.due_time?' at '+String(x.due_time).slice(0,5):''):'No date'}${x.notes?' \u00b7 '+esc(x.notes):''}</div></div></div><div class="row"><button class="btn g" onclick="togglePlan('${x.id}',${!x.done})">${x.done?'Undo':'Mark done'}</button><button class="ib" onclick="delPlan('${x.id}')">${ic('x')}</button></div></div>`).join('')||'<div class="mu">No care plan items yet.</div>'}<button class="btn" style="margin-top:8px" onclick="addPlan('${p.id}')">${ic('plus')} Add care plan item</button></div>
@@ -338,16 +339,12 @@ function detail(p){
  return h}
 async function ackAlert(id){await sb.from('alerts').update({acknowledged:true}).eq('id',id);loadDoc()}
 async function qa(id,s){const {error}=await sb.from('appointments').update({status:s}).eq('id',id);if(error)alert(error.message);loadDoc()}
-async function consult(pid){
- const t=today();let a=D.ap.find(x=>x.patient_id===pid&&x.appt_date===t&&x.status!=='cancelled');
- if(a)await sb.from('appointments').update({status:'in_consult'}).eq('id',a.id);else await sb.from('appointments').insert({patient_id:pid,appt_date:t,status:'in_consult'});
- sel=pid;await loadDoc();recVisit(pid)}
+async function consult(pid){try{await ensureToday(pid,'with_doctor')}catch(e){return alert(friendly(e))}sel=pid;await loadDoc();recVisit(pid)}
 const UR=['','Negative','Trace','+','++','+++'],opt=a=>a.map(o=>`<option>${o}</option>`).join('');
 function recVisit(pid){
  modal('Record visit',`${fld('Visit date','visit_date','date',today(),'required')}<div class="two">${fld('Weight (kg)','weight_kg','number','','step="0.1" min="25" max="250"')}${fld('Temperature (C)','temp_c','number','','step="0.1" min="30" max="43"')}${fld('BP systolic','bp_sys','number','','min="50" max="260"')}${fld('BP diastolic','bp_dia','number','','min="30" max="160"')}${fld('Pulse (bpm)','pulse','number','','min="30" max="220"')}${fld('Fundal height (cm)','fundal_height_cm','number','','step="0.5" min="0" max="50"')}${fld('Fetal heart rate','fetal_heart_rate','number','','min="60" max="220"')}<div></div><div><label class="l">Urine protein</label><select name="urine_protein">${opt(UR)}</select></div><div><label class="l">Urine glucose</label><select name="urine_glucose">${opt(UR)}</select></div></div><label class="l">Clinical note</label><textarea name="clinical_note"></textarea>${fld('Next appointment','next_appointment','date')}`,async f=>{
   const {error}=await sb.from('visits').insert({patient_id:pid,visit_date:f.visit_date,weight_kg:nm(f.weight_kg),bp_sys:nm(f.bp_sys),bp_dia:nm(f.bp_dia),temp_c:nm(f.temp_c),pulse:nm(f.pulse),fundal_height_cm:nm(f.fundal_height_cm),fetal_heart_rate:nm(f.fetal_heart_rate),urine_protein:nz(f.urine_protein),urine_glucose:nz(f.urine_glucose),clinical_note:nz(f.clinical_note),next_appointment:nz(f.next_appointment),recorded_by:me.id});
   if(error)throw error;
-  const t=today(),a=D.ap.find(x=>x.patient_id===pid&&x.appt_date===t&&x.status==='in_consult');if(a)await sb.from('appointments').update({status:'done'}).eq('id',a.id);
   if(f.next_appointment)await sb.from('appointments').insert({patient_id:pid,appt_date:f.next_appointment});
   sel=pid;await loadDoc()})}
 function addNote(pid){modal('Clinical note','<label class="l">Note</label><textarea name="body" required maxlength="4000"></textarea>',async f=>{const {error}=await sb.from('clinical_notes').insert({patient_id:pid,body:f.body.trim(),author_id:me.id});if(error)throw error;await openPt(pid)})}
@@ -369,13 +366,13 @@ function notify(pid){
   const {error}=await sb.from('notifications').insert({patient_id:pid,kind:f.kind,priority:f.priority,title:f.title.trim(),body:nz(f.body)});if(error)throw error})}
 function staffPanel(){
  if(!isAdmin())return '';
- return `<h2 style="margin-top:0">Doctors and midwives</h2><div class="mu" style="margin-bottom:8px">Add an email here, then that person registers as Doctor / Midwife with the same email.</div>${D.se.map(x=>`<div class="li"><div>${esc(x.email)} <span class="pill">${x.title}</span></div>${x.email.toLowerCase()===me.email.toLowerCase()?'':`<button class="btn g" onclick="rmStaff('${esc(x.email)}')">${ic('x')} Remove</button>`}</div>`).join('')}<div class="row"><input id="se" type="email" placeholder="staff@email.com"><select id="st" style="width:auto"><option>Doctor</option><option>Midwife</option></select><button class="btn" onclick="addStaff()">${ic('plus')} Add</button></div>`}
+ return `<h2 style="margin-top:0">Doctors and midwives</h2><div class="mu" style="margin-bottom:8px">Add an email here, then that person registers as Staff with the same email.</div>${D.se.map(x=>`<div class="li"><div>${esc(x.email)} <span class="pill">${x.title}</span></div>${x.email.toLowerCase()===me.email.toLowerCase()?'':`<button class="btn g" onclick="rmStaff('${esc(x.email)}')">${ic('x')} Remove</button>`}</div>`).join('')}<div class="row"><input id="se" type="email" placeholder="staff@email.com"><select id="st" style="width:auto"><option>Doctor</option><option>Midwife</option><option>Nurse</option></select><button class="btn" onclick="addStaff()">${ic('plus')} Add</button></div>`}
 async function addStaff(){const e=$('se').value.trim().toLowerCase();if(!e)return;const {error}=await sb.from('staff_emails').insert({email:e,title:$('st').value});if(error)return alert(error.message);loadDoc()}
 async function rmStaff(e){if(!confirm('Remove '+e+'? Their existing account keeps its access.'))return;await sb.from('staff_emails').delete().eq('email',e);loadDoc()}
 /* ---------- chat ---------- */
 const CH={msgs:[]};let chatPt=null;
 const chatUn=()=>me?(me.role==='doctor'?CH.msgs.filter(m=>m.sender_id===m.patient_id&&!m.read).length:CH.msgs.filter(m=>m.sender_id!==me.id&&!m.read).length):0;
-function refreshNav(){if(!$('side')||!me)return;$('side').innerHTML=me.role==='doctor'?navHtml(DITEMS(),sel?'patients':view,{overview:D.al.length,chat:chatUn()}):navHtml(PITEMS,ptab,{notes:PD.nt.filter(x=>!x.read).length,chat:chatUn()});showInst()}
+function refreshNav(){if(!$('side')||!me)return;$('side').innerHTML=me.role==='doctor'?navHtml(DITEMS(),sel?'patients':view,{overview:D.al.length,queue:qN(),chat:chatUn()}):navHtml(PITEMS,ptab,{notes:PD.nt.filter(x=>!x.read).length,chat:chatUn()});showInst()}
 const nm2=id=>{const s=(me.role==='doctor'?D.staff:PD.staff).find(x=>x.id===id);if(s)return (s.staff_title||'Doctor')+' '+s.full_name;const p=D.pts.find(x=>x.id===id);return p?p.full_name:(id===me.id?'You':'Clinic team')};
 const myLabel=()=>me.role==='doctor'?(me.staff_title||'Doctor')+' '+me.full_name:me.full_name;
 async function loadChat(){const {data}=await sb.from('chat_messages').select('*').eq('patient_id',me.id).order('created_at',{ascending:true}).limit(500);CH.msgs=data||[];refreshNav()}
@@ -467,5 +464,52 @@ async function handleSig(r){
  else if(r.kind==='decline')endCall('declined',false);
  else if(r.kind==='hangup')endCall('remote',false)}
 function onSig(pl){if(pl.new)sigQ=sigQ.then(()=>handleSig(pl.new)).catch(e=>console.error(e))}
+/* ---------- queue, triage and handover ---------- */
+const isMD=()=>!!me&&me.role==='doctor'&&(me.staff_title||'Doctor')==='Doctor';
+const TL={routine:'Routine',urgent:'Urgent',emergency:'Emergency'},TW={emergency:3,urgent:2,routine:1};
+const STAGES=[['waiting','Waiting'],['with_nurse','With nurse'],['with_doctor','With doctor'],['lab','Lab'],['done','Completed']];
+const qN=()=>D.ap.filter(a=>a.appt_date===today()&&['waiting','with_nurse','with_doctor','lab'].includes(a.status)).length;
+async function setStage(id,status,extra){const {error}=await sb.from('appointments').update({status,...(extra||{})}).eq('id',id);if(error)alert(friendly(error));loadDoc()}
+const checkIn=id=>setStage(id,'waiting',{arrived_at:new Date().toISOString()});
+const callIn=id=>setStage(id,'with_nurse');
+const toLab=id=>setStage(id,'lab');
+const complete=id=>{if(confirm('Mark this visit as completed?'))setStage(id,'done')};
+async function ensureToday(pid,status){
+ const t=today(),a=D.ap.find(x=>x.patient_id===pid&&x.appt_date===t&&!['cancelled','done','missed'].includes(x.status));
+ if(a){const {error}=await sb.from('appointments').update({status,...(a.arrived_at?{}:{arrived_at:new Date().toISOString()})}).eq('id',a.id);if(error)throw error;return a.id}
+ const {data,error}=await sb.from('appointments').insert({patient_id:pid,appt_date:t,kind:'Walk-in',status,arrived_at:new Date().toISOString()}).select().single();if(error)throw error;return data.id}
+async function startTriage(pid){let id;try{id=await ensureToday(pid,'with_nurse')}catch(e){return alert(friendly(e))}await loadDoc();triage(id)}
+function walkIn(){
+ const opts=D.pts.filter(p=>p.status==='antenatal').map(p=>`<option value="${p.id}">${esc(p.full_name)} \u00b7 ${esc(p.patient_code)}</option>`).join('');
+ modal('Add walk-in patient',`<label class="l">Patient</label><select name="pid" required><option value="">Select...</option>${opts}</select>`,async f=>{if(!f.pid)throw new Error('Choose a patient');await ensureToday(f.pid,'waiting');await loadDoc()})}
+function triage(id){
+ const a=D.ap.find(x=>x.id===id);if(!a)return;const p=P(a.patient_id)||{},v=lastV(a.patient_id),f=v&&v.visit_date===today()?flags(v):[];
+ modal('Triage \u00b7 '+esc(p.full_name||''),`${f.length?`<div class="fl" style="margin-bottom:8px">${ic('alert')}<span>Today\u2019s vitals: ${esc(f.join('; '))}. Consider Urgent.</span></div>`:''}<label class="l">Triage level</label><select name="triage_level" required>${['routine','urgent','emergency'].map(k=>`<option value="${k}"${(a.triage_level||'routine')===k?' selected':''}>${TL[k]}</option>`).join('')}</select><label class="l">Complaint or reason for visit</label><input name="complaint" maxlength="300" value="${esc(a.complaint||'')}"><label class="l">Triage notes</label><textarea name="triage_note" maxlength="1000">${esc(a.triage_note||'')}</textarea>`,async v2=>{
+  const {error}=await sb.from('appointments').update({triage_level:v2.triage_level,complaint:nz(v2.complaint),triage_note:nz(v2.triage_note),triaged_at:new Date().toISOString()}).eq('id',id);if(error)throw error;await loadDoc()})}
+function handover(id){
+ const a=D.ap.find(x=>x.id===id);if(!a)return;if(!a.triage_level)return alert('Do the triage first, so the doctor sees the priority.');
+ const v0=lastV(a.patient_id),v=v0&&v0.visit_date===today()?v0:null;
+ const pre=a.handover_note||[a.complaint&&'Complaint: '+a.complaint,v&&v.bp_sys&&'BP '+v.bp_sys+'/'+v.bp_dia,v&&v.pulse&&'Pulse '+v.pulse,v&&v.temp_c&&'Temp '+v.temp_c,v&&v.fetal_heart_rate&&'FHR '+v.fetal_heart_rate,a.triage_note].filter(Boolean).join('. ');
+ modal('Handover to doctor',`<label class="l">Summary for the doctor</label><textarea name="handover_note" required maxlength="1500">${esc(pre)}</textarea>`,async f=>{
+  const {error}=await sb.from('appointments').update({status:'with_doctor',handover_note:f.handover_note.trim(),handover_by:me.id}).eq('id',id);if(error)throw error;await loadDoc()})}
+function queueView(){
+ const t=today(),all=D.ap.filter(a=>a.appt_date===t&&a.status!=='cancelled'),md=isMD();
+ const qb=(l,fn,g)=>`<button class="btn ${g?'g':''}" onclick="${fn}">${l}</button>`;
+ const mins=a=>Math.max(0,Math.round((Date.now()-new Date(a.stage_at||a.created_at))/6e4));
+ const card=a=>{const p=P(a.patient_id)||{},v=lastV(a.patient_id),f=v&&v.visit_date===t?flags(v):[],s=a.status,b=[];
+  if(s==='scheduled')b.push(qb('Check in',`checkIn('${a.id}')`));
+  if(s==='waiting'){b.push(qb('Call in',`callIn('${a.id}')`));if(md)b.push(qb('Start consultation',`setStage('${a.id}','with_doctor')`,1))}
+  if(s==='with_nurse')b.push(qb('Triage',`triage('${a.id}')`),qb('Record vitals',`recVisit('${a.patient_id}')`,1),qb('Handover to doctor',`handover('${a.id}')`,1));
+  if(s==='with_doctor'){b.push(qb('Open patient',`openPt('${a.patient_id}')`));if(md)b.push(qb('Send to lab',`toLab('${a.id}')`,1),qb('Complete',`complete('${a.id}')`,1));else b.push(qb('Record vitals',`recVisit('${a.patient_id}')`,1))}
+  if(s==='lab')b.push(qb('Open patient',`openPt('${a.patient_id}')`,1),qb('Back to doctor',`setStage('${a.id}','with_doctor')`));
+  if(s==='done')b.push(qb('Open patient',`openPt('${a.patient_id}')`,1));
+  return `<div class="card"><div class="row" style="justify-content:space-between;align-items:center"><b>${esc(p.full_name||'Patient')}</b><span class="row">${a.triage_level?`<span class="pill ${a.triage_level!=='routine'?'hot':''}">${TL[a.triage_level]}</span>`:s==='scheduled'?'':'<span class="pill">Not triaged</span>'}</span></div><div class="mu">${esc(p.patient_code||'')} \u00b7 ${p.lmp&&p.status==='antenatal'?'Week '+wk(p)+' \u00b7 ':''}${esc(a.kind)}${a.appt_time?' at '+String(a.appt_time).slice(0,5):''}${s!=='scheduled'&&s!=='done'?' \u00b7 '+mins(a)+' min in this stage':''}</div>${a.complaint?`<div>${esc(a.complaint)}</div>`:''}${f.map(x=>`<div class="fl">${ic('alert')} ${esc(x)}</div>`).join('')}${a.handover_note?`<div class="mu" style="margin-top:4px">Handover: ${esc(a.handover_note)}</div>`:''}<div class="row" style="margin-top:8px">${b.join('')}</div></div>`};
+ const sort=x=>x.sort((p,q)=>(TW[q.triage_level]||0)-(TW[p.triage_level]||0)||new Date(p.arrived_at||p.created_at)-new Date(q.arrived_at||q.created_at));
+ const exp=all.filter(a=>a.status==='scheduled').sort((x,y)=>(x.appt_time||'').localeCompare(y.appt_time||''));
+ let h=`<div class="chathd"><h2 style="margin:0">Today\u2019s queue</h2><button class="btn" onclick="walkIn()">${ic('plus')} Add walk-in</button></div><div class="stats" style="margin:12px 0">${STAGES.map(g=>`<div class="st"><b>${all.filter(a=>a.status===g[0]).length}</b><span>${g[1]}</span></div>`).join('')}</div>`;
+ STAGES.forEach(g=>{const items=sort(all.filter(a=>a.status===g[0]));if(items.length)h+=`<h3 style="margin:14px 0 6px">${g[1]} (${items.length})</h3>${items.map(card).join('')}`});
+ if(exp.length)h+=`<h3 style="margin:14px 0 6px">Expected today (${exp.length})</h3>${exp.map(card).join('')}`;
+ if(!all.length)h+='<div class="mu">Nobody in the queue yet. Check in an expected patient or add a walk-in.</div>';
+ return h}
 boot();
 </script></body></html>
