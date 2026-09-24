@@ -1,6 +1,10 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0e0c0b">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icons/icon-64.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Maternity Help">
 <title>Maternity Help</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <style>
@@ -13,6 +17,7 @@ h1,h2,h3{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;lett
 h1{font-size:26px}h2{font-size:18px;margin:22px 0 10px}h3{font-size:15px;margin:0 0 8px;color:var(--mu)}
 svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px}
+.logo{width:34px;height:34px;border-radius:9px;background:#fff;padding:2px;object-fit:contain;flex:none}.logo.big{width:104px;height:104px;border-radius:24px;padding:6px;box-shadow:0 10px 34px rgba(123,30,43,.4)}.tag{text-align:center;color:var(--mu);font-size:14px;margin:0 0 4px}
 .brand{display:flex;align-items:center;gap:8px;font:700 20px 'Barlow Condensed';letter-spacing:.06em;text-transform:uppercase}.brand svg{color:var(--al);width:24px;height:24px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:10px}
 .auth{max-width:420px;margin:8vh auto 0;border-top:3px solid var(--ac);padding:26px 22px}
@@ -81,7 +86,7 @@ plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
 x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
 file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/>',
 act:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
-sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',menu:'<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>',home:'<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>'};
+sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',dl:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',menu:'<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>',home:'<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>'};
 const ic=n=>`<svg viewBox="0 0 24 24">${I[n]}</svg>`;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $=id=>document.getElementById(id),app=$('app');
@@ -104,8 +109,14 @@ const tri=w=>w<=13?'1st trimester':w<=27?'2nd trimester':'3rd trimester';
 const sched=w=>w<28?'every 4 weeks':w<36?'every 2 weeks':'every week';
 const tip=w=>w<=13?'Take folic acid, rest, and book your first antenatal visit. Avoid alcohol and unprescribed medicine.':w<=27?'Keep up your clinic visits, eat iron-rich food and sleep under a treated net.':'Pack your hospital bag and count baby movements daily. Know the warning signs below.';
 let me=null,chans=[],mode='login',role='patient';
-const shell=id=>{document.body.classList.add('in');app.innerHTML=`<div class="lay"><aside class="side" id="side"></aside><div class="scrim" onclick="document.body.classList.remove('nav')"></div><div class="mainc"><div class="mob"><button class="ib" onclick="document.body.classList.add('nav')">${ic('menu')}</button><span class="brand">Maternity Help</span><span class="sp"></span><button class="ib bell" title="Notifications" onclick="nav('${me.role==='doctor'?'overview':'notes'}')">${ic('bell')}<span class="bd" id="bellc" style="display:none"></span></button><button class="ib" data-tb="" title="Change theme" onclick="toggleTheme()">${tIc()}</button><button class="ib" title="Log out" onclick="logout()">${ic('out')}</button></div><div id="${id}"></div></div></div>`};
-const navHtml=(items,active,bd)=>`<div class="brand">${ic('heart')} Maternity Help</div><div class="who"><b>${esc(me.full_name)}</b><div class="mu">${me.role==='doctor'?esc(me.staff_title||'Doctor'):'Patient \u00b7 '+esc(me.patient_code)}</div></div>${items.map(i=>`<button class="nv ${active===i[0]?'on':''}" onclick="nav('${i[0]}')">${ic(i[2])}<span>${i[1]}</span>${bd&&bd[i[0]]?`<span class="bd">${bd[i[0]]}</span>`:''}</button>`).join('')}<div style="flex:1"></div><button class="nv" data-tb="1" onclick="toggleTheme()">${tIc()}<span>${tLb()}</span></button><button class="nv" onclick="logout()">${ic('out')}<span>Log out</span></button>`;
+const shell=id=>{document.body.classList.add('in');app.innerHTML=`<div class="lay"><aside class="side" id="side"></aside><div class="scrim" onclick="document.body.classList.remove('nav')"></div><div class="mainc"><div class="mob"><button class="ib" onclick="document.body.classList.add('nav')">${ic('menu')}</button><img class="logo" src="/logo.png" alt=""><span class="brand">Maternity Help</span><span class="sp"></span><button class="ib bell" title="Notifications" onclick="nav('${me.role==='doctor'?'overview':'notes'}')">${ic('bell')}<span class="bd" id="bellc" style="display:none"></span></button><button class="ib" data-tb="" title="Change theme" onclick="toggleTheme()">${tIc()}</button><button class="ib" title="Log out" onclick="logout()">${ic('out')}</button></div><div id="${id}"></div></div></div>`};
+const navHtml=(items,active,bd)=>`<div class="brand"><img class="logo" src="/logo.png" alt=""> Maternity Help</div><div class="who"><b>${esc(me.full_name)}</b><div class="mu">${me.role==='doctor'?esc(me.staff_title||'Doctor'):'Patient \u00b7 '+esc(me.patient_code)}</div></div>${items.map(i=>`<button class="nv ${active===i[0]?'on':''}" onclick="nav('${i[0]}')">${ic(i[2])}<span>${i[1]}</span>${bd&&bd[i[0]]?`<span class="bd">${bd[i[0]]}</span>`:''}</button>`).join('')}<div style="flex:1"></div><button class="nv" data-inst style="display:none" onclick="installApp()">${ic('dl')}<span>Install app</span></button><button class="nv" data-tb="1" onclick="toggleTheme()">${tIc()}<span>${tLb()}</span></button><button class="nv" onclick="logout()">${ic('out')}<span>Log out</span></button>`;
+let dip=null;const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+function showInst(){document.querySelectorAll('[data-inst]').forEach(b=>b.style.display=standalone()?'none':'')}
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e;showInst()});
+addEventListener('appinstalled',()=>{dip=null;showInst()});
+async function installApp(){if(!dip)return alert('To install: open the browser menu (three dots) and tap Install app or Add to Home screen.');dip.prompt();await dip.userChoice;dip=null}
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
 function toast(msg,fn){document.querySelectorAll('.toast').forEach(t=>t.remove());const t=document.createElement('div');t.className='toast';t.innerHTML=ic('bell')+'<span>'+esc(msg)+'</span>';t.onclick=()=>{t.remove();fn&&fn()};document.body.appendChild(t);try{navigator.vibrate&&navigator.vibrate(200)}catch(e){}setTimeout(()=>t.remove(),8000)}
 function setBell(n){const b=$('bellc');if(b){b.textContent=n>9?'9+':n;b.style.display=n?'block':'none'}document.title=(n?'('+n+') ':'')+'Maternity Help'}
 let ptLoaded=false,lastAl=-1;
@@ -114,14 +125,14 @@ async function logout(){chans.forEach(c=>sb.removeChannel(c));chans=[];me=null;s
 function authView(msg=''){
  document.body.classList.remove('in','nav');document.title='Maternity Help';
  const reg=mode==='reg',pat=role==='patient';
- app.innerHTML=`<div class="card auth"><div style="text-align:right"><button class="ib" data-tb="" title="Change theme" onclick="toggleTheme()">${tIc()}</button></div><div class="brand" style="justify-content:center">${ic('heart')}</div><h1>${reg?'Register':'Sign in'}</h1><div class="mu">${reg?'Create your account':'Use your Maternity Help account'}</div>
+ app.innerHTML=`<div class="card auth"><div style="text-align:right"><button class="ib" data-tb="" title="Change theme" onclick="toggleTheme()">${tIc()}</button></div><div style="display:flex;justify-content:center"><img class="logo big" src="/logo.png" alt="Maternity Help"></div><h1>${reg?'Register':'Sign in'}</h1><p class="tag">Care for you and your baby, every week</p><div class="mu">${reg?'Create your account':'Use your Maternity Help account'}</div>
  <div class="seg"><button class="btn ${!reg?'on':''}" onclick="mode='login';authView()">Log in</button><button class="btn ${reg?'on':''}" onclick="mode='reg';authView()">Register</button></div>
  ${reg?`<div class="seg"><button class="btn ${pat?'on':''}" onclick="role='patient';authView()">${ic('user')} Patient</button><button class="btn ${!pat?'on':''}" onclick="role='doctor';authView()">${ic('heart')} Doctor / Midwife</button></div>
  <label class="l">Full name</label><div class="f">${ic('user')}<input id="fn" autocomplete="name"></div>
  ${pat?`<label class="l">Phone</label><div class="f">${ic('msg')}<input id="ph" type="tel" autocomplete="tel"></div><label class="l">Weeks pregnant now (1-40)</label><div class="f">${ic('cal')}<input id="wks" type="number" min="1" max="40"></div>`:''}`:''}
  <label class="l">Email</label><div class="f">${ic('mail')}<input id="em" type="email" autocomplete="email"></div>
  <label class="l">Password</label><div class="f">${ic('lock')}<input id="pw" type="password" autocomplete="${reg?'new-password':'current-password'}"><button class="ib" type="button" onclick="const i=$('pw');i.type=i.type==='password'?'text':'password'">${ic('eye')}</button></div>
- <button class="btn w" onclick="submitAuth()">${ic('login')} ${reg?'Create account':'Sign in'}</button><p class="err" id="msg">${esc(msg)}</p><div class="mu">Maternity Help \u00b7 Clinic system</div></div>`}
+ <button class="btn w" onclick="submitAuth()">${ic('login')} ${reg?'Create account':'Sign in'}</button><p class="err" id="msg">${esc(msg)}</p><div class="mu">Maternity Help \u00b7 Clinic system</div><div style="text-align:center;margin-top:8px"><button class="btn g" data-inst style="display:none" onclick="installApp()">${ic('dl')} Install app</button></div></div>`;showInst()}
 async function submitAuth(){
  const em=$('em').value.trim(),pw=$('pw').value,m=$('msg');m.textContent='';
  if(!em||pw.length<8)return m.textContent='Enter your email and a password of at least 8 characters.';
@@ -173,7 +184,7 @@ async function loadPatient(){
  ptLoaded=true;drawPt()}
 function drawPt(){
  if(!$('pv'))return;const un=PD.nt.filter(x=>!x.read).length;
- $('side').innerHTML=navHtml(PITEMS,ptab,{notes:un});setBell(un);
+ $('side').innerHTML=navHtml(PITEMS,ptab,{notes:un});setBell(un);showInst();
  $('pv').innerHTML={home:ptHome,plan:ptPlan,book:ptBook,appts:ptAppts,notes:ptNotes}[ptab]();
  if(ptab==='book')loadSlots()}
 function reminders(){
@@ -265,7 +276,7 @@ async function loadDoc(){
  const all=a.data||[];D.pts=all.filter(x=>x.role==='patient');D.staff=all.filter(x=>x.role==='doctor');D.vis=b.data||[];D.ap=c.data||[];D.al=d.data||[];
  if(lastAl>=0&&D.al.length>lastAl)toast('New emergency alert from a patient',()=>{view='overview';sel=null;drawDoc()});lastAl=D.al.length;
  const [e,f]=await Promise.all([sb.from('services').select('*'),isAdmin()?sb.from('staff_emails').select('*').order('email'):{data:[]}]);D.svc=e.data||[];D.se=f.data||[];drawDoc()}
-function drawDoc(){if(!$('doc'))return;$('side').innerHTML=navHtml(DITEMS(),sel?'patients':view,{overview:D.al.length});setBell(D.al.length);$('doc').innerHTML=sel&&P(sel)?detail(P(sel)):overview()}
+function drawDoc(){if(!$('doc'))return;$('side').innerHTML=navHtml(DITEMS(),sel?'patients':view,{overview:D.al.length});setBell(D.al.length);showInst();$('doc').innerHTML=sel&&P(sel)?detail(P(sel)):overview()}
 function overview(){
  const t=today(),act=D.pts.filter(p=>p.status==='antenatal'),qs=D.ap.filter(a=>a.appt_date===t&&a.status!=='cancelled').sort((x,y)=>(x.appt_time||'').localeCompare(y.appt_time||'')),
  missed=D.ap.filter(a=>a.appt_date<t&&['scheduled','waiting'].includes(a.status)),
