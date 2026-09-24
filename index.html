@@ -46,7 +46,7 @@ label.ck{display:flex;gap:10px;align-items:center;padding:7px 0}label.ck input{w
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;justify-content:center;z-index:9}
 .md{background:var(--card);border:1px solid var(--bd);border-top:3px solid var(--ac);border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:92vh;overflow:auto;padding:16px}
 .mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font:700 20px 'Barlow Condensed';text-transform:uppercase}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px;margin-top:6px}#tabs .btn{padding:10px 2px;font-size:14px}.unread{border-color:var(--ac)}.two{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
 </style></head><body><main id="app"></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
@@ -94,7 +94,7 @@ function authView(msg=''){
  const reg=mode==='reg',pat=role==='patient';
  app.innerHTML=`<div class="card auth"><div class="brand" style="justify-content:center">${ic('heart')}</div><h1>${reg?'Register':'Sign in'}</h1><div class="mu">${reg?'Create your account':'Use your Maternity Help account'}</div>
  <div class="seg"><button class="btn ${!reg?'on':''}" onclick="mode='login';authView()">Log in</button><button class="btn ${reg?'on':''}" onclick="mode='reg';authView()">Register</button></div>
- ${reg?`<div class="seg"><button class="btn ${pat?'on':''}" onclick="role='patient';authView()">${ic('user')} Patient</button><button class="btn ${!pat?'on':''}" onclick="role='doctor';authView()">${ic('heart')} Doctor</button></div>
+ ${reg?`<div class="seg"><button class="btn ${pat?'on':''}" onclick="role='patient';authView()">${ic('user')} Patient</button><button class="btn ${!pat?'on':''}" onclick="role='doctor';authView()">${ic('heart')} Doctor / Midwife</button></div>
  <label class="l">Full name</label><div class="f">${ic('user')}<input id="fn" autocomplete="name"></div>
  ${pat?`<label class="l">Phone</label><div class="f">${ic('msg')}<input id="ph" type="tel" autocomplete="tel"></div><label class="l">Weeks pregnant now (1-40)</label><div class="f">${ic('cal')}<input id="wks" type="number" min="1" max="40"></div>`:''}`:''}
  <label class="l">Email</label><div class="f">${ic('mail')}<input id="em" type="email" autocomplete="email"></div>
@@ -124,26 +124,93 @@ function modal(title,body,onSave){
  m.querySelector('form').onsubmit=async e=>{e.preventDefault();try{await onSave(Object.fromEntries(new FormData(e.target)));m.remove()}catch(er){alert(er.message||er)}}}
 const fld=(l,n,t='text',v='',x='')=>`<label class="l">${l}</label><input name="${n}" type="${t}" value="${esc(v)}" ${x}>`;
 /* ---------- patient ---------- */
+let ptab='home',PD={ap:[],nt:[],svc:[],staff:[],al:[]},bk={},conf='';
+const TABS=[['home','Home'],['book','Book'],['appts','Visits'],['notes','Alerts']];
+const KINDS=[['message','Hospital message'],['test_result','New test result'],['medication','Medication reminder'],['follow_up','Follow-up appointment'],['checkup','Antenatal checkup'],['lab','Laboratory appointment'],['ultrasound','Ultrasound appointment'],['doctor_appointment','Doctor appointment'],['missed','Missed appointment']];
+const ft=t=>t?String(t).slice(0,5):'';
+const svcName=a=>(PD.svc.find(x=>x.id===a.service_id)||{}).name||a.kind;
+const stfName=a=>{const f=PD.staff.find(x=>x.id===a.staff_id);return f?f.staff_title+' '+f.full_name:''};
 async function patientView(){
- const w=wk(me),d=me.status==='delivered';
- app.innerHTML=hdr(esc(me.full_name)+' \u00b7 '+esc(me.patient_code))+(d?`<div class="card"><div class="mu">Postnatal care</div><div class="big">Week ${Math.min(pnw(me),6)} of 6</div><div class="bar"><i style="width:${Math.min(100,pnw(me)/6*100)}%"></i></div><div>Attend your 6-week check for you and baby. Report heavy bleeding, fever or breathing trouble straight away.</div></div>`
- :`<div class="card"><div class="mu">${tri(w)} \u00b7 due ${due(me)}</div><div class="big">Week ${Math.min(w,42)} of 40</div><div class="bar"><i style="width:${Math.min(100,w/40*100)}%"></i></div><div>${tip(w)}</div><div class="mu" style="margin-top:6px">Clinic visits: ${sched(w)}. <span id="nx"></span></div></div>`)+
- `<h2>Alert the labour ward</h2><div class="card">${SYM.map((s,i)=>`<label class="ck"><input type="checkbox" class="sy" data-i="${i}">${s[0]}</label>`).join('')}<button class="btn w" onclick="sendAlert()">${ic('alert')} Send emergency alert</button><div class="mu" id="ast" style="margin-top:8px"></div></div>
- <h2>Messages from the clinic</h2><div id="msgs"></div>`;
- loadPatient();
- chans.push(sb.channel('pm').on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:'patient_id=eq.'+me.id},loadPatient).on('postgres_changes',{event:'*',schema:'public',table:'alerts',filter:'patient_id=eq.'+me.id},loadPatient).on('postgres_changes',{event:'*',schema:'public',table:'appointments',filter:'patient_id=eq.'+me.id},loadPatient).subscribe())}
+ app.innerHTML=hdr(esc(me.full_name)+' \u00b7 '+esc(me.patient_code))+'<div class="seg" id="tabs"></div><div id="pv"></div>';
+ await loadPatient();
+ const f='patient_id=eq.'+me.id,ch=sb.channel('pm');
+ ['notifications','appointments','alerts'].forEach(t=>ch.on('postgres_changes',{event:'*',schema:'public',table:t,filter:f},loadPatient));
+ chans.push(ch.subscribe())}
 async function loadPatient(){
- const [{data:m},{data:a},{data:ap}]=await Promise.all([sb.from('messages').select('*').eq('patient_id',me.id).order('created_at',{ascending:false}),sb.from('alerts').select('*').eq('patient_id',me.id).order('created_at',{ascending:false}).limit(1),sb.from('appointments').select('*').eq('patient_id',me.id).eq('status','scheduled').gte('appt_date',today()).order('appt_date').limit(1)]);
- if(!$('msgs'))return;
- $('msgs').innerHTML=(m||[]).length?m.map(x=>`<div class="card">${esc(x.body)}<div class="mu">${new Date(x.created_at).toLocaleString()}</div></div>`).join(''):'<div class="mu">No messages yet.</div>';
- $('ast').innerHTML=a&&a[0]?(a[0].acknowledged?ic('check')+' Staff have seen your last alert.':'Alert sent. Waiting for staff...'):'';
- if($('nx'))$('nx').textContent=ap&&ap[0]?'Next appointment: '+fd(ap[0].appt_date)+'.':''}
+ const [a,n,s,st,al]=await Promise.all([
+  sb.from('appointments').select('*').eq('patient_id',me.id).order('appt_date',{ascending:false}).order('appt_time',{ascending:false}),
+  sb.from('notifications').select('*').eq('patient_id',me.id).order('created_at',{ascending:false}).limit(100),
+  sb.from('services').select('*').eq('active',true).order('name'),
+  sb.rpc('bookable_staff'),
+  sb.from('alerts').select('*').eq('patient_id',me.id).order('created_at',{ascending:false}).limit(1)]);
+ PD={ap:a.data||[],nt:n.data||[],svc:s.data||[],staff:st.data||[],al:al.data||[]};drawPt()}
+function drawPt(){
+ if(!$('pv'))return;const un=PD.nt.filter(x=>!x.read).length;
+ $('tabs').innerHTML=TABS.map(t=>`<button class="btn ${ptab===t[0]?'on':''}" onclick="ptab='${t[0]}';bk={};conf='';drawPt()">${t[1]}${t[0]==='notes'&&un?' ('+un+')':''}</button>`).join('');
+ $('pv').innerHTML={home:ptHome,book:ptBook,appts:ptAppts,notes:ptNotes}[ptab]();
+ if(ptab==='book')loadSlots()}
+function reminders(){
+ const t=today(),tm=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10),r=[];
+ const when=a=>svcName(a)+(a.appt_time?' at '+ft(a.appt_time):'');
+ PD.ap.forEach(a=>{
+  if(a.status==='scheduled'&&a.appt_date===t)r.push({priority:'urgent',title:'Appointment today',body:when(a)});
+  else if(a.status==='scheduled'&&a.appt_date===tm)r.push({priority:'important',title:'Appointment tomorrow',body:when(a)});
+  else if(a.status==='missed'||(a.status==='scheduled'&&a.appt_date<t))r.push({priority:'important',title:'Missed appointment',body:svcName(a)+' on '+fd(a.appt_date)+'. Please book a new one.'})});
+ return r}
+const ntCard=(x,rem)=>`<div class="card ${!x.read&&!rem?'unread':''}" ${rem||x.read?'':`onclick="markRead('${x.id}')"`}><div class="row" style="justify-content:space-between"><b>${esc(x.title)}</b><span class="pill ${x.priority==='urgent'?'hot':''}">${x.priority}</span></div>${x.body?`<div>${esc(x.body)}</div>`:''}<div class="mu">${rem?'Reminder':(KINDS.find(k=>k[0]===x.kind)||[0,'Notice'])[1]+' \u00b7 '+new Date(x.created_at).toLocaleString()}</div></div>`;
+async function markRead(id){await sb.from('notifications').update({read:true}).eq('id',id);loadPatient()}
+async function markAll(){await sb.from('notifications').update({read:true}).eq('patient_id',me.id).eq('read',false);loadPatient()}
+function ptHome(){
+ const t=today(),w=wk(me),d=me.status==='delivered',up=PD.ap.filter(a=>a.status==='scheduled'&&a.appt_date>=t).sort((x,y)=>(x.appt_date+(x.appt_time||'')).localeCompare(y.appt_date+(y.appt_time||''))),al=PD.al[0];
+ let h=d?`<div class="card"><div class="mu">Pregnancy status</div><div class="big">Postnatal week ${Math.min(pnw(me),6)} of 6</div><div class="bar"><i style="width:${Math.min(100,pnw(me)/6*100)}%"></i></div><div>Attend your 6-week check for you and baby. Report heavy bleeding, fever or breathing trouble straight away.</div></div>`
+ :`<div class="card"><div class="mu">Pregnancy status \u00b7 ${tri(w)}</div><div class="big">Week ${Math.min(w,42)} of 40</div><div class="bar"><i style="width:${Math.min(100,w/40*100)}%"></i></div><div class="grid"><div><span>Gestational age</span>${w} weeks</div><div><span>Estimated due date</span>${due(me)}</div><div><span>Next appointment</span>${up[0]?fd(up[0].appt_date)+(up[0].appt_time?' at '+ft(up[0].appt_time):''):'None booked'}</div></div></div>`;
+ h+=`<div class="card"><h3>Profile</h3><div class="grid"><div><span>Name</span>${esc(me.full_name)}</div><div><span>Patient ID</span>${esc(me.patient_code)}</div><div><span>Phone</span>${esc(me.phone||'-')}</div><div><span>Email</span>${esc(me.email)}</div></div></div>`;
+ h+=`<h2>Emergency</h2><div class="card">${SYM.map((s,i)=>`<label class="ck"><input type="checkbox" class="sy" data-i="${i}">${s[0]}</label>`).join('')}<button class="btn w" onclick="sendAlert()">${ic('alert')} Send emergency alert to the labour ward</button><div class="mu" style="margin-top:8px">${al?(al.acknowledged?'Staff have seen your last alert.':'Alert sent. Waiting for staff...'):''}</div></div>`;
+ const rec=reminders().concat(PD.nt).slice(0,3);
+ h+=`<h2>Recent notifications</h2>${rec.map(x=>ntCard(x,!x.id)).join('')||'<div class="mu">Nothing new.</div>'}`;
+ h+=`<h2>Upcoming checkups</h2>${up.slice(0,3).map(a=>`<div class="li"><div><b>${esc(svcName(a))}</b><div class="mu">${fd(a.appt_date)}${a.appt_time?' at '+ft(a.appt_time):''} \u00b7 ${esc(stfName(a))}</div></div></div>`).join('')||`<div class="mu">No upcoming appointments.</div>`}<button class="btn" onclick="ptab='book';drawPt()">${ic('plus')} Book an appointment</button>`;
+ if(!d)h+=`<h2>Pregnancy reminders</h2><div class="card">${tip(w)}<div class="mu" style="margin-top:6px">Clinic visits: ${sched(w)}.</div></div>`;
+ return h}
+function ptBook(){
+ const tm=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+ const o=(arr,v,f)=>arr.map(x=>`<option value="${x.id}"${v===x.id?' selected':''}>${f(x)}</option>`).join('');
+ return `<div class="card"><h3>${bk.id?'Reschedule appointment':'Book an appointment'}</h3>
+ <label class="l">Department / service</label><select onchange="bk.svc=this.value;bk.time=null;drawPt()"><option value="">Select...</option>${o(PD.svc,bk.svc,s=>esc(s.name))}</select>
+ <label class="l">Doctor / midwife</label><select onchange="bk.staff=this.value;bk.time=null;drawPt()"><option value="">Select...</option>${o(PD.staff,bk.staff,s=>esc(s.staff_title+' '+s.full_name))}</select>
+ <label class="l">Date (Monday to Friday)</label><input type="date" min="${bk.id?tm:today()}" value="${bk.date||''}" onchange="bk.date=this.value;bk.time=null;drawPt()">
+ <div id="slots">${bk.svc&&bk.staff&&bk.date?'':'<div class="mu" style="margin-top:8px">Choose a service, a doctor or midwife, and a date to see free times.</div>'}</div></div>`}
+async function loadSlots(){
+ const el=$('slots');if(!el||!bk.svc||!bk.staff||!bk.date)return;
+ const dow=new Date(bk.date+'T00:00:00').getDay();
+ if(dow===0||dow===6){el.innerHTML='<div class="mu" style="margin-top:8px">The clinic is closed at weekends. Choose a weekday.</div>';return}
+ el.innerHTML='<div class="mu" style="margin-top:8px">Loading times...</div>';
+ const {data,error}=await sb.rpc('booked_slots',{p_staff:bk.staff,p_date:bk.date});
+ if(!$('slots'))return;if(error){el.innerHTML='<div class="err">'+esc(error.message)+'</div>';return}
+ const taken=(data||[]).map(ft),n=new Date(),isT=bk.date===today(),sl=[];
+ for(let m=480;m<=930;m+=30){const x=String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');if(taken.includes(x)||(isT&&m<=n.getHours()*60+n.getMinutes()))continue;sl.push(x)}
+ el.innerHTML=sl.length?`<label class="l">Available times</label><div class="slots">${sl.map(x=>`<button type="button" class="btn ${bk.time===x?'':'g'}" onclick="bk.time='${x}';drawPt()">${x}</button>`).join('')}</div>${bk.time?`<button class="btn w" onclick="confirmBook()">${ic('check')} ${bk.id?'Confirm new time':'Confirm booking'}</button>`:''}`:'<div class="mu" style="margin-top:8px">No free times on this date. Try another day.</div>'}
+async function confirmBook(){
+ const s=PD.svc.find(x=>x.id===bk.svc),f=PD.staff.find(x=>x.id===bk.staff);
+ const row={patient_id:me.id,service_id:bk.svc,staff_id:bk.staff,appt_date:bk.date,appt_time:bk.time,kind:s.name,status:'scheduled'};
+ const {error}=bk.id?await sb.from('appointments').update(row).eq('id',bk.id):await sb.from('appointments').insert(row);
+ if(error)return alert(/duplicate|unique/i.test(error.message)?'That time was just taken. Please choose another one.':error.message);
+ conf=(bk.id?'Rescheduled: ':'Booked: ')+s.name+' with '+f.staff_title+' '+f.full_name+' on '+fd(bk.date)+' at '+bk.time+'.';
+ bk={};ptab='appts';await loadPatient()}
+function ptAppts(){
+ const t=today(),row=a=>{const can=a.status==='scheduled'&&a.appt_date>t;return `<div class="li"><div><b>${esc(svcName(a))}</b><div class="mu">${fd(a.appt_date)}${a.appt_time?' at '+ft(a.appt_time):''} \u00b7 ${esc(stfName(a))} \u00b7 ${a.status.replace('_',' ')}</div></div>${can?`<div class="row"><button class="btn g" onclick="resched('${a.id}')">Reschedule</button><button class="btn g" onclick="cancelAppt('${a.id}')">Cancel</button></div>`:''}</div>`};
+ const up=PD.ap.filter(a=>a.status==='scheduled'&&a.appt_date>=t).reverse(),prev=PD.ap.filter(a=>!(a.status==='scheduled'&&a.appt_date>=t));
+ return (conf?`<div class="card" style="border-color:var(--ac)"><div class="fl">${ic('check')} ${esc(conf)}</div></div>`:'')+`<h2>Upcoming</h2>${up.map(row).join('')||'<div class="mu">No upcoming appointments.</div>'}<p class="mu">Appointments can be changed or cancelled until the day before.</p><button class="btn" onclick="ptab='book';drawPt()">${ic('plus')} Book an appointment</button><h2>Previous</h2>${prev.map(row).join('')||'<div class="mu">No previous appointments.</div>'}`}
+function resched(id){const a=PD.ap.find(x=>x.id===id);bk={id,svc:a.service_id,staff:a.staff_id};ptab='book';drawPt()}
+async function cancelAppt(id){if(!confirm('Cancel this appointment?'))return;const {error}=await sb.from('appointments').update({status:'cancelled'}).eq('id',id);if(error)return alert(error.message);loadPatient()}
+function ptNotes(){
+ const r=reminders();return `<div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Notifications</h2>${PD.nt.some(x=>!x.read)?`<button class="btn g" onclick="markAll()">Mark all read</button>`:''}</div><div style="margin-top:10px">${r.map(x=>ntCard(x,true)).join('')}${PD.nt.map(x=>ntCard(x,false)).join('')||(r.length?'':'<div class="mu">No notifications yet.</div>')}</div>`}
 async function sendAlert(){
  const t=[...document.querySelectorAll('.sy:checked')].map(c=>+c.dataset.i);
  const {error}=await sb.from('alerts').insert({patient_id:me.id,level:t.some(i=>SYM[i][1])?'EMERGENCY':'LABOUR',symptoms:t.map(i=>SYM[i][0])});
  if(error)return alert('Alert failed: '+error.message+'. Call the clinic now.');loadPatient()}
 /* ---------- doctor ---------- */
-let D={pts:[],vis:[],ap:[],al:[],notes:[]},sel=null;
+let D={pts:[],vis:[],ap:[],al:[],notes:[],staff:[],svc:[],se:[]},sel=null;
+const dsn=a=>{const s=D.svc.find(x=>x.id===a.service_id),f=D.staff.find(x=>x.id===a.staff_id);return esc((s?s.name:a.kind)+(a.appt_time?' at '+String(a.appt_time).slice(0,5):'')+(f?' with '+(f.staff_title||'Doctor')+' '+f.full_name:''))};
 const P=id=>D.pts.find(p=>p.id===id),lastV=id=>D.vis.find(v=>v.patient_id===id);
 function flags(v){const f=[];if(!v)return f;
  if(v.bp_sys>=160||v.bp_dia>=110)f.push('Severe high blood pressure ('+v.bp_sys+'/'+v.bp_dia+')');
@@ -153,21 +220,22 @@ function flags(v){const f=[];if(!v)return f;
  const u=(v.urine_protein||'').toLowerCase();if(u&&!/^(neg|nil|-|0|trace)/.test(u))f.push('Protein in urine ('+v.urine_protein+')');
  return f}
 async function doctorView(){
- app.innerHTML=hdr('Doctor dashboard \u00b7 '+esc(me.full_name))+'<div id="doc"></div>';
+ app.innerHTML=hdr(esc(me.staff_title||'Doctor')+' dashboard \u00b7 '+esc(me.full_name))+'<div id="doc"></div>';
  await loadDoc();
  const ch=sb.channel('da');['alerts','appointments','visits'].forEach(t=>ch.on('postgres_changes',{event:'*',schema:'public',table:t},loadDoc));
  ch.on('postgres_changes',{event:'INSERT',schema:'public',table:'profiles'},loadDoc);chans.push(ch.subscribe())}
 async function loadDoc(){
  const back=new Date(Date.now()-30*864e5).toISOString().slice(0,10);
  const [a,b,c,d]=await Promise.all([
-  sb.from('profiles').select('*').eq('role','patient').order('created_at',{ascending:false}),
+  sb.from('profiles').select('*').order('created_at',{ascending:false}),
   sb.from('visits').select('*').order('visit_date',{ascending:false}).order('created_at',{ascending:false}).limit(1000),
   sb.from('appointments').select('*').gte('appt_date',back).order('appt_date'),
   sb.from('alerts').select('*').eq('acknowledged',false).order('created_at',{ascending:false})]);
- D.pts=a.data||[];D.vis=b.data||[];D.ap=c.data||[];D.al=d.data||[];drawDoc()}
+ const all=a.data||[];D.pts=all.filter(x=>x.role==='patient');D.staff=all.filter(x=>x.role==='doctor');D.vis=b.data||[];D.ap=c.data||[];D.al=d.data||[];
+ const [e,f]=await Promise.all([sb.from('services').select('*'),isAdmin()?sb.from('staff_emails').select('*').order('email'):{data:[]}]);D.svc=e.data||[];D.se=f.data||[];drawDoc()}
 function drawDoc(){if(!$('doc'))return;$('doc').innerHTML=sel&&P(sel)?detail(P(sel)):overview()}
 function overview(){
- const t=today(),act=D.pts.filter(p=>p.status==='antenatal'),qs=D.ap.filter(a=>a.appt_date===t&&a.status!=='cancelled'),
+ const t=today(),act=D.pts.filter(p=>p.status==='antenatal'),qs=D.ap.filter(a=>a.appt_date===t&&a.status!=='cancelled').sort((x,y)=>(x.appt_time||'').localeCompare(y.appt_time||'')),
  missed=D.ap.filter(a=>a.appt_date<t&&['scheduled','waiting'].includes(a.status)),
  cl=act.map(p=>({p,f:flags(lastV(p.id))})).filter(x=>x.f.length),hi=D.al.length+cl.length+missed.length;
  const st=[['users','Pregnant patients',act.length],['clock','Waiting for consultation',qs.filter(a=>a.status==='waiting').length],['cal','Antenatal visits today',qs.length],['bed','Admitted',D.pts.filter(p=>p.admitted_at).length],['cal','Upcoming appointments',D.ap.filter(a=>a.appt_date>t&&a.status==='scheduled').length],['alert','High-priority alerts',hi]];
@@ -177,10 +245,12 @@ function overview(){
  h+=missed.map(a=>`<div class="pr" onclick="openPt('${a.patient_id}')"><div class="fl">${ic('clock')} Missed appointment ${fd(a.appt_date)} \u00b7 ${esc((P(a.patient_id)||{}).full_name)}</div></div>`).join('');
  if(!hi)h+='<div class="mu">No alerts.</div>';
  h+='<h2>Today\u2019s queue</h2>';
- h+=qs.length?qs.map(a=>{const p=P(a.patient_id)||{};const b={scheduled:`<button class="btn g" onclick="qa('${a.id}','waiting')">Check in</button>`,waiting:`<button class="btn" onclick="consult('${a.patient_id}')">Start consultation</button>`,in_consult:`<button class="btn" onclick="openPt('${a.patient_id}')">Open</button>`,done:'<span class="pill">Done</span>',missed:'<span class="pill hot">Missed</span>'}[a.status];return `<div class="li"><div><b>${esc(p.full_name)}</b><div class="mu">${esc(a.kind)} \u00b7 ${a.status.replace('_',' ')}</div></div>${b}</div>`}).join(''):'<div class="mu">No appointments today.</div>';
+ h+=qs.length?qs.map(a=>{const p=P(a.patient_id)||{};const b={scheduled:`<button class="btn g" onclick="qa('${a.id}','waiting')">Check in</button>`,waiting:`<button class="btn" onclick="consult('${a.patient_id}')">Start consultation</button>`,in_consult:`<button class="btn" onclick="openPt('${a.patient_id}')">Open</button>`,done:'<span class="pill">Done</span>',missed:'<span class="pill hot">Missed</span>'}[a.status];return `<div class="li"><div><b>${esc(p.full_name)}</b><div class="mu">${dsn(a)} \u00b7 ${a.status.replace('_',' ')}</div></div>${b}</div>`}).join(''):'<div class="mu">No appointments today.</div>';
+ const upc=D.ap.filter(a=>a.appt_date>t&&a.status==='scheduled').sort((x,y)=>(x.appt_date+(x.appt_time||'')).localeCompare(y.appt_date+(y.appt_time||''))).slice(0,15);
+ h+='<h2>Upcoming bookings</h2>'+(upc.length?upc.map(a=>`<div class="pr" onclick="openPt('${a.patient_id}')"><div><b>${esc((P(a.patient_id)||{}).full_name)}</b><div class="mu">${fd(a.appt_date)} \u00b7 ${dsn(a)}</div></div></div>`).join(''):'<div class="mu">No upcoming bookings.</div>');
  h+=`<h2>Patients (${D.pts.length})</h2><input placeholder="Search name, ID or phone" oninput="filt(this.value)" style="margin-bottom:10px">`;
  h+=D.pts.map(p=>{const d=p.status==='delivered',n=flags(lastV(p.id)).length;return `<div class="pr" data-q="${esc((p.full_name+' '+p.patient_code+' '+p.phone).toLowerCase())}" onclick="openPt('${p.id}')"><div><b>${esc(p.full_name)}</b> <span class="mu">${esc(p.patient_code)}</span><div class="mu">${d?'Postnatal week '+pnw(p):p.lmp?'Week '+wk(p)+' \u00b7 EDD '+due(p):'No dates'}</div></div><div class="row">${p.admitted_at?'<span class="pill hot">Admitted</span>':''}${n?`<span class="pill hot">${n} flag${n>1?'s':''}</span>`:''}</div></div>`}).join('')||'<div class="mu">No patients registered yet.</div>';
- return h}
+ h+=staffPanel();return h}
 function filt(q){q=q.toLowerCase();document.querySelectorAll('.pr[data-q]').forEach(r=>r.style.display=r.dataset.q.includes(q)?'':'none')}
 async function openPt(id){sel=id;D.notes=[];drawDoc();scrollTo(0,0);const {data}=await sb.from('clinical_notes').select('*').eq('patient_id',id).order('created_at',{ascending:false});D.notes=data||[];if(sel===id)drawDoc()}
 function timeline(p){
@@ -200,7 +270,7 @@ function detail(p){
  <div class="card"><h3>Pregnancy timeline</h3>${timeline(p)}${up.length?`<div class="mu" style="margin-top:8px">Next appointment: ${fd(up[0].appt_date)} (${esc(up[0].kind)})</div>`:''}</div>
  <h2>Antenatal records</h2><div class="card tw">${vs.length?`<table><tr><th>Date</th><th>Weight</th><th>BP</th><th>Temp</th><th>Pulse</th><th>Fundal ht</th><th>FHR</th><th>Urine P / G</th><th>Next</th><th>Notes</th></tr>${vs.map(v=>`<tr><td>${fd(v.visit_date)}</td><td>${v.weight_kg??'-'}</td><td>${v.bp_sys?v.bp_sys+'/'+v.bp_dia:'-'}</td><td>${v.temp_c??'-'}</td><td>${v.pulse??'-'}</td><td>${v.fundal_height_cm??'-'}</td><td>${v.fetal_heart_rate??'-'}</td><td>${esc(v.urine_protein||'-')} / ${esc(v.urine_glucose||'-')}</td><td>${v.next_appointment?fd(v.next_appointment):'-'}</td><td class="n">${esc(v.clinical_note||'')}</td></tr>`).join('')}</table>`:'<div class="mu">No visits recorded yet.</div>'}</div>
  <h2>Clinical notes</h2>${D.notes.map(n=>`<div class="card">${esc(n.body)}<div class="mu">${n.author_id===me.id?esc(me.full_name):'Doctor'} \u00b7 ${new Date(n.created_at).toLocaleString()}</div></div>`).join('')||'<div class="mu">No notes yet.</div>'}
- <h2>Message patient</h2><div class="row"><input id="mm" placeholder="Message to ${esc(p.full_name)}"><button class="btn" onclick="sendMsg('${p.id}')">${ic('send')} Send</button></div>`;
+ <h2>Notify patient</h2><button class="btn" onclick="notify('${p.id}')">${ic('send')} Send notification</button>`;
  return h}
 async function ackAlert(id){await sb.from('alerts').update({acknowledged:true}).eq('id',id);loadDoc()}
 async function qa(id,s){const {error}=await sb.from('appointments').update({status:s}).eq('id',id);if(error)alert(error.message);loadDoc()}
@@ -223,6 +293,14 @@ function editPt(pid){const p=P(pid);
   const {error}=await sb.from('profiles').update({dob:nz(f.dob),address:nz(f.address),gravida:nm(f.gravida),para:nm(f.para),blood_group:nz(f.blood_group),allergies:nz(f.allergies),current_medications:nz(f.current_medications),medical_history:nz(f.medical_history),previous_pregnancies:nz(f.previous_pregnancies)}).eq('id',pid);if(error)throw error;await loadDoc()})}
 async function admit(pid){const p=P(pid);if(!confirm(p.admitted_at?'Discharge this patient?':'Admit this patient?'))return;const {error}=await sb.from('profiles').update({admitted_at:p.admitted_at?null:new Date().toISOString()}).eq('id',pid);if(error)alert(error.message);loadDoc()}
 async function deliver(pid){if(!confirm('Mark this patient as delivered?'))return;const {error}=await sb.from('profiles').update({status:'delivered',delivered_on:today(),admitted_at:null}).eq('id',pid);if(error)alert(error.message);loadDoc()}
-async function sendMsg(pid){const i=$('mm'),t=i.value.trim();if(!t)return;const {error}=await sb.from('messages').insert({patient_id:pid,body:t});if(error)return alert(error.message);i.value='';i.placeholder='Sent'}
+const isAdmin=()=>(me?.email||'').toLowerCase()==='malvirngomo8@gmail.com';
+function notify(pid){
+ modal('Notify patient',`<label class="l">Type</label><select name="kind">${KINDS.map(k=>`<option value="${k[0]}">${k[1]}</option>`).join('')}</select><label class="l">Priority</label><select name="priority"><option value="routine">Routine</option><option value="important">Important</option><option value="urgent">Urgent</option></select>${fld('Title','title','text','','required maxlength="200"')}<label class="l">Details</label><textarea name="body" maxlength="2000"></textarea>`,async f=>{
+  const {error}=await sb.from('notifications').insert({patient_id:pid,kind:f.kind,priority:f.priority,title:f.title.trim(),body:nz(f.body)});if(error)throw error})}
+function staffPanel(){
+ if(!isAdmin())return '';
+ return `<h2>Doctors and midwives</h2><div class="mu" style="margin-bottom:8px">Add an email here, then that person registers as Doctor / Midwife with the same email.</div>${D.se.map(x=>`<div class="li"><div>${esc(x.email)} <span class="pill">${x.title}</span></div>${x.email.toLowerCase()===me.email.toLowerCase()?'':`<button class="btn g" onclick="rmStaff('${esc(x.email)}')">${ic('x')} Remove</button>`}</div>`).join('')}<div class="row"><input id="se" type="email" placeholder="staff@email.com"><select id="st" style="width:auto"><option>Doctor</option><option>Midwife</option></select><button class="btn" onclick="addStaff()">${ic('plus')} Add</button></div>`}
+async function addStaff(){const e=$('se').value.trim().toLowerCase();if(!e)return;const {error}=await sb.from('staff_emails').insert({email:e,title:$('st').value});if(error)return alert(error.message);loadDoc()}
+async function rmStaff(e){if(!confirm('Remove '+e+'? Their existing account keeps its access.'))return;await sb.from('staff_emails').delete().eq('email',e);loadDoc()}
 boot();
 </script></body></html>
