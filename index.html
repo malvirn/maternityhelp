@@ -50,7 +50,9 @@ label.ck{display:flex;gap:10px;align-items:center;padding:7px 0}label.ck input{w
 .tls{display:flex;justify-content:space-between;font-size:12px;color:var(--mu)}
 .tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:8px 10px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}th{font:600 12px Barlow;letter-spacing:.08em;text-transform:uppercase;color:var(--mu)}td.n{white-space:normal;min-width:180px}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;justify-content:center;z-index:9}
-.md{background:var(--card);border:1px solid var(--bd);border-top:3px solid var(--ac);border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:92vh;overflow:auto;padding:16px}
+.md{background:var(--card);border:1px solid var(--bd);border-top:3px solid var(--ac);border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:92vh;display:flex;flex-direction:column;padding:16px 16px 0}
+.md form{overflow-y:auto;padding-bottom:14px}
+.md form>.btn.w{position:sticky;bottom:0;background:var(--card);margin-top:10px}
 .mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font:700 20px 'Barlow Condensed';text-transform:uppercase}
 body.in main{max-width:none;padding:0}.lay{display:flex;min-height:100vh}
 .side{width:236px;flex:none;background:var(--card);border-right:1px solid var(--bd);padding:16px 12px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh;overflow:auto}
@@ -77,8 +79,9 @@ body.sos{animation:sosflash 1s steps(1) infinite}
 @keyframes sosflash{0%,49%{--glow:#4a0708}50%,100%{--glow:#06133a}}
 .sosemoji{font-size:40px;line-height:1;flex:none}
 .sosbar .sosemoji{font-size:30px}
-.quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.quick{display:grid;grid-template-columns:1fr;gap:8px;margin:10px 0}
 .quick button{text-align:left;white-space:normal}
+@media(min-width:520px){.quick{grid-template-columns:1fr 1fr}}
 .sosfab{position:fixed;right:14px;bottom:20px;z-index:14;background:#b3121e;color:#fff;border:0;border-radius:99px;padding:12px 18px;font:700 16px 'Barlow Condensed';letter-spacing:.08em;display:flex;gap:6px;align-items:center;box-shadow:0 6px 20px rgba(0,0,0,.5);cursor:pointer}
 @media(max-width:820px){.sosfab{bottom:calc(86px + env(safe-area-inset-bottom))}}
 .stepbars{display:flex;gap:8px;align-items:flex-end;height:96px}.sb{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:4px}.sb i{width:100%;background:var(--ac);border-radius:6px 6px 0 0;min-height:2px}.sb span{font-size:11px;color:var(--mu)}
@@ -185,7 +188,7 @@ async function boot(){
  me=p;p.role==='doctor'?doctorView():patientView()}
 function modal(title,body,onSave,btnLabel){
  const m=document.createElement('div');m.className='ov';
- m.innerHTML=`<div class="md"><div class="mh"><span>${title}</span><button class="ib" data-x>${ic('x')}</button></div><form>${body}<button class="btn w" type="submit">${ic('check')} ${btnLabel||'Save'}</button></form></div>`;
+ m.innerHTML=`<div class="md"><div class="mh"><span>${title}</span><button class="ib" data-x>${ic('x')}</button></div><form>${body}<button class="btn w" type="submit">${ic('check')} ${btnLabel||'Save'}</button></form></div>`;m.querySelector('.md').style.paddingBottom='env(safe-area-inset-bottom, 0px)';
  document.body.appendChild(m);m.querySelector('[data-x]').onclick=()=>m.remove();
  m.querySelector('form').onsubmit=async e=>{e.preventDefault();try{await onSave(Object.fromEntries(new FormData(e.target)));m.remove()}catch(er){alert(friendly(er))}}}
 const friendly=e=>{const m=e.message||String(e);return /violates check constraint/.test(m)?'One of the numbers is outside the allowed range. Please check the values and try again.':m};
@@ -266,11 +269,10 @@ function ptBook(){if(!bk.id&&!bk.staff){const t=(PD.team||[]).find(x=>PD.staff.s
 async function loadSlots(){
  const el=$('slots');if(!el||!bk.svc||!bk.staff||!bk.date)return;
  el.innerHTML='<div class="mu" style="margin-top:8px">Loading times...</div>';
- const {data,error}=await sb.rpc('booked_slots',{p_staff:bk.staff,p_date:bk.date});
+ const {data,error}=await sb.rpc('available_slots',{p_staff:bk.staff,p_date:bk.date});
  if(!$('slots'))return;if(error){el.innerHTML='<div class="err">'+esc(error.message)+'</div>';return}
- const taken=(data||[]).map(ft),n=new Date(),isT=bk.date===today(),sl=[];
- for(let m=0;m<=1410;m+=30){const x=String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');if(taken.includes(x)||(isT&&m<=n.getHours()*60+n.getMinutes()))continue;sl.push(x)}
- el.innerHTML=sl.length?`<label class="l">Available times</label><div class="slots">${sl.map(x=>`<button type="button" class="btn ${bk.time===x?'':'g'}" onclick="bk.time='${x}';drawPt()">${x}</button>`).join('')}</div>${bk.time?`<button class="btn w" onclick="confirmBook()">${ic('check')} ${bk.id?'Confirm new time':'Confirm booking'}</button>`:''}`:'<div class="mu" style="margin-top:8px">No free times on this date. Try another day.</div>'}
+ const sl=(data||[]).map(ft).sort();
+ el.innerHTML=sl.length?`<label class="l">Available times</label><div class="slots">${sl.map(x=>`<button type="button" class="btn ${bk.time===x?'':'g'}" onclick="bk.time='${x}';drawPt()">${x}</button>`).join('')}</div>${bk.time?`<button class="btn w" onclick="confirmBook()">${ic('check')} ${bk.id?'Confirm new time':'Confirm booking'}</button>`:''}`:'<div class="mu" style="margin-top:8px">No free times with this clinician on this date. Try another day, or a different doctor or midwife.</div>'}
 async function confirmBook(){
  const s=PD.svc.find(x=>x.id===bk.svc),f=PD.staff.find(x=>x.id===bk.staff);
  const row={patient_id:me.id,service_id:bk.svc,staff_id:bk.staff,appt_date:bk.date,appt_time:bk.time,kind:s.name,status:'scheduled'};
@@ -577,7 +579,8 @@ function sosSync(){
  const items=amb.map(a=>({kind:'amb',a})).concat(lab.map(x=>({kind:'lab',a:x})));
  const top=items[0],p=P(top.a.patient_id)||{},isAmb=top.kind==='amb',m=isAmb?ambMin(top.a):Math.round((Date.now()-new Date(top.a.created_at))/6e4);
  const label=isAmb?'AMBULANCE REQUESTED':'EMERGENCY LABOUR ALERT',emoji=isAmb?EMOJI.amb:EMOJI.emergency;
- const goBtn=isAmb?`<button class="btn g" style="color:#fff;border-color:#fff" onclick="nav('ambulance')">Details</button><button class="btn" style="background:#fff;color:#b3121e" onclick="dispatchAmb('${top.a.id}')">We\u2019re coming</button>`:`<button class="btn g" style="color:#fff;border-color:#fff" onclick="openPt('${top.a.patient_id}')">Open patient</button><button class="btn" style="background:#fff;color:#b3121e" onclick="ackAlert('${top.a.id}')">Acknowledge</button>`;
+ const upd=isAmb?`quickModal('Send update to patient',QUICK_AMB,async m=>{await sb.from('notifications').insert({patient_id:'${top.a.patient_id}',kind:'message',priority:'urgent',title:'Ambulance update',body:m});alert('Sent.')})`:`quickModal('Send update to patient',QUICK_LABOUR,async m=>{await sb.from('notifications').insert({patient_id:'${top.a.patient_id}',kind:'message',priority:'urgent',title:'Update on your alert',body:m});alert('Sent.')})`;
+ const goBtn=(isAmb?`<button class="btn g" style="color:#fff;border-color:#fff" onclick="nav('ambulance')">Details</button>`:`<button class="btn g" style="color:#fff;border-color:#fff" onclick="openPt('${top.a.patient_id}')">Open patient</button>`)+`<button class="btn g" style="color:#fff;border-color:#fff" onclick="${upd}">${ic('send')} Send update</button>`+(isAmb?`<button class="btn" style="background:#fff;color:#b3121e" onclick="dispatchAmb('${top.a.id}')">We\u2019re coming</button>`:`<button class="btn" style="background:#fff;color:#b3121e" onclick="ackAlert('${top.a.id}')">Acknowledge</button>`);
  b.innerHTML=`<div class="lights">${'<i></i>'.repeat(10)}</div><div class="fl" style="color:#fff"><span class="sosemoji">${emoji}</span><span>${label} \u00b7 ${esc(p.full_name||'Patient')} \u00b7 ${m} min ago${m>=5?' \u00b7 UNATTENDED':''}${items.length>1?' \u00b7 +'+(items.length-1)+' more':''}</span></div><div class="row">${goBtn}</div>`;
  sosStart()}
 setInterval(()=>{if(me&&me.role==='doctor')sosSync()},15000);
@@ -596,10 +599,11 @@ function stepAdvice(p){
  if(p.status==='delivered'){const w=pnw(p);return w<=2?{g:2000,why:'gentle walking in the first two weeks after birth, only as you feel able'}:{g:4000,why:'building up slowly in the weeks after birth'}}
  const w=wk(p);return w>=28?{g:5000,why:'the 3rd trimester (week '+w+'), when comfort matters most'}:{g:7000,why:'the '+tri(w)+' (week '+w+')'}}
 function ptSteps(){
- const t=today(),goal=me.step_goal,by=me.step_goal_by,sg=stepAdvice(me),logs=PD.steps||[],tn=(logs.find(x=>x.log_date===t)||{}).steps||0;
+ const t=today(),goal=me.step_goal,by=me.step_goal_by,sg=stepAdvice(me),logs=PD.steps||[],tn=(logs.find(x=>x.log_date===t)||{}).steps||0,met=goal?tn>=goal:false;
  const days=[...Array(7)].map((_,i)=>{const d=new Date(Date.now()-(6-i)*864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);return {d,n:(logs.find(x=>x.log_date===d)||{}).steps||0}});
  const mx=Math.max(goal||0,...days.map(x=>x.n),1),avg=Math.round(days.reduce((a,x)=>a+x.n,0)/7);
- return `<h2 style="margin-top:0">Daily steps</h2><div class="card">${goal?`<div class="mu">Your daily goal${by==='clinician'?' (set by your midwife or doctor)':''}</div><div class="big">${goal.toLocaleString()} steps</div><div class="bar"><i style="width:${Math.min(100,tn/goal*100)}%"></i></div><div>Today: <b>${tn.toLocaleString()}</b> steps${tn>=goal?' \u00b7 goal reached':''}</div>`:'<div class="mu">You have not set a daily goal yet.</div>'}</div>
+ let streak=0;if(goal)for(let i=days.length-1;i>=0;i--){if(days[i].n>=goal)streak++;else break}
+ return `<h2 style="margin-top:0">Daily steps</h2><div class="card">${goal?`<div class="mu">Your daily goal${by==='clinician'?' (set by your midwife or doctor)':''}</div><div class="big">${goal.toLocaleString()} steps</div><div class="bar"><i style="width:${Math.min(100,tn/goal*100)}%"></i></div><div>Today: <b>${tn.toLocaleString()}</b> steps \u2014 <b style="color:${met?'var(--ok, #12805c)':'inherit'}">${met?'goal reached \u2713':'goal not reached yet'}</b></div>${streak>0?`<div class="mu" style="margin-top:4px">${streak} day streak of hitting your goal \ud83d\udd25</div>`:''}`:`<div class="mu">You have not set a daily goal yet. A common target is ${sg.g.toLocaleString()} steps a day \u2014 set yours below.</div>`}</div>
  <div class="card"><h3>Log today\u2019s steps</h3><div class="row"><input id="sn" type="number" min="0" max="100000" placeholder="Steps from your phone\u2019s health app" value="${tn||''}"><button class="btn" onclick="saveSteps()">${ic('check')} Save</button></div></div>
  <div class="card"><h3>Last 7 days \u00b7 average ${avg.toLocaleString()}</h3><div class="stepbars">${days.map(x=>`<div class="sb"><i style="height:${Math.round(x.n/mx*100)}%"></i><span>${new Date(x.d+'T00:00:00').toLocaleDateString(undefined,{weekday:'short'}).slice(0,2)}</span></div>`).join('')}</div></div>
  ${by==='clinician'?'<div class="mu">Your midwife or doctor set this goal. Message them if you want it changed.</div>':`<div class="card"><h3>Set my goal</h3><div class="mu" style="margin-bottom:8px">Suggested for you: <b>${sg.g.toLocaleString()} steps a day</b>, based on ${sg.why}. This is a general starting point, not medical advice.</div><div class="row"><input id="sg" type="number" min="1000" max="20000" step="500" value="${goal||sg.g}"><button class="btn" onclick="saveGoal()">${ic('check')} Save goal</button></div></div>`}
@@ -640,7 +644,7 @@ function staffView(){
  if(!isAdmin())return '';
  const reg=[...D.staff].sort((a,b)=>stTitle(a).localeCompare(stTitle(b))||(a.full_name||'').localeCompare(b.full_name||'')),pending=D.se.filter(x=>!reg.some(s=>(s.email||'').toLowerCase()===x.email.toLowerCase())),cnt=id=>(D.asg||[]).filter(a=>a.staff_id===id).length;
  let h=`<h2 style="margin-top:0">Staff</h2><div class="card"><h3>Add a doctor, midwife or nurse</h3><div class="mu" style="margin-bottom:8px">Add their email here. They then register on the login page as Staff, using the same email.</div><div class="row"><input id="se" type="email" placeholder="staff@email.com"><select id="st" style="width:auto"><option>Doctor</option><option>Midwife</option><option>Nurse</option></select><button class="btn" onclick="addStaff()">${ic('plus')} Add</button></div></div>`;
- h+=reg.map(s=>`<div class="card" ${s.active===false?'style="opacity:.6"':''}><div class="row" style="justify-content:space-between;align-items:center"><b>${esc(s.full_name)}</b><span class="row"><span class="pill">${stTitle(s)}</span>${s.active===false?'<span class="pill hot">Inactive</span>':''}</span></div><div class="mu">${esc(s.email)} \u00b7 ${cnt(s.id)} patient${cnt(s.id)===1?'':'s'}</div>${s.id===me.id?'<div class="mu">This is you, the administrator.</div>':`<div class="row" style="margin-top:8px"><button class="btn" onclick="assignPatientsModal('${s.id}')">Assign patients</button><button class="btn g" onclick="roleModal('${s.id}')">Change role</button><button class="btn g" onclick="setActive('${s.id}',${s.active===false})">${s.active===false?'Reactivate':'Deactivate'}</button></div>`}</div>`).join('')||'<div class="mu">No staff have registered yet.</div>';
+ h+=reg.map(s=>`<div class="card" ${s.active===false?'style="opacity:.6"':''}><div class="row" style="justify-content:space-between;align-items:center"><b>${esc(s.full_name)}</b><span class="row"><span class="pill">${stTitle(s)}</span>${s.active===false?'<span class="pill hot">Inactive</span>':''}</span></div><div class="mu">${esc(s.email)} \u00b7 ${cnt(s.id)} patient${cnt(s.id)===1?'':'s'}</div>${s.id===me.id?'<div class="mu">This is you, the administrator.</div>':`<div class="row" style="margin-top:8px"><button class="btn" onclick="assignPatientsModal('${s.id}')">Assign patients</button>${stTitle(s)!=='Nurse'?`<button class="btn g" onclick="scheduleModal('${s.id}')">${ic('cal')} Set schedule</button>`:''}<button class="btn g" onclick="roleModal('${s.id}')">Change role</button><button class="btn g" onclick="setActive('${s.id}',${s.active===false})">${s.active===false?'Reactivate':'Deactivate'}</button></div>`}</div>`).join('')||'<div class="mu">No staff have registered yet.</div>';
  if(pending.length)h+=`<h3 style="margin:16px 0 6px">Waiting to register (${pending.length})</h3>`+pending.map(x=>`<div class="li"><div>${esc(x.email)} <span class="pill">${x.title}</span></div><button class="btn g" onclick="rmStaff('${esc(x.email)}')">${ic('x')} Remove</button></div>`).join('');
  return h}
 function assignView(){
@@ -667,5 +671,23 @@ function roleModal(sid){
   if(f.t===stTitle(s))return;const a=await sb.from('profiles').update({staff_title:f.t}).eq('id',sid);if(a.error)throw a.error;
   await sb.from('staff_emails').update({title:f.t}).eq('email',s.email);await sb.from('patient_assignments').delete().eq('staff_id',sid);await loadDoc()})}
 async function setActive(id,active){const s=D.staff.find(x=>x.id===id);if(!s)return;if(!confirm(active?'Reactivate '+s.full_name+'?':'Deactivate '+s.full_name+'? They will lose access straight away.'))return;const {error}=await sb.from('profiles').update({active}).eq('id',id);if(error)return alert(friendly(error));await loadDoc()}
+/* ---------- staff working hours and leave (availability) ---------- */
+const DOWN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+async function scheduleModal(sid){
+ const s=D.staff.find(x=>x.id===sid);if(!s)return;
+ const [{data:hrs},{data:lv}]=await Promise.all([sb.from('staff_hours').select('*').eq('staff_id',sid).order('dow').order('start_time'),sb.from('staff_leave').select('*').eq('staff_id',sid).order('start_date')]);
+ const rows=(hrs||[]).map(h=>`<div class="li" data-h="${h.id}"><div>${DOWN[h.dow]} \u00b7 ${ft(h.start_time)}\u2013${ft(h.end_time)}</div><button type="button" class="ib" onclick="rmHours('${h.id}','${sid}')">${ic('x')}</button></div>`).join('')||'<div class="mu">No fixed hours set \u2014 treated as available every day, all day.</div>';
+ const lvRows=(lv||[]).map(l=>`<div class="li" data-l="${l.id}"><div>${fd(l.start_date)}${l.end_date!==l.start_date?' \u2013 '+fd(l.end_date):''}${l.note?' \u00b7 '+esc(l.note):''}</div><button type="button" class="ib" onclick="rmLeave('${l.id}','${sid}')">${ic('x')}</button></div>`).join('')||'<div class="mu">No leave or time off recorded.</div>';
+ modal('Schedule \u00b7 '+esc(s.full_name),`<h3>Weekly working hours</h3><div class="mu" style="margin-bottom:6px">Patients can only book inside these hours. Leave empty for always available.</div><div id="hrsList">${rows}</div><div class="row" style="margin-top:8px"><select id="hDow">${DOWN.map((d,i)=>`<option value="${i}">${d}</option>`).join('')}</select><input id="hFrom" type="time" value="08:00"><input id="hTo" type="time" value="17:00"><button type="button" class="btn g" onclick="addHours('${sid}')">${ic('plus')} Add</button></div>
+ <h3 style="margin-top:16px">Leave / time off</h3><div id="lvList">${lvRows}</div><div class="row" style="margin-top:8px"><input id="lFrom" type="date"><input id="lTo" type="date"><input id="lNote" placeholder="Reason (optional)"><button type="button" class="btn g" onclick="addLeave('${sid}')">${ic('plus')} Add</button></div>`,
+ async()=>{},'Done')}
+async function addHours(sid){
+ const dow=+$('hDow').value,from=$('hFrom').value,to=$('hTo').value;if(!from||!to||from>=to)return alert('Choose a valid time range.');
+ const {error}=await sb.from('staff_hours').insert({staff_id:sid,dow,start_time:from,end_time:to});if(error)return alert(friendly(error));scheduleModal(sid)}
+async function rmHours(id,sid){await sb.from('staff_hours').delete().eq('id',id);scheduleModal(sid)}
+async function addLeave(sid){
+ const from=$('lFrom').value,to=$('lTo').value||from;if(!from)return alert('Choose a start date.');if(to<from)return alert('End date cannot be before the start date.');
+ const {error}=await sb.from('staff_leave').insert({staff_id:sid,start_date:from,end_date:to,note:nz($('lNote').value.trim())});if(error)return alert(friendly(error));scheduleModal(sid)}
+async function rmLeave(id,sid){await sb.from('staff_leave').delete().eq('id',id);scheduleModal(sid)}
 boot();
 </script></body></html>
