@@ -336,11 +336,13 @@ function overview(){
  h+=cl.map(x=>`<div class="pr" onclick="openPt('${x.p.id}')"><div>${x.f.map(f=>`<div class="fl">${ic('alert')} ${esc(f)}</div>`).join('')}<div class="mu">${esc(x.p.full_name)} \u00b7 last visit ${fd(lastV(x.p.id).visit_date)}</div></div></div>`).join('');
  h+=missed.map(a=>`<div class="pr" onclick="openPt('${a.patient_id}')"><div class="fl">${ic('clock')} Missed appointment ${fd(a.appt_date)} \u00b7 ${esc((P(a.patient_id)||{}).full_name)}</div></div>`).join('');
  if(!hi)h+='<div class="mu">No alerts.</div>';
+ const pr=D.pts.filter(p=>riskOf(p).level==='priority'&&!cl.some(x=>x.p.id===p.id)).slice(0,5);
+ if(pr.length)h+=`<h3 style="margin:14px 0 6px">Priority patients</h3>`+pr.map(p=>`<div class="pr" onclick="openPt('${p.id}')"><div><b>${esc(p.full_name)}</b><span class="row">${riskPill(p)}</span></div></div>`).join('');
  h+=`<h2>Today\u2019s queue</h2><div class="pr" onclick="nav('queue')"><div><b>${qN()} in the queue</b><div class="mu">${qs.filter(a=>a.status==='waiting').length} waiting \u00b7 ${qs.filter(a=>a.status==='with_nurse').length} with nurse \u00b7 ${qs.filter(a=>a.status==='with_doctor').length} with doctor \u00b7 ${qs.filter(a=>a.status==='lab').length} in lab</div></div><span class="pill">Open queue</span></div>`;
  const H1=h;h='';const upc=D.ap.filter(a=>a.appt_date>t&&a.status==='scheduled').sort((x,y)=>(x.appt_date+(x.appt_time||'')).localeCompare(y.appt_date+(y.appt_time||''))).slice(0,15);
  h+='<h2 style="margin-top:0">Upcoming bookings</h2>'+(upc.length?upc.map(a=>`<div class="pr" onclick="openPt('${a.patient_id}')"><div><b>${esc((P(a.patient_id)||{}).full_name)}</b><div class="mu">${fd(a.appt_date)} \u00b7 ${dsn(a)}</div></div></div>`).join(''):'<div class="mu">No upcoming bookings.</div>');
  const H2=h;h='';h+=`<h2>Patients (${D.pts.length})</h2>${scopeChips()}${pFilter?`<button class="btn g" style="margin-bottom:10px" onclick="pFilter=null;drawDoc()">Showing admitted only \u00d7</button>`:''}<input placeholder="Search name, ID or phone" oninput="filt(this.value)" style="margin-bottom:10px">`;
- h+=pList().map(p=>{const d=p.status==='delivered',n=flags(lastV(p.id)).length;return `<div class="pr" data-q="${esc((p.full_name+' '+p.patient_code+' '+p.phone).toLowerCase())}" onclick="openPt('${p.id}')"><div><b>${esc(p.full_name)}</b> <span class="mu">${esc(p.patient_code)}</span><div class="mu">${d?'Postnatal week '+pnw(p):p.lmp?'Week '+wk(p)+' \u00b7 EDD '+due(p):'No dates'}</div></div><div class="row">${p.admitted_at?'<span class="pill hot">Admitted</span>':''}${n?`<span class="pill hot">${n} flag${n>1?'s':''}</span>`:''}</div></div>`}).join('')||'<div class="mu">No patients registered yet.</div>';
+ h+=[...pList()].sort((a,b)=>riskRank[riskOf(b).level]-riskRank[riskOf(a).level]).map(p=>{const d=p.status==='delivered';return `<div class="pr" data-q="${esc((p.full_name+' '+p.patient_code+' '+p.phone).toLowerCase())}" onclick="openPt('${p.id}')"><div><b>${esc(p.full_name)}</b> <span class="mu">${esc(p.patient_code)}</span><div class="mu">${d?'Postnatal week '+pnw(p):p.lmp?'Week '+wk(p)+' \u00b7 EDD '+due(p):'No dates'}</div></div><div class="row">${p.admitted_at?'<span class="pill hot">Admitted</span>':''}${riskPill(p)}</div></div>`}).join('')||'<div class="mu">No patients registered yet.</div>';
  return {overview:H1,bookings:H2,patients:h,staff:staffView(),admin:adminDash(),assign:assignView(),audit:auditPanel(),chat:staffChat(),queue:queueView(),ambulance:ambulanceView()}[view]||H1}
 function filt(q){q=q.toLowerCase();document.querySelectorAll('.pr[data-q]').forEach(r=>r.style.display=r.dataset.q.includes(q)?'':'none')}
 async function openPt(id){sel=id;D.notes=[];D.plan=[];D.steps=[];drawDoc();scrollTo(0,0);sb.rpc('log_view',{p_patient:id});const [n,p,sl]=await Promise.all([sb.from('clinical_notes').select('*').eq('patient_id',id).order('created_at',{ascending:false}),sb.from('care_plan_items').select('*').eq('patient_id',id).order('done').order('due_date',{ascending:true,nullsFirst:false}),sb.from('step_logs').select('*').eq('patient_id',id).gte('log_date',new Date(Date.now()-13*864e5).toISOString().slice(0,10))]);D.notes=n.data||[];D.plan=p.data||[];D.steps=sl.data||[];if(sel===id)drawDoc()}
@@ -640,7 +642,7 @@ function adminDash(){
  const st=[['users','Patients',D.pts.length,"nav('patients')"],['user','Doctors',by('Doctor'),"nav('staff')"],['user','Midwives',by('Midwife'),"nav('staff')"],['user','Nurses',by('Nurse'),"nav('staff')"],
   ['alert','Without a care team',un.length,"aUn=true;nav('assign')"],['plus','Invites not registered',pending.length,"nav('staff')"],
   ['cal','Appointments today',D.ap.filter(a=>a.appt_date===t&&a.status!=='cancelled').length,"nav('queue')"],['cal','Booked, coming up',D.ap.filter(a=>a.appt_date>t&&a.status==='scheduled').length,"nav('bookings')"],
-  ['bed','Admitted',D.pts.filter(p=>p.admitted_at).length,"nav('patients');pFilter='admitted';drawDoc()"],['alert','Open ambulance requests',ambN(),"nav('ambulance')"],
+  ['bed','Admitted',D.pts.filter(p=>p.admitted_at).length,"nav('patients');pFilter='admitted';drawDoc()"],['alert','Priority patients',D.pts.filter(p=>['critical','priority'].includes(riskOf(p).level)).length,"nav('patients')"],['alert','Open ambulance requests',ambN(),"nav('ambulance')"],
   ['file','Ambulance fees paid','$'+paid,"nav('ambulance')"],['file','Ambulance fees unpaid','$'+owed,"nav('ambulance')"]];
  let h=`<h2 style="margin-top:0">Administrator dashboard</h2><div class="mu" style="margin-bottom:10px">One place to manage staff and who looks after each patient.</div><div class="stats">${st.map(s=>`<div class="st click" role="button" tabindex="0" onclick="${s[3]}">${ic(s[0])}<b>${s[2]}</b><span>${s[1]}</span></div>`).join('')}</div>`;
  h+=`<div class="row" style="margin:14px 0"><button class="btn" onclick="nav('staff')">${ic('plus')} Add or manage staff</button><button class="btn g" onclick="nav('assign')">${ic('user')} Assign patients</button><button class="btn g" onclick="nav('audit')">${ic('shield')} Audit log</button></div>`;
@@ -699,5 +701,25 @@ async function addLeave(sid){
  const {error}=await sb.from('staff_leave').insert({staff_id:sid,start_date:from,end_date:to,note:nz($('lNote').value.trim())});if(error)return alert(friendly(error));scheduleModal(sid)}
 async function rmLeave(id,sid){await sb.from('staff_leave').delete().eq('id',id);scheduleModal(sid)}
 async function promoteNow(pid,title){const p=D.pts.find(x=>x.id===pid);if(!p)return;if(!confirm('Make '+esc(p.full_name)+' a '+title+' now?'))return;const {error}=await sb.from('profiles').update({role:'doctor',staff_title:title}).eq('id',pid);if(error)return alert(friendly(error));await loadDoc()}
+/* ---------- risk radar: combines existing signals into one priority per patient ---------- */
+const RISK_LB={critical:'Critical',priority:'Priority',watch:'Watch'};
+function riskOf(p){
+ const reasons=[];
+ const activeAlert=(D.al||[]).some(a=>a.patient_id===p.id&&a.level==='EMERGENCY'&&!a.acknowledged);
+ if(activeAlert)reasons.push('Unresolved emergency alert from the patient');
+ const activeAmb=(D.amb||[]).some(a=>a.patient_id===p.id&&['requested','dispatched'].includes(a.status));
+ if(activeAmb)reasons.push('Active ambulance request');
+ const v=lastV(p.id);(v?flags(v):[]).forEach(f=>reasons.push(f+(v.visit_date===today()?'':' (visit of '+fd(v.visit_date)+')')));
+ if(p.admitted_at)reasons.push('Currently admitted');
+ const missed=(D.ap||[]).filter(a=>a.patient_id===p.id&&a.status==='missed').length;
+ if(missed>=2)reasons.push(missed+' missed appointments');
+ if((p.gravida||0)>=5)reasons.push('Grand multipara (gravida '+p.gravida+')');
+ if(p.dob){const age=ageOf(p);if(age!=='-'&&(age<18||age>35))reasons.push('Age '+age+(age<18?' \u2013 adolescent pregnancy':' \u2013 advanced maternal age'))}
+ let level='normal';
+ if(activeAlert||activeAmb)level='critical';else if(reasons.length>=2||p.admitted_at)level='priority';else if(reasons.length===1)level='watch';
+ return {level,reasons}}
+function riskPill(p){const r=riskOf(p);if(r.level==='normal')return '';
+ return `<span class="pill hot" style="cursor:help" title="${esc(r.reasons.join('. '))}" onclick="event.stopPropagation();alert(${JSON.stringify(RISK_LB[r.level]+' \u2013 '+p.full_name+'\n\n')}+[${r.reasons.map(x=>JSON.stringify('\u2022 '+x)).join(',')}].join('\n'))">${RISK_LB[r.level]}</span>`}
+const riskRank={critical:3,priority:2,watch:1,normal:0};
 boot();
 </script></body></html>
