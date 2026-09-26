@@ -169,7 +169,7 @@ function authView(msg=''){
  <label class="l">Password</label><div class="f">${ic('lock')}<input id="pw" type="password" autocomplete="${reg?'new-password':'current-password'}"><button class="ib" type="button" onclick="const i=$('pw');i.type=i.type==='password'?'text':'password'">${ic('eye')}</button></div>
  <button class="btn w" onclick="submitAuth()">${ic('login')} ${reg?'Create account':'Sign in'}</button><p class="err" id="msg">${esc(msg)}</p><div class="mu">Maternity Help \u00b7 Clinic system</div><div style="text-align:center;margin-top:8px"><button class="btn g" data-inst style="display:none" onclick="installApp()">${ic('dl')} Install app</button></div></div>`;showInst()}
 async function submitAuth(){
- const em=$('em').value.trim(),pw=$('pw').value,m=$('msg');m.textContent='';
+ const em=$('em').value.trim().toLowerCase(),pw=$('pw').value,m=$('msg');m.textContent='';
  if(!em||pw.length<8)return m.textContent='Enter your email and a password of at least 8 characters.';
  if(mode==='reg'){
   const fn=$('fn').value.trim(),pat=role==='patient',w=pat?+$("wks").value:0;
@@ -396,7 +396,15 @@ function notify(pid){
 function staffPanel(){
  if(!isAdmin())return '';
  return `<h2 style="margin-top:0">Doctors and midwives</h2><div class="mu" style="margin-bottom:8px">Add an email here, then that person registers as Staff with the same email.</div>${D.se.map(x=>`<div class="li"><div>${esc(x.email)} <span class="pill">${x.title}</span></div>${x.email.toLowerCase()===me.email.toLowerCase()?'':`<button class="btn g" onclick="rmStaff('${esc(x.email)}')">${ic('x')} Remove</button>`}</div>`).join('')}<div class="row"><input id="se" type="email" placeholder="staff@email.com"><select id="st" style="width:auto"><option>Doctor</option><option>Midwife</option><option>Nurse</option></select><button class="btn" onclick="addStaff()">${ic('plus')} Add</button></div>`}
-async function addStaff(){const e=$('se').value.trim().toLowerCase();if(!e)return;const {error}=await sb.from('staff_emails').insert({email:e,title:$('st').value});if(error)return alert(error.message);loadDoc()}
+async function addStaff(){
+ const e=$('se').value.trim().toLowerCase(),title=$('st').value;if(!e)return;
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)||(e.match(/@/g)||[]).length!==1)return alert('That does not look like a valid email address. Please check it and try again.');
+ const existing=D.pts.find(p=>(p.email||'').toLowerCase()===e);
+ if(existing&&!confirm(esc(existing.full_name)+' is already registered here as a patient (email '+e+'). Make them a '+title+' now? Their patient record and history stay, but they will log in as staff from now on.'))return;
+ const {error}=await sb.from('staff_emails').insert({email:e,title});
+ if(error)return alert(/duplicate|already exists/i.test(error.message)?'That email is already on the staff list.':error.message);
+ if(existing){const u=await sb.from('profiles').update({role:'doctor',staff_title:title}).eq('id',existing.id);if(u.error)return alert('Added to the staff list, but could not switch the existing account: '+u.error.message)}
+ $('se').value='';await loadDoc()}
 async function rmStaff(e){if(!confirm('Remove '+e+'? Their existing account keeps its access.'))return;await sb.from('staff_emails').delete().eq('email',e);loadDoc()}
 /* ---------- chat ---------- */
 const CH={msgs:[]};let chatPt=null;
@@ -642,10 +650,11 @@ function adminDash(){
  return h}
 function staffView(){
  if(!isAdmin())return '';
- const reg=[...D.staff].sort((a,b)=>stTitle(a).localeCompare(stTitle(b))||(a.full_name||'').localeCompare(b.full_name||'')),pending=D.se.filter(x=>!reg.some(s=>(s.email||'').toLowerCase()===x.email.toLowerCase())),cnt=id=>(D.asg||[]).filter(a=>a.staff_id===id).length;
+ const reg=[...D.staff].sort((a,b)=>stTitle(a).localeCompare(stTitle(b))||(a.full_name||'').localeCompare(b.full_name||'')),cnt=id=>(D.asg||[]).filter(a=>a.staff_id===id).length;
+ const pending=D.se.filter(x=>!reg.some(s=>(s.email||'').toLowerCase()===x.email.toLowerCase())).map(x=>({...x,pt:D.pts.find(p=>(p.email||'').toLowerCase()===x.email.toLowerCase())}));
  let h=`<h2 style="margin-top:0">Staff</h2><div class="card"><h3>Add a doctor, midwife or nurse</h3><div class="mu" style="margin-bottom:8px">Add their email here. They then register on the login page as Staff, using the same email.</div><div class="row"><input id="se" type="email" placeholder="staff@email.com"><select id="st" style="width:auto"><option>Doctor</option><option>Midwife</option><option>Nurse</option></select><button class="btn" onclick="addStaff()">${ic('plus')} Add</button></div></div>`;
  h+=reg.map(s=>`<div class="card" ${s.active===false?'style="opacity:.6"':''}><div class="row" style="justify-content:space-between;align-items:center"><b>${esc(s.full_name)}</b><span class="row"><span class="pill">${stTitle(s)}</span>${s.active===false?'<span class="pill hot">Inactive</span>':''}</span></div><div class="mu">${esc(s.email)} \u00b7 ${cnt(s.id)} patient${cnt(s.id)===1?'':'s'}</div>${s.id===me.id?'<div class="mu">This is you, the administrator.</div>':`<div class="row" style="margin-top:8px"><button class="btn" onclick="assignPatientsModal('${s.id}')">Assign patients</button>${stTitle(s)!=='Nurse'?`<button class="btn g" onclick="scheduleModal('${s.id}')">${ic('cal')} Set schedule</button>`:''}<button class="btn g" onclick="roleModal('${s.id}')">Change role</button><button class="btn g" onclick="setActive('${s.id}',${s.active===false})">${s.active===false?'Reactivate':'Deactivate'}</button></div>`}</div>`).join('')||'<div class="mu">No staff have registered yet.</div>';
- if(pending.length)h+=`<h3 style="margin:16px 0 6px">Waiting to register (${pending.length})</h3>`+pending.map(x=>`<div class="li"><div>${esc(x.email)} <span class="pill">${x.title}</span></div><button class="btn g" onclick="rmStaff('${esc(x.email)}')">${ic('x')} Remove</button></div>`).join('');
+ if(pending.length)h+=`<h3 style="margin:16px 0 6px">Waiting to register (${pending.length})</h3>`+pending.map(x=>`<div class="li"><div>${esc(x.email)} <span class="pill">${x.title}</span>${x.pt?` <span class="pill hot">Already a patient</span>`:''}</div><div class="row">${x.pt?`<button class="btn" onclick="promoteNow('${x.pt.id}','${x.title}')">Make ${x.title} now</button>`:''}<button class="btn g" onclick="rmStaff('${esc(x.email)}')">${ic('x')} Remove</button></div></div>`).join('');
  return h}
 function assignView(){
  if(!isAdmin())return '';
@@ -689,5 +698,6 @@ async function addLeave(sid){
  const from=$('lFrom').value,to=$('lTo').value||from;if(!from)return alert('Choose a start date.');if(to<from)return alert('End date cannot be before the start date.');
  const {error}=await sb.from('staff_leave').insert({staff_id:sid,start_date:from,end_date:to,note:nz($('lNote').value.trim())});if(error)return alert(friendly(error));scheduleModal(sid)}
 async function rmLeave(id,sid){await sb.from('staff_leave').delete().eq('id',id);scheduleModal(sid)}
+async function promoteNow(pid,title){const p=D.pts.find(x=>x.id===pid);if(!p)return;if(!confirm('Make '+esc(p.full_name)+' a '+title+' now?'))return;const {error}=await sb.from('profiles').update({role:'doctor',staff_title:title}).eq('id',pid);if(error)return alert(friendly(error));await loadDoc()}
 boot();
 </script></body></html>
