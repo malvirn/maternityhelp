@@ -156,7 +156,7 @@ function navBody(items,active,bd){
    if(open)body+=`<div class="grpwrap">${sub.map(x=>`<button class="nv sub ${active===x[0]?'on':''}" onclick="nav('${x[0]}')">${ic(x[2])}<span>${x[1]}</span>${bd&&bd[x[0]]?`<span class="bd">${bd[x[0]]}</span>`:''}</button>`).join('')}</div>`}
   else{seen.add(k);body+=`<button class="nv ${active===k?'on':''}" onclick="nav('${k}')">${ic(it[2])}<span>${it[1]}</span>${bd&&bd[k]?`<span class="bd">${bd[k]}</span>`:''}</button>`}});
  return body}
-const navHtml=(items,active,bd)=>`<div class="brand"><img class="logo" src="/logo.png" alt=""> Maternity Help</div><div class="who"><b>${esc(me.full_name)}</b><div class="mu">${me.role==='doctor'?esc(me.staff_title||'Doctor'):'Patient \u00b7 '+esc(me.patient_code)}</div></div>${navBody(items,active,bd)}<div style="flex:1"></div><button class="nv" data-inst style="display:none" onclick="installApp()">${ic('dl')}<span>Install app</span></button><button class="nv" data-tb="1" onclick="toggleTheme()">${tIc()}<span>${tLb()}</span></button><button class="nv" onclick="logout()">${ic('out')}<span>Log out</span></button>`;
+const navHtml=(items,active,bd)=>`<div class="brand"><img class="logo" src="/logo.png" alt=""> Maternity Help</div><div class="who"><b>${esc(me.full_name)}</b><div class="mu">${me.role==='doctor'?esc(me.staff_title||'Doctor'):'Patient \u00b7 '+esc(me.patient_code)}</div></div>${navBody(items,active,bd)}<div style="flex:1"></div><button class="nv" data-inst style="display:none" onclick="installApp()">${ic('dl')}<span>Install app</span></button><button class="nv" onclick="changePwModal()">${ic('lock')}<span>Change password</span></button><button class="nv" data-tb="1" onclick="toggleTheme()">${tIc()}<span>${tLb()}</span></button><button class="nv" onclick="logout()">${ic('out')}<span>Log out</span></button>`;
 let dip=null;const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone;
 function showInst(){document.querySelectorAll('[data-inst]').forEach(b=>b.style.display=standalone()?'none':'')}
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e;showInst()});
@@ -170,10 +170,10 @@ function nav(k){document.body.classList.remove('nav');if(me.role==='doctor'){vie
 async function logout(){chans.forEach(c=>sb.removeChannel(c));chans=[];me=null;sel=null;view='overview';ptab='home';ptLoaded=false;lastAl=-1;lastQ={};qInit=false;CH.msgs=[];chatPt=null;if(CALL)endCall('me');await sb.auth.signOut();authView()}
 function authView(msg=''){
  document.body.classList.remove('in','nav','sos');sosStop();{const f=document.getElementById('sosfab');if(f)f.remove()}document.title='Maternity Help';
- const reg=mode==='reg',pat=role==='patient';
+ const reg=mode==='reg',pat=true;
  app.innerHTML=`<div class="card auth"><div style="text-align:right"><button class="ib" data-tb="" title="Change theme" onclick="toggleTheme()">${tIc()}</button></div><div style="display:flex;justify-content:center"><img class="logo big" src="/logo.png" alt="Maternity Help"></div><h1>${reg?'Register':'Sign in'}</h1><p class="tag">Care for you and your baby, every week</p><div class="mu">${reg?'Create your account':'Use your Maternity Help account'}</div>
  <div class="seg"><button class="btn ${!reg?'on':''}" onclick="mode='login';authView()">Log in</button><button class="btn ${reg?'on':''}" onclick="mode='reg';authView()">Register</button></div>
- ${reg?`<div class="seg"><button class="btn ${pat?'on':''}" onclick="role='patient';authView()">${ic('user')} Patient</button><button class="btn ${!pat?'on':''}" onclick="role='doctor';authView()">${ic('heart')} Staff</button></div>
+ ${reg?`<div class="mu" style="margin-bottom:6px">Sign-up is for patients. Doctors, midwives and nurses get their accounts from the hospital administrator.</div>
  <label class="l">Full name</label><div class="f">${ic('user')}<input id="fn" autocomplete="name"></div>
  ${pat?`<label class="l">Phone</label><div class="f">${ic('msg')}<input id="ph" type="tel" autocomplete="tel"></div><label class="l">Weeks pregnant now (1-40)</label><div class="f">${ic('cal')}<input id="wks" type="number" min="1" max="40"></div>`:''}`:''}
  <label class="l">Email</label><div class="f">${ic('mail')}<input id="em" type="email" autocomplete="email"></div>
@@ -183,9 +183,9 @@ async function submitAuth(){
  const em=$('em').value.trim().toLowerCase(),pw=$('pw').value,m=$('msg');m.textContent='';
  if(!em||pw.length<8)return m.textContent='Enter your email and a password of at least 8 characters.';
  if(mode==='reg'){
-  const fn=$('fn').value.trim(),pat=role==='patient',w=pat?+$("wks").value:0;
+  const fn=$('fn').value.trim(),pat=true,w=+$("wks").value;
   if(!fn||(pat&&!(w>=1&&w<=40)))return m.textContent='Fill in every field. Weeks must be 1 to 40.';
-  const {data,error}=await sb.auth.signUp({email:em,password:pw,options:{data:{full_name:fn,phone:pat?$('ph').value.trim():'',weeks:pat?w:'',wants:role}}});
+  const {data,error}=await sb.auth.signUp({email:em,password:pw,options:{data:{full_name:fn,phone:$('ph').value.trim(),weeks:w}}});
   if(error)return m.textContent=error.message;
   if(!data.session){mode='login';return authView('Account created. Check your email to confirm it, then log in.')}
  }else{const {error}=await sb.auth.signInWithPassword({email:em,password:pw});if(error)return m.textContent=error.message}
@@ -408,19 +408,6 @@ const isAdmin=()=>(me?.email||'').toLowerCase()==='malvirngomo8@gmail.com';
 function notify(pid){
  modal('Notify patient',`<label class="l">Type</label><select name="kind">${KINDS.map(k=>`<option value="${k[0]}">${k[1]}</option>`).join('')}</select><label class="l">Priority</label><select name="priority"><option value="routine">Routine</option><option value="important">Important</option><option value="urgent">Urgent</option></select>${fld('Title','title','text','','required maxlength="200"')}<label class="l">Details</label><textarea name="body" maxlength="2000"></textarea>`,async f=>{
   const {error}=await sb.from('notifications').insert({patient_id:pid,kind:f.kind,priority:f.priority,title:f.title.trim(),body:nz(f.body)});if(error)throw error})}
-function staffPanel(){
- if(!isAdmin())return '';
- return `<h2 style="margin-top:0">Doctors and midwives</h2><div class="mu" style="margin-bottom:8px">Add an email here, then that person registers as Staff with the same email.</div>${D.se.map(x=>`<div class="li"><div>${esc(x.email)} <span class="pill">${x.title}</span></div>${x.email.toLowerCase()===me.email.toLowerCase()?'':`<button class="btn g" onclick="rmStaff('${esc(x.email)}')">${ic('x')} Remove</button>`}</div>`).join('')}<div class="row"><input id="se" type="email" placeholder="staff@email.com"><select id="st" style="width:auto"><option>Doctor</option><option>Midwife</option><option>Nurse</option></select><button class="btn" onclick="addStaff()">${ic('plus')} Add</button></div>`}
-async function addStaff(){
- const e=$('se').value.trim().toLowerCase(),title=$('st').value;if(!e)return;
- if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)||(e.match(/@/g)||[]).length!==1)return alert('That does not look like a valid email address. Please check it and try again.');
- const existing=D.pts.find(p=>(p.email||'').toLowerCase()===e);
- if(existing&&!confirm(esc(existing.full_name)+' is already registered here as a patient (email '+e+'). Make them a '+title+' now? Their patient record and history stay, but they will log in as staff from now on.'))return;
- const {error}=await sb.from('staff_emails').insert({email:e,title});
- if(error)return alert(/duplicate|already exists/i.test(error.message)?'That email is already on the staff list.':error.message);
- if(existing){const u=await sb.from('profiles').update({role:'doctor',staff_title:title}).eq('id',existing.id);if(u.error)return alert('Added to the staff list, but could not switch the existing account: '+u.error.message)}
- $('se').value='';await loadDoc()}
-async function rmStaff(e){if(!confirm('Remove '+e+'? Their existing account keeps its access.'))return;await sb.from('staff_emails').delete().eq('email',e);loadDoc()}
 /* ---------- chat ---------- */
 const CH={msgs:[]};let chatPt=null;
 const chatUn=()=>me?(me.role==='doctor'?CH.msgs.filter(m=>m.sender_id===m.patient_id&&!m.read).length:CH.msgs.filter(m=>m.sender_id!==me.id&&!m.read).length):0;
@@ -651,10 +638,10 @@ const teamCard=()=>{const t=PD.team||[];return `<div class="card"><h3>Your care 
 function adminDash(){
  if(!isAdmin())return '';
  const t=today(),reg=D.staff,by=x=>reg.filter(s=>s.active!==false&&stTitle(s)===x).length,anti=D.pts.filter(p=>p.status==='antenatal');
- const un=anti.filter(p=>!teamOf(p.id).length),pending=D.se.filter(x=>!reg.some(s=>(s.email||'').toLowerCase()===x.email.toLowerCase()));
+ const un=anti.filter(p=>!teamOf(p.id).length);
  const fees=(D.amb||[]).filter(a=>a.status!=='cancelled'),paid=fees.filter(a=>a.paid).reduce((n,a)=>n+Number(a.fee_usd),0),owed=fees.filter(a=>!a.paid).reduce((n,a)=>n+Number(a.fee_usd),0);
  const st=[['users','Patients',D.pts.length,"nav('patients')"],['user','Doctors',by('Doctor'),"nav('staff')"],['user','Midwives',by('Midwife'),"nav('staff')"],['user','Nurses',by('Nurse'),"nav('staff')"],
-  ['alert','Without a care team',un.length,"aUn=true;nav('assign')"],['plus','Invites not registered',pending.length,"nav('staff')"],
+  ['alert','Without a care team',un.length,"aUn=true;nav('assign')"],
   ['cal','Appointments today',D.ap.filter(a=>a.appt_date===t&&a.status!=='cancelled').length,"nav('queue')"],['cal','Booked, coming up',D.ap.filter(a=>a.appt_date>t&&a.status==='scheduled').length,"nav('bookings')"],
   ['bed','Admitted',D.pts.filter(p=>p.admitted_at).length,"nav('patients');pFilter='admitted';drawDoc()"],['alert','Priority patients',D.pts.filter(p=>['critical','priority'].includes(riskOf(p).level)).length,"nav('patients')"],['alert','Open ambulance requests',ambN(),"nav('ambulance')"],
   ['file','Ambulance fees paid','$'+paid,"nav('ambulance')"],['file','Ambulance fees unpaid','$'+owed,"nav('ambulance')"]];
@@ -667,17 +654,14 @@ function adminDash(){
 function staffView(){
  if(!isAdmin())return '';
  const reg=[...D.staff].sort((a,b)=>stTitle(a).localeCompare(stTitle(b))||(a.full_name||'').localeCompare(b.full_name||'')),cnt=id=>(D.asg||[]).filter(a=>a.staff_id===id).length;
- const pending=D.se.filter(x=>!reg.some(s=>(s.email||'').toLowerCase()===x.email.toLowerCase())).map(x=>({...x,pt:D.pts.find(p=>(p.email||'').toLowerCase()===x.email.toLowerCase())}));
- let h=`<h2 style="margin-top:0">Staff</h2><div class="card"><h3>Add a doctor, midwife or nurse</h3><div class="mu" style="margin-bottom:8px">Add their email here. They then register on the login page as Staff, using the same email.</div><div class="row"><input id="se" type="email" placeholder="staff@email.com"><select id="st" style="width:auto"><option>Doctor</option><option>Midwife</option><option>Nurse</option></select><button class="btn" onclick="addStaff()">${ic('plus')} Add</button></div></div>`;
- h+=reg.map(s=>`<div class="card" ${s.active===false?'style="opacity:.6"':''}><div class="row" style="justify-content:space-between;align-items:center"><b>${esc(s.full_name)}</b><span class="row"><span class="pill">${stTitle(s)}</span>${s.active===false?'<span class="pill hot">Inactive</span>':''}</span></div><div class="mu">${esc(s.email)} \u00b7 ${cnt(s.id)} patient${cnt(s.id)===1?'':'s'}</div><div class="mu">${[s.phone,s.qualification,s.professional_reg_no?'Reg. '+s.professional_reg_no:'',s.years_experience!=null?s.years_experience+' yr'+(s.years_experience===1?'':'s')+' experience':''].filter(Boolean).map(esc).join(' \u00b7 ')||'No extra details yet'}</div>${s.id===me.id?'<div class="mu">This is you, the administrator.</div><div class="row" style="margin-top:8px"><button class="btn g" onclick="detailsModal(\''+s.id+'\')">'+ic('edit')+' Details</button></div>':`<div class="row" style="margin-top:8px"><button class="btn" onclick="assignPatientsModal('${s.id}')">Assign patients</button><button class="btn g" onclick="detailsModal('${s.id}')">${ic('edit')} Details</button>${stTitle(s)!=='Nurse'?`<button class="btn g" onclick="scheduleModal('${s.id}')">${ic('cal')} Set schedule</button>`:''}<button class="btn g" onclick="roleModal('${s.id}')">Change role</button><button class="btn g" onclick="setActive('${s.id}',${s.active===false})">${s.active===false?'Reactivate':'Deactivate'}</button></div>`}</div>`).join('')||'<div class="mu">No staff have registered yet.</div>';
- if(pending.length)h+=`<h3 style="margin:16px 0 6px">Waiting to register (${pending.length})</h3>`+pending.map(x=>`<div class="li"><div>${esc(x.email)} <span class="pill">${x.title}</span>${x.pt?` <span class="pill hot">Already a patient</span>`:''}</div><div class="row">${x.pt?`<button class="btn" onclick="promoteNow('${x.pt.id}','${x.title}')">Make ${x.title} now</button>`:''}<button class="btn g" onclick="rmStaff('${esc(x.email)}')">${ic('x')} Remove</button></div></div>`).join('');
- return h}
+ let h=`<h2 style="margin-top:0">Staff</h2><div class="card"><h3>Doctors, midwives and nurses</h3><div class="mu" style="margin-bottom:8px">Only you create these accounts. Enter their details and a temporary password, then give them their email and password.</div><button class="btn" onclick="createStaffModal()">${ic('plus')} Create staff account</button></div>`;
+ h+=reg.map(s=>`<div class="card" ${s.active===false?'style="opacity:.6"':''}><div class="row" style="justify-content:space-between;align-items:center"><b>${esc(s.full_name)}</b><span class="row"><span class="pill">${stTitle(s)}</span>${s.active===false?'<span class="pill hot">Inactive</span>':''}</span></div><div class="mu">${esc(s.email)} \u00b7 ${cnt(s.id)} patient${cnt(s.id)===1?'':'s'}</div><div class="mu">${[s.phone,s.qualification,s.professional_reg_no?'Reg. '+s.professional_reg_no:'',s.years_experience!=null?s.years_experience+' yr'+(s.years_experience===1?'':'s')+' experience':''].filter(Boolean).map(esc).join(' \u00b7 ')||'No extra details yet'}</div>${s.id===me.id?'<div class="mu">This is you, the administrator.</div><div class="row" style="margin-top:8px"><button class="btn g" onclick="detailsModal(\''+s.id+'\')">'+ic('edit')+' Details</button></div>':`<div class="row" style="margin-top:8px"><button class="btn" onclick="assignPatientsModal('${s.id}')">Assign patients</button><button class="btn g" onclick="detailsModal('${s.id}')">${ic('edit')} Details</button>${stTitle(s)!=='Nurse'?`<button class="btn g" onclick="scheduleModal('${s.id}')">${ic('cal')} Set schedule</button>`:''}<button class="btn g" onclick="resetPwModal('${s.id}')">Reset password</button><button class="btn g" onclick="roleModal('${s.id}')">Change role</button><button class="btn g" onclick="setActive('${s.id}',${s.active===false})">${s.active===false?'Reactivate':'Deactivate'}</button></div>`}</div>`).join('')||'<div class="mu">No staff have registered yet.</div>';
+  return h}
 function assignView(){
  if(!isAdmin())return '';
  const sel=(p,title)=>{const cur=teamOf(p.id).find(s=>stTitle(s)===title);return `<select onchange="assign('${p.id}','${title}',this.value)"><option value="">${title}: none</option>${activeStaff(title).map(s=>`<option value="${s.id}"${cur&&cur.id===s.id?' selected':''}>${esc(s.full_name)}</option>`).join('')}</select>`};
  const rows=D.pts.filter(p=>!aUn||!teamOf(p.id).length).map(p=>`<div class="card asr" data-q="${esc((p.full_name+' '+p.patient_code).toLowerCase())}"><div class="row" style="justify-content:space-between"><b>${esc(p.full_name)}</b><span class="mu">${esc(p.patient_code)}${p.lmp&&p.status==='antenatal'?' \u00b7 Week '+wk(p):''}</span></div><div class="grid" style="margin-top:8px">${['Doctor','Midwife','Nurse'].map(t=>sel(p,t)).join('')}</div></div>`).join('');
- const pending=D.se.filter(x=>!D.staff.some(s=>(s.email||'').toLowerCase()===x.email.toLowerCase()));
- const note=pending.length?`<div class="card" style="border-color:var(--ac)"><b>${pending.length} invited ${pending.length===1?'person hasn\u2019t':'people haven\u2019t'} registered yet</b><div class="mu">They won\u2019t appear in the lists below until they open the site and register with the email you invited: ${pending.map(x=>esc(x.email)+' ('+x.title+')').join(', ')}.</div></div>`:'';
+  const note='';
  return `<h2 style="margin-top:0">Assignments</h2>${note}<div class="row" style="margin-bottom:10px"><input placeholder="Search patients" oninput="filtA(this.value)"><button class="btn ${aUn?'':'g'}" onclick="aUn=!aUn;drawDoc()">${aUn?'Showing unassigned only':'Show unassigned only'}</button></div>${rows||'<div class="mu">No patients to show.</div>'}`}
 const filtA=q=>{q=q.toLowerCase();document.querySelectorAll('.asr').forEach(r=>r.style.display=r.dataset.q.includes(q)?'':'none')};
 async function assign(pid,title,sid){const {error}=await sb.rpc('assign_staff',{p_patient:pid,p_title:title,p_staff:sid||null});if(error)alert(friendly(error));await loadDoc()}
@@ -716,7 +700,6 @@ async function addLeave(sid){
  const from=$('lFrom').value,to=$('lTo').value||from;if(!from)return alert('Choose a start date.');if(to<from)return alert('End date cannot be before the start date.');
  const {error}=await sb.from('staff_leave').insert({staff_id:sid,start_date:from,end_date:to,note:nz($('lNote').value.trim())});if(error)return alert(friendly(error));scheduleModal(sid)}
 async function rmLeave(id,sid){await sb.from('staff_leave').delete().eq('id',id);scheduleModal(sid)}
-async function promoteNow(pid,title){const p=D.pts.find(x=>x.id===pid);if(!p)return;if(!confirm('Make '+esc(p.full_name)+' a '+title+' now?'))return;const {error}=await sb.from('profiles').update({role:'doctor',staff_title:title}).eq('id',pid);if(error)return alert(friendly(error));await loadDoc()}
 /* ---------- risk radar: combines existing signals into one priority per patient ---------- */
 const RISK_LB={critical:'Critical',priority:'Priority',watch:'Watch'};
 function riskOf(p){
@@ -748,5 +731,21 @@ function makeStaffModal(pid){
   if(!confirm('Make '+p.full_name+' a '+f.title+' now?'))return;
   const {error}=await sb.rpc('promote_to_staff',{p_patient:pid,p_title:f.title});if(error)throw error;
   toast(p.full_name+' is now a '+f.title+'.');await loadDoc()},'Make staff')}
+async function callStaffAdmin(body){
+ const {data,error}=await sb.functions.invoke('staff-admin',{body});
+ if(error){let m=error.message;try{const j=await error.context.json();if(j&&j.error)m=j.error}catch(e){}throw new Error(m)}
+ if(data&&data.error)throw new Error(data.error);return data}
+const genPw=()=>{const c='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';let p='';const a=new Uint32Array(10);crypto.getRandomValues(a);a.forEach(n=>p+=c[n%c.length]);return p};
+function createStaffModal(){
+ modal('Create staff account',`<label class="l">Role</label><select name="title"><option>Doctor</option><option>Midwife</option><option>Nurse</option></select>${fld('Full name','full_name','text','','required maxlength="120"')}${fld('Email','email','email','','required')}<label class="l">Temporary password (share it with them)</label><input name="password" type="text" required minlength="8" maxlength="72" value="${genPw()}">${fld('Phone','phone','tel','','maxlength="30"')}${fld('Qualification (e.g. MBChB, SRN, Diploma in Midwifery)','qualification','text','','maxlength="200"')}${fld('Professional registration number','professional_reg_no','text','','maxlength="60"')}${fld('Years of experience','years_experience','number','','min="0" max="60"')}`,async f=>{
+  await callStaffAdmin({action:'create',...f});
+  toast('Account created for '+f.full_name+'. Give them the email and temporary password.');await loadDoc()},'Create account')}
+function resetPwModal(sid){
+ const s=D.staff.find(x=>x.id===sid);if(!s)return;
+ modal('Reset password \u00b7 '+esc(s.full_name),`<div class="mu" style="margin-bottom:6px">Sets a new temporary password. Share it with them privately.</div><label class="l">New temporary password</label><input name="password" type="text" required minlength="8" maxlength="72" value="${genPw()}">`,async f=>{
+  await callStaffAdmin({action:'reset_password',user_id:sid,password:f.password});toast('Password reset for '+s.full_name+'.')},'Reset password')}
+function changePwModal(){
+ modal('Change my password',`<label class="l">New password (8 or more characters)</label><input name="password" type="password" required minlength="8" maxlength="72" autocomplete="new-password">`,async f=>{
+  const {error}=await sb.auth.updateUser({password:f.password});if(error)throw error;toast('Password changed.')},'Change password')}
 boot();
 </script></body></html>
