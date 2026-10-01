@@ -243,7 +243,7 @@ function drawPt(){
  if(ptab==='steps'&&document.activeElement&&document.activeElement.tagName==='INPUT'&&$('pv').contains(document.activeElement))return;
  $('pv').innerHTML={home:ptHome,plan:ptPlan,steps:ptSteps,book:ptBook,appts:ptAppts,chat:()=>threadView(me.id),notes:ptNotes,fees:ptFees}[ptab]();
  if(ptab==='chat')afterChat();
- ambSync()}
+ ambSync();checkReminders()}
 function reminders(){
  const t=today(),tm=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10),r=[];
  const when=a=>svcName(a)+(a.appt_time?' at '+ft(a.appt_time):'');
@@ -252,7 +252,40 @@ function reminders(){
   else if(a.status==='scheduled'&&a.appt_date===tm)r.push({priority:'important',title:'Appointment tomorrow',body:when(a)});
   else if(a.status==='missed')r.push({priority:'important',title:'Missed appointment',body:svcName(a)+' on '+fd(a.appt_date)+'. Please book a new one.'})});
  return r}
-const ntCard=(x,rem)=>`<div class="card ${!x.read&&!rem?'unread':''}" ${rem||x.read?'':`onclick="markRead('${x.id}')"`}><div class="row" style="justify-content:space-between"><b>${esc(x.title)}</b><span class="row">${!x.read&&!rem?'<span class="pill hot">New</span>':''}<span class="pill ${x.priority==='urgent'?'hot':''}">${x.priority}</span></span></div>${x.body?`<div>${esc(x.body)}</div>`:''}<div class="mu">${rem?'Reminder':(KINDS.find(k=>k[0]===x.kind)||[0,'Notice'])[1]+' \u00b7 '+new Date(x.created_at).toLocaleString()}</div></div>`;
+const SOUNDS=[['chime','Chime'],['bell','Bell'],['beep','Beep'],['alarm','Alarm'],['soft','Soft melody']];
+function playSound(name,loops){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();
+ const P={chime:[[880,.0,.25,'sine'],[1320,.25,.5,'sine']],bell:[[660,0,1.2,'sine'],[1320,0,.8,'sine']],beep:[[1000,0,.15,'square'],[1000,.25,.15,'square'],[1000,.5,.15,'square']],alarm:[[800,0,.25,'square'],[600,.3,.25,'square'],[800,.6,.25,'square'],[600,.9,.25,'square']],soft:[[523,0,.3,'triangle'],[659,.3,.3,'triangle'],[784,.6,.6,'triangle']]}[name]||[];
+ const len={chime:.9,bell:1.4,beep:.8,alarm:1.3,soft:1.3}[name]||1;
+ for(let r=0;r<(loops||1);r++)P.forEach(([f,t,d,w])=>{const o=actx.createOscillator(),g=actx.createGain(),t0=actx.currentTime+r*(len+.4)+t;o.type=w;o.frequency.value=f;g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.18,t0+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+d);o.connect(g);g.connect(actx.destination);o.start(t0);o.stop(t0+d+.05)});
+ navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}}
+let nf='all';
+const ntBadge=x=>(x.saved?'<span class="pill">\u2605 Saved</span>':'')+(x.remind_at&&!x.reminded?'<span class="pill">\u{1F514} '+new Date(x.remind_at).toLocaleString([],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+'</span>':'');
+const ntCard=(x,rem)=>`<div class="card ${!x.read&&!rem?'unread':''}" ${rem?'':`style="cursor:pointer" onclick="openNt('${x.id}')"`}><div class="row" style="justify-content:space-between"><b>${esc(x.title)}</b><span class="row">${!x.read&&!rem?'<span class="pill hot">New</span>':''}${rem?'':ntBadge(x)}<span class="pill ${x.priority==='urgent'?'hot':''}">${x.priority}</span></span></div>${x.body?`<div>${esc(x.body)}</div>`:''}<div class="mu">${rem?'Reminder':(KINDS.find(k=>k[0]===x.kind)||[0,'Notice'])[1]+' \u00b7 '+new Date(x.created_at).toLocaleString()}</div></div>`;
+function ntOverlay(x,fired){document.querySelectorAll('.ntov').forEach(e=>e.remove());
+ const m=document.createElement('div');m.className='ov ntov';
+ const pad=n=>String(n).padStart(2,'0'),dl=new Date(Date.now()+36e5),dv=x.remind_at&&!x.reminded?new Date(x.remind_at):dl,val=dv.getFullYear()+'-'+pad(dv.getMonth()+1)+'-'+pad(dv.getDate())+'T'+pad(dv.getHours())+':'+pad(dv.getMinutes());
+ m.innerHTML=`<div class="md" style="padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));overflow-y:auto"><div class="mh"><span>${fired?'\u{1F514} Reminder':esc((KINDS.find(k=>k[0]===x.kind)||[0,'Notice'])[1])}</span><button class="ib" data-x>${ic('x')}</button></div>
+ <h3 style="margin:4px 0">${esc(x.title)}</h3><div class="mu">${new Date(x.created_at).toLocaleString()} \u00b7 ${x.priority}</div><p style="white-space:pre-wrap">${esc(x.body||'No further details.')}</p>
+ <div class="row" style="margin:8px 0"><button class="btn ${x.saved?'':'g'}" data-save>${x.saved?'\u2605 Saved \u00b7 tap to unsave':'\u2606 Save'}</button></div>
+ <h3 style="margin:12px 0 4px">Remind me</h3><label class="l">Date and time</label><input type="datetime-local" data-when value="${val}"><label class="l">Sound</label><div class="row"><select data-snd style="flex:1">${SOUNDS.map(o=>`<option value="${o[0]}"${(x.remind_sound||'chime')===o[0]?' selected':''}>${o[1]}</option>`).join('')}</select><button class="btn g" data-prev>Play</button></div>
+ <div class="row" style="margin-top:10px"><button class="btn" data-set>${ic('bell')} ${x.remind_at&&!x.reminded?'Update reminder':'Set reminder'}</button>${x.remind_at&&!x.reminded?'<button class="btn g" data-clear>Remove</button>':''}</div>
+ <div class="mu" style="margin-top:8px">Reminders sound while Maternity Help is open on your phone.</div></div>`;
+ document.body.appendChild(m);const q=a=>m.querySelector(a);
+ q('[data-x]').onclick=()=>m.remove();m.onclick=e=>{if(e.target===m)m.remove()};
+ q('[data-prev]').onclick=()=>playSound(q('[data-snd]').value);
+ q('[data-save]').onclick=async()=>{const {error}=await sb.from('notifications').update({saved:!x.saved}).eq('id',x.id);if(error)return alert(friendly(error));toast(x.saved?'Removed from saved.':'Saved.');m.remove();loadPatient()};
+ q('[data-set]').onclick=async()=>{const w=q('[data-when]').value,t=w?new Date(w):null;if(!t||isNaN(t)||t.getTime()<=Date.now())return alert('Choose a time in the future.');
+  try{window.Notification&&Notification.permission==='default'&&Notification.requestPermission()}catch(e){}
+  const {error}=await sb.from('notifications').update({remind_at:t.toISOString(),remind_sound:q('[data-snd]').value,reminded:false}).eq('id',x.id);if(error)return alert(friendly(error));FIRED.delete(x.id);playSound(q('[data-snd]').value);toast('Reminder set for '+t.toLocaleString([],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}));m.remove();loadPatient()};
+ const c=q('[data-clear]');if(c)c.onclick=async()=>{const {error}=await sb.from('notifications').update({remind_at:null,remind_sound:null,reminded:false}).eq('id',x.id);if(error)return alert(friendly(error));toast('Reminder removed.');m.remove();loadPatient()}}
+function openNt(id){const x=PD.nt.find(n=>n.id===id);if(!x)return;if(!x.read){x.read=true;sb.from('notifications').update({read:true}).eq('id',id).then(()=>loadPatient())}ntOverlay(x,false)}
+const FIRED=new Set();
+function checkReminders(){if(!me||me.role!=='patient'||!PD||!PD.nt)return;
+ const due=PD.nt.filter(x=>x.remind_at&&!x.reminded&&!FIRED.has(x.id)&&new Date(x.remind_at).getTime()<=Date.now());if(!due.length)return;
+ const x=due[0];FIRED.add(x.id);playSound(x.remind_sound||'chime',x.remind_sound==='alarm'?3:2);
+ try{if(window.Notification&&Notification.permission==='granted')new Notification(x.title,{body:x.body||'Reminder',icon:'/icons/icon-192.png'})}catch(e){}
+ ntOverlay(x,true);sb.from('notifications').update({reminded:true}).eq('id',x.id).then(()=>loadPatient())}
+setInterval(checkReminders,15000);
 async function markRead(id){await sb.from('notifications').update({read:true}).eq('id',id);loadPatient()}
 async function markAll(){await sb.from('notifications').update({read:true}).eq('patient_id',me.id).eq('read',false);loadPatient()}
 const chatCard=()=>{const n=chatUn();return `<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><b>Chat with your midwife</b><div class="mu">${n?n+' unread message'+(n>1?'s':''):'Ask a question or start a video call'}</div></div><button class="btn" onclick="nav('chat')">${ic('msg')} Open chat</button></div>`};
@@ -317,7 +350,9 @@ function ptAppts(){
 function resched(id){const a=PD.ap.find(x=>x.id===id);bk={id,svc:a.service_id,staff:a.staff_id};ptab='book';drawPt()}
 async function cancelAppt(id){if(!confirm('Cancel this appointment?'))return;const {error}=await sb.from('appointments').update({status:'cancelled'}).eq('id',id);if(error)return alert(error.message);loadPatient()}
 function ptNotes(){
- const r=reminders();return `<div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Notifications</h2>${PD.nt.some(x=>!x.read)?`<button class="btn g" onclick="markAll()">Mark all read</button>`:''}</div><div class="mu" style="margin-top:6px">Tap a new notification to mark it as read.</div><div style="margin-top:10px">${r.map(x=>ntCard(x,true)).join('')}${PD.nt.map(x=>ntCard(x,false)).join('')||(r.length?'':'<div class="mu">No notifications yet.</div>')}</div>`}
+ const r=reminders(),list=PD.nt.filter(x=>nf==='saved'?x.saved:nf==='remind'?(x.remind_at&&!x.reminded):true);
+ const chip=(k,l)=>`<button class="btn ${nf===k?'':'g'}" style="padding:4px 12px" onclick="nf='${k}';drawPt()">${l}</button>`;
+ return `<div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Notifications</h2>${PD.nt.some(x=>!x.read)?`<button class="btn g" onclick="markAll()">Mark all read</button>`:''}</div><div class="row" style="margin-top:10px">${chip('all','All')}${chip('saved','\u2605 Saved ('+PD.nt.filter(x=>x.saved).length+')')}${chip('remind','\u{1F514} Reminders ('+PD.nt.filter(x=>x.remind_at&&!x.reminded).length+')')}</div><div class="mu" style="margin-top:6px">Tap a notification to open it, save it or set a reminder.</div><div style="margin-top:10px">${nf==='all'?r.map(x=>ntCard(x,true)).join(''):''}${list.map(x=>ntCard(x,false)).join('')||(nf==='all'&&r.length?'':'<div class="mu">'+(nf==='all'?'No notifications yet.':'Nothing here yet.')+'</div>')}</div>`}
 async function sendAlert(){
  const t=[...document.querySelectorAll('.sy:checked')].map(c=>+c.dataset.i),lvl=t.some(i=>SYM[i][1])?'EMERGENCY':'LABOUR';
  const {error}=await sb.from('alerts').insert({patient_id:me.id,level:lvl,symptoms:t.map(i=>SYM[i][0])});
