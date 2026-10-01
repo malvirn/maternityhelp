@@ -206,7 +206,7 @@ const friendly=e=>{const m=e.message||String(e);return /violates check constrain
 const fld=(l,n,t='text',v='',x='')=>`<label class="l">${l}</label><input name="${n}" type="${t}" value="${esc(v)}" ${x}>`;
 /* ---------- patient ---------- */
 let ptab='home',PD={ap:[],nt:[],svc:[],staff:[],al:[],plan:[],amb:[],steps:[],team:[]},bk={},conf='';
-const PITEMS=[['home','Home','home'],['plan','Care plan','file'],['steps','Daily steps','act'],['book','Book appointment','cal'],['appts','Appointments','clock'],['chat','Messages','msg'],['notes','Notifications','bell']];
+const PITEMS=[['home','Home','home'],['plan','Care plan','file'],['steps','Daily steps','act'],['book','Book appointment','cal'],['appts','Appointments','clock'],['fees','Fees','file'],['chat','Messages','msg'],['notes','Notifications','bell']];
 const KINDS=[['message','Hospital message'],['test_result','New test result'],['medication','Medication reminder'],['follow_up','Follow-up appointment'],['checkup','Antenatal checkup'],['lab','Laboratory appointment'],['ultrasound','Ultrasound appointment'],['doctor_appointment','Doctor appointment'],['missed','Missed appointment']];
 const ft=t=>t?String(t).slice(0,5):'';
 const svcName=a=>(PD.svc.find(x=>x.id===a.service_id)||{}).name||a.kind;
@@ -238,7 +238,7 @@ function drawPt(){
  $('side').innerHTML=navHtml(PITEMS,ptab,{notes:un,chat:chatUn()});setBell(un);showInst();
  if(ptab==='chat'&&$('chat')){paintChat();return}
  if(ptab==='steps'&&document.activeElement&&document.activeElement.tagName==='INPUT'&&$('pv').contains(document.activeElement))return;
- $('pv').innerHTML={home:ptHome,plan:ptPlan,steps:ptSteps,book:ptBook,appts:ptAppts,chat:()=>threadView(me.id),notes:ptNotes}[ptab]();
+ $('pv').innerHTML={home:ptHome,plan:ptPlan,steps:ptSteps,book:ptBook,appts:ptAppts,chat:()=>threadView(me.id),notes:ptNotes,fees:ptFees}[ptab]();
  if(ptab==='chat')afterChat();
  if(ptab==='book')loadSlots();ambSync()}
 function reminders(){
@@ -265,6 +265,13 @@ function ptHome(){
  h+=`<h2>Upcoming checkups</h2>${up.slice(0,3).map(a=>`<div class="li"><div><b>${esc(svcName(a))}</b><div class="mu">${fd(a.appt_date)}${a.appt_time?' at '+ft(a.appt_time):''} \u00b7 ${esc(stfName(a))}</div></div></div>`).join('')||`<div class="mu">No upcoming appointments.</div>`}<button class="btn" onclick="ptab='book';drawPt()">${ic('plus')} Book an appointment</button>`;
  if(!d)h+=`<h2>Pregnancy reminders</h2><div class="card">${tip(w)}<div class="mu" style="margin-top:6px">Clinic visits: ${sched(w)}.</div></div>`;
  return h}
+const FEES=[
+ {cat:'Maternity',items:[['Booking fee',56],['Delivery fee',150],['Unbooked',225],['Suture',20],['Bedding fee',10]]},
+ {cat:'Antenatal',items:[['ANC',1]]},
+ {cat:'Gynaecology',items:[['Gyno consultation',20]]}
+];
+function ptFees(){
+ return `<h2 style="margin-top:0">Fees</h2><div class="mu" style="margin-bottom:10px">Prices are in US dollars (USD).</div>`+FEES.map(g=>`<h3 style="margin:16px 0 6px">${g.cat}</h3>${g.items.map(i=>`<div class="li"><b>${i[0]}</b><span>USD ${i[1]}</span></div>`).join('')}`).join('')}
 function ptPlan(){
  const todo=PD.plan.filter(x=>!x.done),dn=PD.plan.filter(x=>x.done);
  const it=(x,d)=>`<div class="li"><div class="fl" style="color:${d?'var(--tx)':'var(--mu)'}">${ic(d?'check':'clock')}<div><b>${esc(x.title)}</b>${x.due_date?`<div class="mu">${fd(x.due_date)}${x.due_time?' at '+ft(x.due_time):''}</div>`:''}${x.notes?`<div class="mu">${esc(x.notes)}</div>`:''}</div></div></div>`;
