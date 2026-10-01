@@ -209,10 +209,12 @@ let ptab='home',PD={ap:[],nt:[],svc:[],staff:[],al:[],plan:[],amb:[],steps:[],te
 const PITEMS=[['home','Home','home'],['plan','Care plan','file'],['steps','Daily steps','act'],['book','Book appointment','cal'],['appts','Appointments','clock'],['fees','Fees','file'],['chat','Messages','msg'],['notes','Notifications','bell']];
 const KINDS=[['message','Hospital message'],['test_result','New test result'],['medication','Medication reminder'],['follow_up','Follow-up appointment'],['checkup','Antenatal checkup'],['lab','Laboratory appointment'],['ultrasound','Ultrasound appointment'],['doctor_appointment','Doctor appointment'],['missed','Missed appointment']];
 const ft=t=>t?String(t).slice(0,5):'';
+const overdue=a=>a.status==='scheduled'&&new Date(a.appt_date+'T'+(a.appt_time?String(a.appt_time).slice(0,5):'23:59')).getTime()<Date.now();
+const apStat=a=>a.status==='done'?'\u2714\uFE0F Done':a.status==='missed'?'Missed':overdue(a)?'Awaiting doctor confirmation':a.status.replace('_',' ');
 const svcName=a=>(PD.svc.find(x=>x.id===a.service_id)||{}).name||a.kind;
 const stfName=a=>{const f=PD.staff.find(x=>x.id===a.staff_id);return f?f.staff_title+' '+f.full_name:''};
 async function patientView(){
- shell('pv');
+ shell('pv');beat();
  await loadPatient();await loadChat();
  const f='patient_id=eq.'+me.id,ch=sb.channel('pm');
  ['notifications','appointments','alerts','care_plan_items','ambulance_requests'].forEach(t=>ch.on('postgres_changes',{event:'*',schema:'public',table:t,filter:f},loadPatient));
@@ -247,7 +249,7 @@ function reminders(){
  PD.ap.forEach(a=>{
   if(a.status==='scheduled'&&a.appt_date===t)r.push({priority:'urgent',title:'Appointment today',body:when(a)});
   else if(a.status==='scheduled'&&a.appt_date===tm)r.push({priority:'important',title:'Appointment tomorrow',body:when(a)});
-  else if(a.status==='missed'||(a.status==='scheduled'&&a.appt_date<t))r.push({priority:'important',title:'Missed appointment',body:svcName(a)+' on '+fd(a.appt_date)+'. Please book a new one.'})});
+  else if(a.status==='missed')r.push({priority:'important',title:'Missed appointment',body:svcName(a)+' on '+fd(a.appt_date)+'. Please book a new one.'})});
  return r}
 const ntCard=(x,rem)=>`<div class="card ${!x.read&&!rem?'unread':''}" ${rem||x.read?'':`onclick="markRead('${x.id}')"`}><div class="row" style="justify-content:space-between"><b>${esc(x.title)}</b><span class="row">${!x.read&&!rem?'<span class="pill hot">New</span>':''}<span class="pill ${x.priority==='urgent'?'hot':''}">${x.priority}</span></span></div>${x.body?`<div>${esc(x.body)}</div>`:''}<div class="mu">${rem?'Reminder':(KINDS.find(k=>k[0]===x.kind)||[0,'Notice'])[1]+' \u00b7 '+new Date(x.created_at).toLocaleString()}</div></div>`;
 async function markRead(id){await sb.from('notifications').update({read:true}).eq('id',id);loadPatient()}
@@ -276,6 +278,9 @@ function ptPlan(){
  const todo=PD.plan.filter(x=>!x.done),dn=PD.plan.filter(x=>x.done);
  const it=(x,d)=>`<div class="li"><div class="fl" style="color:${d?'var(--tx)':'var(--mu)'}">${ic(d?'check':'clock')}<div><b>${esc(x.title)}</b>${x.due_date?`<div class="mu">${fd(x.due_date)}${x.due_time?' at '+ft(x.due_time):''}</div>`:''}${x.notes?`<div class="mu">${esc(x.notes)}</div>`:''}</div></div></div>`;
  return `<h2 style="margin-top:0">My care plan</h2>`+(PD.plan.length?`<h3>To do</h3>${todo.map(x=>it(x,false)).join('')||'<div class="mu">Nothing left to do.</div>'}<h3 style="margin-top:14px">Completed</h3>${dn.map(x=>it(x,true)).join('')||'<div class="mu">Nothing completed yet.</div>'}`:'<div class="mu">Your doctor or midwife has not added a care plan yet.</div>')}
+const FEE_OPT=[['booking','Booking fee',56],['anc','ANC visit',1],['gyno','Gyno consultation',20]],PAY_OPT=[['cash','Cash at clinic'],['ecocash','EcoCash'],['innbucks','InnBucks'],['insurance','Medical aid / insurance'],['other','Other']];
+function bkForm(){if(bk.id)return '';const fo=FEE_OPT.find(x=>x[0]===bk.fee);
+ return `<div class="card" style="margin-top:12px"><h3 style="margin-top:0">Booking details</h3><label class="l">Fee for this visit</label><select onchange="bk.fee=this.value;drawPt()"><option value="">Select...</option>${FEE_OPT.map(x=>`<option value="${x[0]}"${bk.fee===x[0]?' selected':''}>${x[1]} \u00b7 USD ${x[2]}</option>`).join('')}</select>${fo?`<div class="mu" style="margin-top:6px">Amount to pay: <b>USD ${fo[2]}</b></div>`:''}<label class="l">Reason for visit</label><textarea rows="2" maxlength="500" oninput="bk.reason=this.value">${esc(bk.reason||'')}</textarea><label class="l">Name of person paying</label><input value="${esc(bk.pname!==undefined?bk.pname:(me.full_name||''))}" oninput="bk.pname=this.value"><label class="l">Phone number</label><input type="tel" value="${esc(bk.pphone!==undefined?bk.pphone:(me.phone||''))}" oninput="bk.pphone=this.value"><label class="l">Payment method</label><select onchange="bk.pay=this.value"><option value="">Select...</option>${PAY_OPT.map(x=>`<option value="${x[0]}"${bk.pay===x[0]?' selected':''}>${x[1]}</option>`).join('')}</select></div>`}
 function ptBook(){if(!bk.id&&!bk.staff){const t=(PD.team||[]).find(x=>PD.staff.some(s=>s.id===x.id));if(t)bk.staff=t.id}
  const tm=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
  const o=(arr,v,f)=>arr.map(x=>`<option value="${x.id}"${v===x.id?' selected':''}>${f(x)}</option>`).join('');
@@ -290,17 +295,20 @@ async function loadSlots(){
  const {data,error}=await sb.rpc('available_slots',{p_staff:bk.staff,p_date:bk.date});
  if(!$('slots'))return;if(error){el.innerHTML='<div class="err">'+esc(error.message)+'</div>';return}
  const sl=(data||[]).map(ft).sort();
- el.innerHTML=sl.length?`<label class="l">Available times</label><div class="slots">${sl.map(x=>`<button type="button" class="btn ${bk.time===x?'':'g'}" onclick="bk.time='${x}';drawPt()">${x}</button>`).join('')}</div>${bk.time?`<button class="btn w" onclick="confirmBook()">${ic('check')} ${bk.id?'Confirm new time':'Confirm booking'}</button>`:''}`:'<div class="mu" style="margin-top:8px">No free times with this clinician on this date. Try another day, or a different doctor or midwife.</div>'}
+ el.innerHTML=sl.length?`<label class="l">Available times</label><div class="slots">${sl.map(x=>`<button type="button" class="btn ${bk.time===x?'':'g'}" onclick="bk.time='${x}';drawPt()">${x}</button>`).join('')}</div>${bk.time?`${bkForm()}<button class="btn w" style="margin-top:12px" onclick="confirmBook()">${ic('check')} ${bk.id?'Confirm new time':'Confirm booking'}</button>`:''}`:'<div class="mu" style="margin-top:8px">No free times with this clinician on this date. Try another day, or a different doctor or midwife.</div>'}
 async function confirmBook(){
  const s=PD.svc.find(x=>x.id===bk.svc),f=PD.staff.find(x=>x.id===bk.staff);
  const row={patient_id:me.id,service_id:bk.svc,staff_id:bk.staff,appt_date:bk.date,appt_time:bk.time,kind:s.name,status:'scheduled'};
+ if(!bk.id){const fo=FEE_OPT.find(x=>x[0]===bk.fee),rs=(bk.reason||'').trim(),pn=(bk.pname!==undefined?bk.pname:me.full_name||'').trim(),pp=(bk.pphone!==undefined?bk.pphone:me.phone||'').trim();
+  if(!fo||!rs||!pn||!pp||!bk.pay)return alert('Please fill in the fee, reason, name, phone number and payment method.');
+  Object.assign(row,{fee_item:fo[0],fee_usd:fo[2],reason:rs,payer_name:pn,payer_phone:pp,payment_method:bk.pay})}
  const {error}=bk.id?await sb.from('appointments').update(row).eq('id',bk.id):await sb.from('appointments').insert(row);
  if(error)return alert(/duplicate|unique/i.test(error.message)?'That time was just taken. Please choose another one.':error.message);
  conf=(bk.id?'Rescheduled: ':'Booked: ')+s.name+' with '+f.staff_title+' '+f.full_name+' on '+fd(bk.date)+' at '+bk.time+'.';
  bk={};ptab='appts';await loadPatient()}
 function ptAppts(){
- const t=today(),row=a=>{const can=a.status==='scheduled'&&a.appt_date>t;return `<div class="li"><div><b>${esc(svcName(a))}</b><div class="mu">${fd(a.appt_date)}${a.appt_time?' at '+ft(a.appt_time):''} \u00b7 ${esc(stfName(a))} \u00b7 ${a.status.replace('_',' ')}</div></div>${can?`<div class="row"><button class="btn g" onclick="resched('${a.id}')">Reschedule</button><button class="btn g" onclick="cancelAppt('${a.id}')">Cancel</button></div>`:''}</div>`};
- const up=PD.ap.filter(a=>a.status==='scheduled'&&a.appt_date>=t).reverse(),prev=PD.ap.filter(a=>!(a.status==='scheduled'&&a.appt_date>=t));
+ const t=today(),row=a=>{const can=a.status==='scheduled'&&a.appt_date>t;return `<div class="li"><div><b>${esc(svcName(a))}</b><div class="mu">${fd(a.appt_date)}${a.appt_time?' at '+ft(a.appt_time):''} \u00b7 ${esc(stfName(a))} \u00b7 ${apStat(a)}${a.fee_usd?' \u00b7 USD '+a.fee_usd:''}</div></div>${can?`<div class="row"><button class="btn g" onclick="resched('${a.id}')">Reschedule</button><button class="btn g" onclick="cancelAppt('${a.id}')">Cancel</button></div>`:''}</div>`};
+ const up=PD.ap.filter(a=>a.status==='scheduled'&&!overdue(a)).reverse(),prev=PD.ap.filter(a=>!(a.status==='scheduled'&&!overdue(a)));
  return (conf?`<div class="card" style="border-color:var(--ac)"><div class="fl">${ic('check')} ${esc(conf)}</div></div>`:'')+`<h2>Upcoming</h2>${up.map(row).join('')||'<div class="mu">No upcoming appointments.</div>'}<p class="mu">Appointments can be changed or cancelled until the day before.</p><button class="btn" onclick="ptab='book';drawPt()">${ic('plus')} Book an appointment</button><h2>Previous</h2>${prev.map(row).join('')||'<div class="mu">No previous appointments.</div>'}`}
 function resched(id){const a=PD.ap.find(x=>x.id===id);bk={id,svc:a.service_id,staff:a.staff_id};ptab='book';drawPt()}
 async function cancelAppt(id){if(!confirm('Cancel this appointment?'))return;const {error}=await sb.from('appointments').update({status:'cancelled'}).eq('id',id);if(error)return alert(error.message);loadPatient()}
@@ -325,7 +333,7 @@ function flags(v){const f=[];if(!v)return f;
  const u=(v.urine_protein||'').toLowerCase();if(u&&!/^(neg|nil|-|0|trace)/.test(u))f.push('Protein in urine ('+v.urine_protein+')');
  return f}
 async function doctorView(){
- shell('doc');view=isAdmin()?'admin':isMD()?'overview':'queue';
+ shell('doc');beat();view=isAdmin()?'admin':isMD()?'overview':'queue';
  await loadDoc();await loadChatAll();
  const ch=sb.channel('da');['alerts','appointments','visits','ambulance_requests'].forEach(t=>ch.on('postgres_changes',{event:'*',schema:'public',table:t},loadDoc));
  ch.on('postgres_changes',{event:'INSERT',schema:'public',table:'profiles'},loadDoc);
@@ -359,8 +367,8 @@ function overview(){
  const pr=D.pts.filter(p=>riskOf(p).level==='priority'&&!cl.some(x=>x.p.id===p.id)).slice(0,5);
  if(pr.length)h+=`<h3 style="margin:14px 0 6px">Priority patients</h3>`+pr.map(p=>`<div class="pr" onclick="openPt('${p.id}')"><div><b>${esc(p.full_name)}</b><span class="row">${riskPill(p)}</span></div></div>`).join('');
  h+=`<h2>Today\u2019s queue</h2><div class="pr" onclick="nav('queue')"><div><b>${qN()} in the queue</b><div class="mu">${qs.filter(a=>a.status==='waiting').length} waiting \u00b7 ${qs.filter(a=>a.status==='with_nurse').length} with nurse \u00b7 ${qs.filter(a=>a.status==='with_doctor').length} with doctor \u00b7 ${qs.filter(a=>a.status==='lab').length} in lab</div></div><span class="pill">Open queue</span></div>`;
- const H1=h;h='';const upc=D.ap.filter(a=>a.appt_date>t&&a.status==='scheduled').sort((x,y)=>(x.appt_date+(x.appt_time||'')).localeCompare(y.appt_date+(y.appt_time||''))).slice(0,15);
- h+='<h2 style="margin-top:0">Upcoming bookings</h2>'+(upc.length?upc.map(a=>`<div class="pr" onclick="openPt('${a.patient_id}')"><div><b>${esc((P(a.patient_id)||{}).full_name)}</b><div class="mu">${fd(a.appt_date)} \u00b7 ${dsn(a)}</div></div></div>`).join(''):'<div class="mu">No upcoming bookings.</div>');
+ h+=confirmList(false);const H1=h;h='';const upc=D.ap.filter(a=>a.status==='scheduled'&&!overdue(a)).sort((x,y)=>(x.appt_date+(x.appt_time||'')).localeCompare(y.appt_date+(y.appt_time||''))).slice(0,15);
+ h+=confirmList(true)+'<h2>Upcoming bookings</h2>'+(upc.length?upc.map(a=>`<div class="pr" onclick="openPt('${a.patient_id}')"><div><b>${esc((P(a.patient_id)||{}).full_name)}</b><div class="mu">${fd(a.appt_date)} \u00b7 ${dsn(a)}</div></div></div>`).join(''):'<div class="mu">No upcoming bookings.</div>');
  const H2=h;h='';h+=`<h2>Patients (${D.pts.length})</h2>${scopeChips()}${pFilter?`<button class="btn g" style="margin-bottom:10px" onclick="pFilter=null;drawDoc()">Showing admitted only \u00d7</button>`:''}<input placeholder="Search name, ID or phone" oninput="filt(this.value)" style="margin-bottom:10px">`;
  h+=[...pList()].sort((a,b)=>riskRank[riskOf(b).level]-riskRank[riskOf(a).level]).map(p=>{const d=p.status==='delivered';return `<div class="pr" data-q="${esc((p.full_name+' '+p.patient_code+' '+p.phone).toLowerCase())}" onclick="openPt('${p.id}')"><div><b>${esc(p.full_name)}</b> <span class="mu">${esc(p.patient_code)}</span><div class="mu">${d?'Postnatal week '+pnw(p):p.lmp?'Week '+wk(p)+' \u00b7 EDD '+due(p):'No dates'}</div></div><div class="row">${p.admitted_at?'<span class="pill hot">Admitted</span>':''}${riskPill(p)}${isAdmin()?`<button class="btn g" onclick="event.stopPropagation();makeStaffModal('${p.id}')">Make staff</button>`:''}</div></div>`}).join('')||'<div class="mu">No patients registered yet.</div>';
  return {overview:H1,bookings:H2,patients:h,staff:staffView(),admin:adminDash(),assign:assignView(),audit:auditPanel(),chat:staffChat(),queue:queueView(),ambulance:ambulanceView()}[view]||H1}
@@ -389,6 +397,11 @@ function detail(p){
  <h2>Notify patient</h2><button class="btn" onclick="notify('${p.id}')">${ic('send')} Send notification</button>`;
  return h}
 async function ackAlert(id){const {error}=await sb.from('alerts').update({acknowledged:true}).eq('id',id);if(error)return alert(friendly(error));toast('Feedback sent \u2014 alert acknowledged.');loadDoc()}
+async function confirmAppt(id,st){const a=D.ap.find(x=>x.id===id);const {error}=await sb.from('appointments').update({status:st,confirmed_by:me.id,confirmed_at:new Date().toISOString()}).eq('id',id);if(error)return alert(friendly(error));
+ if(a)await sb.from('notifications').insert(st==='missed'?{patient_id:a.patient_id,kind:'missed',priority:'important',title:'Missed appointment',body:'Your appointment on '+fd(a.appt_date)+' was marked as missed. Please book a new one.'}:{patient_id:a.patient_id,kind:'message',priority:'routine',title:'Appointment completed',body:'Your appointment on '+fd(a.appt_date)+' was marked as done.'});
+ toast(st==='done'?'Marked as done.':'Marked as missed.');loadDoc()}
+const confirmList=(top)=>{const l=D.ap.filter(a=>overdue(a)&&(isAdmin()||!a.staff_id||a.staff_id===me.id)).sort((x,y)=>(x.appt_date+(x.appt_time||'')).localeCompare(y.appt_date+(y.appt_time||'')));
+ return l.length?`<h${top?2:3} style="margin:${top?'0':'14px'} 0 6px">Confirm past appointments (${l.length})</h${top?2:3}>`+l.map(a=>`<div class="li"><div><b>${esc((P(a.patient_id)||{}).full_name)}</b><div class="mu">${fd(a.appt_date)} \u00b7 ${dsn(a)}</div></div><div class="row"><button class="btn" onclick="confirmAppt('${a.id}','done')">\u2714\uFE0F Done</button><button class="btn g" onclick="confirmAppt('${a.id}','missed')">Missed</button></div></div>`).join(''):''};
 async function qa(id,s){const {error}=await sb.from('appointments').update({status:s}).eq('id',id);if(error)alert(error.message);loadDoc()}
 async function consult(pid){try{await ensureToday(pid,'with_doctor')}catch(e){return alert(friendly(e))}sel=pid;await loadDoc();recVisit(pid)}
 const UR=['','Negative','Trace','+','++','+++'],opt=a=>a.map(o=>`<option>${o}</option>`).join('');
@@ -425,9 +438,16 @@ async function loadChat(){const {data}=await sb.from('chat_messages').select('*'
 async function loadChatAll(){const {data}=await sb.from('chat_messages').select('*').order('created_at',{ascending:false}).limit(1000);CH.msgs=(data||[]).reverse();refreshNav()}
 function bubbles(pid){const ms=CH.msgs.filter(m=>m.patient_id===pid).sort((a,b)=>a.created_at.localeCompare(b.created_at));
  return ms.map(m=>{const mine=m.sender_id===me.id;return `<div class="bub ${mine?'me':''}">${mine?'':`<small>${esc(nm2(m.sender_id))}</small>`}${esc(m.body)}<small>${new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</small></div>`}).join('')||'<div class="mu" style="margin:auto">No messages yet. Say hello.</div>'}
+let PR={};
+async function beat(){if(me)try{await sb.from('user_presence').upsert({user_id:me.id,last_seen_at:new Date().toISOString()})}catch(e){}}
+beat();setInterval(beat,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)beat()});
+function presIds(pid){return me.role==='doctor'?[pid]:((PD.team||[]).length?PD.team:PD.staff).map(x=>x.id)}
+function presTxt(ids){const ts=ids.map(i=>PR[i]).filter(Boolean).map(x=>new Date(x).getTime());if(!ts.length)return 'Offline';const m=Math.max(...ts),d=Date.now()-m;if(d<9e4)return '\u{1F7E2} Online';const mins=Math.round(d/6e4);return 'Last seen '+(mins<60?mins+' min ago':new Date(m).toLocaleString([],{weekday:'short',hour:'2-digit',minute:'2-digit'}))}
+async function refreshPres(){const pid=me.role==='doctor'?chatPt:me.id,el=$('pres');if(!el||!pid)return;const ids=presIds(pid);if(!ids.length)return;const {data}=await sb.from('user_presence').select('user_id,last_seen_at').in('user_id',ids);(data||[]).forEach(r=>PR[r.user_id]=r.last_seen_at);const e2=$('pres');if(e2)e2.textContent=presTxt(ids)}
+setInterval(()=>{if(me&&$('pres'))refreshPres()},20000);
 function threadView(pid){
  const st=me.role==='doctor',arg=st?",'"+pid+"'":'';
- return `<div class="chathd">${st?`<button class="btn g" onclick="chatPt=null;drawDoc()">${ic('back')} All</button>`:''}<h2 style="margin:0">${st?esc((D.pts.find(x=>x.id===pid)||{}).full_name||'Patient'):'Maternity team'}</h2><div class="row"><button class="btn g" onclick="startCall(false${arg})">${ic('phone')} Voice</button><button class="btn" onclick="startCall(true${arg})">${ic('video')} Video</button></div></div><div class="chat" id="chat">${bubbles(pid)}</div><div class="row"><input id="cin" placeholder="Type a message" autocomplete="off" onkeydown="if(event.key==='Enter')sendChat()"><button class="btn" onclick="sendChat()">${ic('send')}</button></div><div class="mu" style="margin-top:6px">Chat is not for emergencies.${st?'':' Use the emergency alert on Home.'}</div>`}
+ return `<div class="chathd">${st?`<button class="btn g" onclick="chatPt=null;drawDoc()">${ic('back')} All</button>`:''}<div><h2 style="margin:0">${st?esc((D.pts.find(x=>x.id===pid)||{}).full_name||'Patient'):'Maternity team'}</h2><div class="mu" id="pres">${presTxt(presIds(pid))}</div></div><div class="row"><button class="btn g" onclick="startCall(false${arg})">${ic('phone')} Voice</button><button class="btn" onclick="startCall(true${arg})">${ic('video')} Video</button></div></div><div class="chat" id="chat">${bubbles(pid)}</div><div class="row"><input id="cin" placeholder="Type a message" autocomplete="off" onkeydown="if(event.key==='Enter')sendChat()"><button class="btn" onclick="sendChat()">${ic('send')}</button></div><div class="mu" style="margin-top:6px">Chat is not for emergencies.${st?'':' Use the emergency alert on Home.'}</div>`}
 function staffChat(){
  if(chatPt)return threadView(chatPt);
  const by={};CH.msgs.forEach(m=>{(by[m.patient_id]=by[m.patient_id]||[]).push(m)});
@@ -435,7 +455,7 @@ function staffChat(){
  return `<h2 style="margin-top:0">Messages</h2>`+(rows.map(r=>`<div class="pr" onclick="openChat('${r.pid}')"><div><b>${esc((D.pts.find(x=>x.id===r.pid)||{}).full_name||'Patient')}</b><div class="mu">${esc(r.last.body.slice(0,80))}</div></div>${r.un?`<span class="pill hot">${r.un}</span>`:''}</div>`).join('')||'<div class="mu">No conversations yet. Open a patient and tap Message to start one.</div>')}
 function openChat(pid){view='chat';chatPt=pid;sel=null;drawDoc()}
 function paintChat(){const el=$('chat');if(!el)return;el.innerHTML=bubbles(me.role==='doctor'?chatPt:me.id);el.scrollTop=el.scrollHeight}
-function afterChat(){paintChat();markThread(me.role==='doctor'?chatPt:me.id)}
+function afterChat(){refreshPres();paintChat();markThread(me.role==='doctor'?chatPt:me.id)}
 async function markThread(pid){
  const st=me.role==='doctor',un=CH.msgs.filter(m=>m.patient_id===pid&&!m.read&&(st?m.sender_id===pid:m.sender_id!==me.id));if(!un.length)return;
  un.forEach(m=>m.read=true);refreshNav();
@@ -569,7 +589,7 @@ const activeAmb=()=>(PD.amb||[]).find(a=>['requested','dispatched'].includes(a.s
 let ambBusy=false,sosT=null;
 function ambSync(){
  if(!me||me.role!=='patient')return;const a=activeAmb(),host=document.querySelector('.mainc');
- let f=$('sosfab');if(a){if(f)f.remove()}else if(!f){f=document.createElement('button');f.id='sosfab';f.className='sosfab';f.onclick=ambModal;f.innerHTML=ic('alert')+'<span>SOS</span>';document.body.appendChild(f)}
+ let f=$('sosfab');if(a||ptab!=='home'){if(f)f.remove()}else if(!f){f=document.createElement('button');f.id='sosfab';f.className='sosfab';f.onclick=ambModal;f.innerHTML=ic('alert')+'<span>SOS</span>';document.body.appendChild(f)}
  const r=a||(PD.amb||[]).find(x=>x.status==='arrived'&&Date.now()-new Date(x.arrived_at)<36e5);let b=$('ambbar');
  if(!r||!host){if(b)b.remove();return}
  if(!b){b=document.createElement('div');b.id='ambbar';b.className='sosbar';host.prepend(b)}
