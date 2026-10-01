@@ -210,7 +210,7 @@ const PITEMS=[['home','Home','home'],['plan','Care plan','file'],['steps','Daily
 const KINDS=[['message','Hospital message'],['test_result','New test result'],['medication','Medication reminder'],['follow_up','Follow-up appointment'],['checkup','Antenatal checkup'],['lab','Laboratory appointment'],['ultrasound','Ultrasound appointment'],['doctor_appointment','Doctor appointment'],['missed','Missed appointment']];
 const ft=t=>t?String(t).slice(0,5):'';
 const overdue=a=>a.status==='scheduled'&&new Date(a.appt_date+'T'+(a.appt_time?String(a.appt_time).slice(0,5):'23:59')).getTime()<Date.now();
-const apStat=a=>a.status==='done'?'\u2714\uFE0F Done':a.status==='missed'?'Missed':overdue(a)?'Awaiting doctor confirmation':a.status.replace('_',' ');
+const apStat=a=>a.status==='done'?'\u2714\uFE0F Done':a.status==='missed'?'Missed':a.status==='pending'?'Request sent \u00b7 awaiting administrator':a.status==='rejected'?'Rejected':overdue(a)?'Awaiting doctor confirmation':a.status.replace('_',' ');
 const svcName=a=>(PD.svc.find(x=>x.id===a.service_id)||{}).name||a.kind;
 const stfName=a=>{const f=PD.staff.find(x=>x.id===a.staff_id);return f?f.staff_title+' '+f.full_name:''};
 async function patientView(){
@@ -242,7 +242,7 @@ function drawPt(){
  if(ptab==='steps'&&document.activeElement&&document.activeElement.tagName==='INPUT'&&$('pv').contains(document.activeElement))return;
  $('pv').innerHTML={home:ptHome,plan:ptPlan,steps:ptSteps,book:ptBook,appts:ptAppts,chat:()=>threadView(me.id),notes:ptNotes,fees:ptFees}[ptab]();
  if(ptab==='chat')afterChat();
- if(ptab==='book')loadSlots();ambSync()}
+ ambSync()}
 function reminders(){
  const t=today(),tm=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10),r=[];
  const when=a=>svcName(a)+(a.appt_time?' at '+ft(a.appt_time):'');
@@ -264,7 +264,7 @@ function ptHome(){
  h+=`<h2>Emergency</h2><div class="card">${SYM.map((s,i)=>`<label class="ck"><input type="checkbox" class="sy" data-i="${i}">${s[0]}</label>`).join('')}<button class="btn w" onclick="sendAlert()">${ic('alert')} Send emergency alert to the labour ward</button><button class="btn w" style="margin-top:8px" onclick="ambModal()">${ic('phone')} Request an ambulance \u00b7 USD 80</button><div class="mu" style="margin-top:8px">${al?(al.acknowledged?'Staff have seen your last alert.':'Alert sent. Waiting for staff...'):''}</div></div>`;
  const rec=reminders().concat(PD.nt).slice(0,3);
  h+=`<h2>Recent notifications</h2>${rec.map(x=>ntCard(x,!x.id)).join('')||'<div class="mu">Nothing new.</div>'}`;
- h+=`<h2>Upcoming checkups</h2>${up.slice(0,3).map(a=>`<div class="li"><div><b>${esc(svcName(a))}</b><div class="mu">${fd(a.appt_date)}${a.appt_time?' at '+ft(a.appt_time):''} \u00b7 ${esc(stfName(a))}</div></div></div>`).join('')||`<div class="mu">No upcoming appointments.</div>`}<button class="btn" onclick="ptab='book';drawPt()">${ic('plus')} Book an appointment</button>`;
+ h+=`<h2>Upcoming checkups</h2>${up.slice(0,3).map(a=>`<div class="li"><div><b>${esc(svcName(a))}</b><div class="mu">${fd(a.appt_date)}${a.appt_time?' at '+ft(a.appt_time):''} \u00b7 ${esc(stfName(a))}</div></div></div>`).join('')||`<div class="mu">No upcoming appointments.</div>`}<button class="btn" onclick="ptab='book';drawPt()">${ic('plus')} Request an appointment</button>`;
  if(!d)h+=`<h2>Pregnancy reminders</h2><div class="card">${tip(w)}<div class="mu" style="margin-top:6px">Clinic visits: ${sched(w)}.</div></div>`;
  return h}
 const FEES=[
@@ -278,38 +278,40 @@ function ptPlan(){
  const todo=PD.plan.filter(x=>!x.done),dn=PD.plan.filter(x=>x.done);
  const it=(x,d)=>`<div class="li"><div class="fl" style="color:${d?'var(--tx)':'var(--mu)'}">${ic(d?'check':'clock')}<div><b>${esc(x.title)}</b>${x.due_date?`<div class="mu">${fd(x.due_date)}${x.due_time?' at '+ft(x.due_time):''}</div>`:''}${x.notes?`<div class="mu">${esc(x.notes)}</div>`:''}</div></div></div>`;
  return `<h2 style="margin-top:0">My care plan</h2>`+(PD.plan.length?`<h3>To do</h3>${todo.map(x=>it(x,false)).join('')||'<div class="mu">Nothing left to do.</div>'}<h3 style="margin-top:14px">Completed</h3>${dn.map(x=>it(x,true)).join('')||'<div class="mu">Nothing completed yet.</div>'}`:'<div class="mu">Your doctor or midwife has not added a care plan yet.</div>')}
-const FEE_OPT=[['booking','Booking fee',56],['anc','ANC visit',1],['gyno','Gyno consultation',20]],PAY_OPT=[['cash','Cash at clinic'],['ecocash','EcoCash'],['innbucks','InnBucks'],['insurance','Medical aid / insurance'],['other','Other']];
-function bkForm(){if(bk.id)return '';const fo=FEE_OPT.find(x=>x[0]===bk.fee);
- return `<div class="card" style="margin-top:12px"><h3 style="margin-top:0">Booking details</h3><label class="l">Fee for this visit</label><select onchange="bk.fee=this.value;drawPt()"><option value="">Select...</option>${FEE_OPT.map(x=>`<option value="${x[0]}"${bk.fee===x[0]?' selected':''}>${x[1]} \u00b7 USD ${x[2]}</option>`).join('')}</select>${fo?`<div class="mu" style="margin-top:6px">Amount to pay: <b>USD ${fo[2]}</b></div>`:''}<label class="l">Reason for visit</label><textarea rows="2" maxlength="500" oninput="bk.reason=this.value">${esc(bk.reason||'')}</textarea><label class="l">Name of person paying</label><input value="${esc(bk.pname!==undefined?bk.pname:(me.full_name||''))}" oninput="bk.pname=this.value"><label class="l">Phone number</label><input type="tel" value="${esc(bk.pphone!==undefined?bk.pphone:(me.phone||''))}" oninput="bk.pphone=this.value"><label class="l">Payment method</label><select onchange="bk.pay=this.value"><option value="">Select...</option>${PAY_OPT.map(x=>`<option value="${x[0]}"${bk.pay===x[0]?' selected':''}>${x[1]}</option>`).join('')}</select></div>`}
-function ptBook(){if(!bk.id&&!bk.staff){const t=(PD.team||[]).find(x=>PD.staff.some(s=>s.id===x.id));if(t)bk.staff=t.id}
+const PAY_OPT=[['cash','Cash at clinic'],['ecocash','EcoCash'],['innbucks','InnBucks'],['insurance','Medical aid / insurance'],['other','Other']];
+const FEE_KEYS={'Booking fee':'booking','Delivery fee':'delivery','Unbooked':'unbooked','Suture':'suture','Bedding fee':'bedding','ANC':'anc','Gyno consultation':'gyno'};
+const feeTotal=()=>FEES.flatMap(g=>g.items).filter(i=>(bk.fees||[]).includes(FEE_KEYS[i[0]])).reduce((n,i)=>n+i[1],0);
+function togFee(k){bk.fees=bk.fees||[];const i=bk.fees.indexOf(k);i<0?bk.fees.push(k):bk.fees.splice(i,1);drawPt()}
+function ptBook(){
  const tm=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
  const o=(arr,v,f)=>arr.map(x=>`<option value="${x.id}"${v===x.id?' selected':''}>${f(x)}</option>`).join('');
- return `<div class="card"><h3>${bk.id?'Reschedule appointment':'Book an appointment'}</h3>
- <label class="l">Department / service</label><select onchange="bk.svc=this.value;bk.time=null;drawPt()"><option value="">Select...</option>${o(PD.svc,bk.svc,s=>esc(s.name))}</select>
- <label class="l">Doctor / midwife</label><select onchange="bk.staff=this.value;bk.time=null;drawPt()"><option value="">Select...</option>${o(PD.staff,bk.staff,s=>esc(s.staff_title+' '+s.full_name))}</select>
- <label class="l">Date</label><input type="date" min="${bk.id?tm:today()}" value="${bk.date||''}" onchange="bk.date=this.value;bk.time=null;drawPt()">
- <div id="slots">${bk.svc&&bk.staff&&bk.date?'':'<div class="mu" style="margin-top:8px">Choose a service, a doctor or midwife, and a date to see free times.</div>'}</div></div>`}
-async function loadSlots(){
- const el=$('slots');if(!el||!bk.svc||!bk.staff||!bk.date)return;
- el.innerHTML='<div class="mu" style="margin-top:8px">Loading times...</div>';
- const {data,error}=await sb.rpc('available_slots',{p_staff:bk.staff,p_date:bk.date});
- if(!$('slots'))return;if(error){el.innerHTML='<div class="err">'+esc(error.message)+'</div>';return}
- const sl=(data||[]).map(ft).sort();
- el.innerHTML=sl.length?`<label class="l">Available times</label><div class="slots">${sl.map(x=>`<button type="button" class="btn ${bk.time===x?'':'g'}" onclick="bk.time='${x}';drawPt()">${x}</button>`).join('')}</div>${bk.time?`${bkForm()}<button class="btn w" style="margin-top:12px" onclick="confirmBook()">${ic('check')} ${bk.id?'Confirm new time':'Confirm booking'}</button>`:''}`:'<div class="mu" style="margin-top:8px">No free times with this clinician on this date. Try another day, or a different doctor or midwife.</div>'}
+ const feeBox=bk.id?'':`<h3 style="margin:16px 0 6px">Fees for this visit</h3>${FEES.map(g=>`<div class="mu" style="margin:8px 0 2px">${g.cat}</div>${g.items.map(i=>{const k=FEE_KEYS[i[0]];return `<label class="li" style="cursor:pointer"><span class="fl"><input type="checkbox" style="width:auto" ${(bk.fees||[]).includes(k)?'checked':''} onchange="togFee('${k}')"> ${i[0]}</span><span>USD ${i[1]}</span></label>`}).join('')}`).join('')}<div class="li" style="border-color:var(--ac)"><b>Total to pay</b><b>USD ${feeTotal()}</b></div>
+ <label class="l">Reason for visit</label><textarea rows="2" maxlength="500" oninput="bk.reason=this.value">${esc(bk.reason||'')}</textarea>
+ <label class="l">Name of person paying</label><input value="${esc(bk.pname!==undefined?bk.pname:(me.full_name||''))}" oninput="bk.pname=this.value">
+ <label class="l">Phone number</label><input type="tel" value="${esc(bk.pphone!==undefined?bk.pphone:(me.phone||''))}" oninput="bk.pphone=this.value">
+ <label class="l">Payment method</label><select onchange="bk.pay=this.value"><option value="">Select...</option>${PAY_OPT.map(x=>`<option value="${x[0]}"${bk.pay===x[0]?' selected':''}>${x[1]}</option>`).join('')}</select>`;
+ return `<div class="card"><h3>${bk.id?'Reschedule request':'Request an appointment'}</h3><div class="mu" style="margin-bottom:6px">The administrator will confirm your date, or reply with a comment.</div>
+ <label class="l">Department / service</label><select onchange="bk.svc=this.value"><option value="">Select...</option>${o(PD.svc,bk.svc,s=>esc(s.name))}</select>
+ <label class="l">Preferred doctor / midwife (optional)</label><select onchange="bk.staff=this.value"><option value="">Any available</option>${o(PD.staff,bk.staff,s=>esc(s.staff_title+' '+s.full_name))}</select>
+ <label class="l">Preferred date</label><input type="date" min="${tm}" value="${bk.date||''}" onchange="bk.date=this.value">
+ ${feeBox}
+ <button class="btn w" style="margin-top:12px" onclick="confirmBook()">${ic('send')} ${bk.id?'Send new request':'Send request'}</button></div>`}
+async function loadSlots(){}
 async function confirmBook(){
- const s=PD.svc.find(x=>x.id===bk.svc),f=PD.staff.find(x=>x.id===bk.staff);
- const row={patient_id:me.id,service_id:bk.svc,staff_id:bk.staff,appt_date:bk.date,appt_time:bk.time,kind:s.name,status:'scheduled'};
- if(!bk.id){const fo=FEE_OPT.find(x=>x[0]===bk.fee),rs=(bk.reason||'').trim(),pn=(bk.pname!==undefined?bk.pname:me.full_name||'').trim(),pp=(bk.pphone!==undefined?bk.pphone:me.phone||'').trim();
-  if(!fo||!rs||!pn||!pp||!bk.pay)return alert('Please fill in the fee, reason, name, phone number and payment method.');
-  Object.assign(row,{fee_item:fo[0],fee_usd:fo[2],reason:rs,payer_name:pn,payer_phone:pp,payment_method:bk.pay})}
+ if(!bk.svc||!bk.date)return alert('Please choose a service and a preferred date.');
+ const s=PD.svc.find(x=>x.id===bk.svc);
+ const row={patient_id:me.id,service_id:bk.svc,staff_id:bk.staff||null,appt_date:bk.date,appt_time:null,kind:s.name,status:'pending',admin_comment:null,decided_by:null,decided_at:null};
+ if(!bk.id){const rs=(bk.reason||'').trim(),pn=(bk.pname!==undefined?bk.pname:me.full_name||'').trim(),pp=(bk.pphone!==undefined?bk.pphone:me.phone||'').trim();
+  if(!(bk.fees||[]).length||!rs||!pn||!pp||!bk.pay)return alert('Please tick at least one fee and fill in the reason, name, phone number and payment method.');
+  Object.assign(row,{fee_item:bk.fees[0],fee_items:bk.fees,fee_usd:feeTotal(),reason:rs,payer_name:pn,payer_phone:pp,payment_method:bk.pay})}
  const {error}=bk.id?await sb.from('appointments').update(row).eq('id',bk.id):await sb.from('appointments').insert(row);
- if(error)return alert(/duplicate|unique/i.test(error.message)?'That time was just taken. Please choose another one.':error.message);
- conf=(bk.id?'Rescheduled: ':'Booked: ')+s.name+' with '+f.staff_title+' '+f.full_name+' on '+fd(bk.date)+' at '+bk.time+'.';
+ if(error)return alert(friendly(error));
+ conf=(bk.id?'Reschedule request sent for ':'Request sent for ')+s.name+' on '+fd(bk.date)+'. Waiting for the administrator to confirm.';
  bk={};ptab='appts';await loadPatient()}
 function ptAppts(){
- const t=today(),row=a=>{const can=a.status==='scheduled'&&a.appt_date>t;return `<div class="li"><div><b>${esc(svcName(a))}</b><div class="mu">${fd(a.appt_date)}${a.appt_time?' at '+ft(a.appt_time):''} \u00b7 ${esc(stfName(a))} \u00b7 ${apStat(a)}${a.fee_usd?' \u00b7 USD '+a.fee_usd:''}</div></div>${can?`<div class="row"><button class="btn g" onclick="resched('${a.id}')">Reschedule</button><button class="btn g" onclick="cancelAppt('${a.id}')">Cancel</button></div>`:''}</div>`};
- const up=PD.ap.filter(a=>a.status==='scheduled'&&!overdue(a)).reverse(),prev=PD.ap.filter(a=>!(a.status==='scheduled'&&!overdue(a)));
- return (conf?`<div class="card" style="border-color:var(--ac)"><div class="fl">${ic('check')} ${esc(conf)}</div></div>`:'')+`<h2>Upcoming</h2>${up.map(row).join('')||'<div class="mu">No upcoming appointments.</div>'}<p class="mu">Appointments can be changed or cancelled until the day before.</p><button class="btn" onclick="ptab='book';drawPt()">${ic('plus')} Book an appointment</button><h2>Previous</h2>${prev.map(row).join('')||'<div class="mu">No previous appointments.</div>'}`}
+ const t=today(),row=a=>{const can=(a.status==='scheduled'&&a.appt_date>t)||a.status==='pending';return `<div class="li"><div><b>${esc(svcName(a))}</b><div class="mu">${fd(a.appt_date)}${a.appt_time?' at '+ft(a.appt_time):''} \u00b7 ${esc(stfName(a))} \u00b7 ${apStat(a)}${a.fee_usd?' \u00b7 USD '+a.fee_usd:''}</div>${a.admin_comment?`<div class="mu" style="margin-top:4px"><b>Administrator:</b> ${esc(a.admin_comment)}</div>`:''}</div>${can?`<div class="row">${a.status==='scheduled'?`<button class="btn g" onclick="resched('${a.id}')">Reschedule</button>`:''}<button class="btn g" onclick="cancelAppt('${a.id}')">Cancel</button></div>`:''}</div>`};
+ const live=a=>(a.status==='scheduled'&&!overdue(a))||(a.status==='pending'&&a.appt_date>=t),up=PD.ap.filter(live).reverse(),prev=PD.ap.filter(a=>!live(a));
+ return (conf?`<div class="card" style="border-color:var(--ac)"><div class="fl">${ic('check')} ${esc(conf)}</div></div>`:'')+`<h2>Upcoming</h2>${up.map(row).join('')||'<div class="mu">No upcoming appointments.</div>'}<p class="mu">Requests stay pending until the administrator confirms a date. Confirmed appointments can be changed or cancelled until the day before.</p><button class="btn" onclick="ptab='book';drawPt()">${ic('plus')} Request an appointment</button><h2>Previous</h2>${prev.map(row).join('')||'<div class="mu">No previous appointments.</div>'}`}
 function resched(id){const a=PD.ap.find(x=>x.id===id);bk={id,svc:a.service_id,staff:a.staff_id};ptab='book';drawPt()}
 async function cancelAppt(id){if(!confirm('Cancel this appointment?'))return;const {error}=await sb.from('appointments').update({status:'cancelled'}).eq('id',id);if(error)return alert(error.message);loadPatient()}
 function ptNotes(){
@@ -350,11 +352,11 @@ async function loadDoc(){
  if(qInit)D.ap.forEach(a=>{if(a.appt_date!==today())return;const o=lastQ[a.id],nmx=(P(a.patient_id)||{}).full_name||'Patient';if(a.status==='with_doctor'&&(!o||o.s!=='with_doctor')&&isMD()&&a.handover_by!==me.id)toast('Handover: '+nmx+(a.triage_level?' ('+TL[a.triage_level]+')':''),()=>{view='queue';sel=null;drawDoc()});else if(a.triage_level==='emergency'&&(!o||o.t!=='emergency')&&a.triaged_at)toast('EMERGENCY triage: '+nmx,()=>{view='queue';sel=null;drawDoc()})});
  lastQ={};D.ap.forEach(a=>{lastQ[a.id]={s:a.status,t:a.triage_level}});qInit=true;
  const [e,f,g,ga]=await Promise.all([sb.from('services').select('*'),isAdmin()?sb.from('staff_emails').select('*').order('email'):{data:[]},sb.from('ambulance_requests').select('*').order('requested_at',{ascending:false}).limit(100),sb.from('patient_assignments').select('*')]);D.svc=e.data||[];D.se=f.data||[];D.amb=g.data||[];D.asg=ga.data||[];drawDoc()}
-function drawDoc(){if(!$('doc'))return;$('side').innerHTML=navHtml(DITEMS(),sel?'patients':view,{overview:D.al.length,queue:qN(),ambulance:ambN(),chat:chatUn()});setBell(D.al.length+openAmb());showInst();sosSync();
+function drawDoc(){if(!$('doc'))return;$('side').innerHTML=navHtml(DITEMS(),sel?'patients':view,{overview:D.al.length,queue:qN(),ambulance:ambN(),bookings:isAdmin()?pendingReqs().length:0,chat:chatUn()});setBell(D.al.length+openAmb());showInst();sosSync();
  if(!sel&&view==='chat'&&chatPt&&$('chat')){paintChat();return}
  $('doc').innerHTML=sel&&P(sel)?detail(P(sel)):overview();if(!sel&&view==='chat'&&chatPt)afterChat()}
 function overview(){
- const t=today(),act=D.pts.filter(p=>p.status==='antenatal'),qs=D.ap.filter(a=>a.appt_date===t&&a.status!=='cancelled').sort((x,y)=>(x.appt_time||'').localeCompare(y.appt_time||'')),
+ const t=today(),act=D.pts.filter(p=>p.status==='antenatal'),qs=D.ap.filter(a=>a.appt_date===t&&!['cancelled','pending','rejected'].includes(a.status)).sort((x,y)=>(x.appt_time||'').localeCompare(y.appt_time||'')),
  missed=D.ap.filter(a=>a.appt_date<t&&['scheduled','waiting'].includes(a.status)),
  cl=act.map(p=>({p,f:flags(lastV(p.id))})).filter(x=>x.f.length),hi=D.al.length+cl.length+missed.length+openAmb();
  const st=[['users','Pregnant patients',act.length,"nav('patients')"],['clock','Waiting for consultation',qs.filter(a=>a.status==='waiting').length,"nav('queue')"],['cal','Antenatal visits today',qs.length,"nav('queue')"],['bed','Admitted',D.pts.filter(p=>p.admitted_at).length,"nav('patients');pFilter='admitted';drawDoc()"],['cal','Upcoming appointments',D.ap.filter(a=>a.appt_date>t&&a.status==='scheduled').length,"nav('bookings')"],['alert','High-priority alerts',hi,"document.getElementById('alerts').scrollIntoView({behavior:'smooth'})"]];
@@ -367,8 +369,8 @@ function overview(){
  const pr=D.pts.filter(p=>riskOf(p).level==='priority'&&!cl.some(x=>x.p.id===p.id)).slice(0,5);
  if(pr.length)h+=`<h3 style="margin:14px 0 6px">Priority patients</h3>`+pr.map(p=>`<div class="pr" onclick="openPt('${p.id}')"><div><b>${esc(p.full_name)}</b><span class="row">${riskPill(p)}</span></div></div>`).join('');
  h+=`<h2>Today\u2019s queue</h2><div class="pr" onclick="nav('queue')"><div><b>${qN()} in the queue</b><div class="mu">${qs.filter(a=>a.status==='waiting').length} waiting \u00b7 ${qs.filter(a=>a.status==='with_nurse').length} with nurse \u00b7 ${qs.filter(a=>a.status==='with_doctor').length} with doctor \u00b7 ${qs.filter(a=>a.status==='lab').length} in lab</div></div><span class="pill">Open queue</span></div>`;
- h+=confirmList(false);const H1=h;h='';const upc=D.ap.filter(a=>a.status==='scheduled'&&!overdue(a)).sort((x,y)=>(x.appt_date+(x.appt_time||'')).localeCompare(y.appt_date+(y.appt_time||''))).slice(0,15);
- h+=confirmList(true)+'<h2>Upcoming bookings</h2>'+(upc.length?upc.map(a=>`<div class="pr" onclick="openPt('${a.patient_id}')"><div><b>${esc((P(a.patient_id)||{}).full_name)}</b><div class="mu">${fd(a.appt_date)} \u00b7 ${dsn(a)}</div></div></div>`).join(''):'<div class="mu">No upcoming bookings.</div>');
+ h+=reqList(false)+confirmList(false);const H1=h;h='';const upc=D.ap.filter(a=>a.status==='scheduled'&&!overdue(a)).sort((x,y)=>(x.appt_date+(x.appt_time||'')).localeCompare(y.appt_date+(y.appt_time||''))).slice(0,15);
+ h+=reqList(true)+confirmList(false)+'<h2>Upcoming bookings</h2>'+(upc.length?upc.map(a=>`<div class="pr" onclick="openPt('${a.patient_id}')"><div><b>${esc((P(a.patient_id)||{}).full_name)}</b><div class="mu">${fd(a.appt_date)} \u00b7 ${dsn(a)}</div></div></div>`).join(''):'<div class="mu">No upcoming bookings.</div>');
  const H2=h;h='';h+=`<h2>Patients (${D.pts.length})</h2>${scopeChips()}${pFilter?`<button class="btn g" style="margin-bottom:10px" onclick="pFilter=null;drawDoc()">Showing admitted only \u00d7</button>`:''}<input placeholder="Search name, ID or phone" oninput="filt(this.value)" style="margin-bottom:10px">`;
  h+=[...pList()].sort((a,b)=>riskRank[riskOf(b).level]-riskRank[riskOf(a).level]).map(p=>{const d=p.status==='delivered';return `<div class="pr" data-q="${esc((p.full_name+' '+p.patient_code+' '+p.phone).toLowerCase())}" onclick="openPt('${p.id}')"><div><b>${esc(p.full_name)}</b> <span class="mu">${esc(p.patient_code)}</span><div class="mu">${d?'Postnatal week '+pnw(p):p.lmp?'Week '+wk(p)+' \u00b7 EDD '+due(p):'No dates'}</div></div><div class="row">${p.admitted_at?'<span class="pill hot">Admitted</span>':''}${riskPill(p)}${isAdmin()?`<button class="btn g" onclick="event.stopPropagation();makeStaffModal('${p.id}')">Make staff</button>`:''}</div></div>`}).join('')||'<div class="mu">No patients registered yet.</div>';
  return {overview:H1,bookings:H2,patients:h,staff:staffView(),admin:adminDash(),assign:assignView(),audit:auditPanel(),chat:staffChat(),queue:queueView(),ambulance:ambulanceView()}[view]||H1}
@@ -402,6 +404,20 @@ async function confirmAppt(id,st){const a=D.ap.find(x=>x.id===id);const {error}=
  toast(st==='done'?'Marked as done.':'Marked as missed.');loadDoc()}
 const confirmList=(top)=>{const l=D.ap.filter(a=>overdue(a)&&(isAdmin()||!a.staff_id||a.staff_id===me.id)).sort((x,y)=>(x.appt_date+(x.appt_time||'')).localeCompare(y.appt_date+(y.appt_time||'')));
  return l.length?`<h${top?2:3} style="margin:${top?'0':'14px'} 0 6px">Confirm past appointments (${l.length})</h${top?2:3}>`+l.map(a=>`<div class="li"><div><b>${esc((P(a.patient_id)||{}).full_name)}</b><div class="mu">${fd(a.appt_date)} \u00b7 ${dsn(a)}</div></div><div class="row"><button class="btn" onclick="confirmAppt('${a.id}','done')">\u2714\uFE0F Done</button><button class="btn g" onclick="confirmAppt('${a.id}','missed')">Missed</button></div></div>`).join(''):''};
+const pendingReqs=()=>D.ap.filter(a=>a.status==='pending').sort((x,y)=>x.created_at.localeCompare(y.created_at));
+const feeNames=a=>(a.fee_items||[]).map(k=>Object.keys(FEE_KEYS).find(n=>FEE_KEYS[n]===k)||k).join(', ');
+function reqList(top){if(!isAdmin())return '';const l=pendingReqs();const H=top?'h2':'h3';
+ return `<${H} style="margin:${top?'0':'14px'} 0 6px">Booking requests (${l.length})</${H}>`+(l.length?l.map(a=>`<div class="li" style="display:block"><div><b>${esc((P(a.patient_id)||{}).full_name)}</b> \u00b7 ${esc(a.kind)}</div><div class="mu">Preferred ${fd(a.appt_date)}${a.staff_id?' \u00b7 '+dsn({...a,appt_time:null}).split(' with ').pop():''}</div>${a.reason?`<div class="mu">Reason: ${esc(a.reason)}</div>`:''}${a.fee_usd?`<div class="mu">${esc(feeNames(a))} \u00b7 USD ${a.fee_usd} \u00b7 ${esc(a.payment_method||'')} \u00b7 ${esc(a.payer_name||'')} ${esc(a.payer_phone||'')}</div>`:''}<div class="row" style="margin-top:8px"><button class="btn" onclick="acceptReq('${a.id}')">${ic('check')} Accept</button><button class="btn g" onclick="rejectReq('${a.id}')">Reject</button></div></div>`).join(''):'<div class="mu">No pending requests.</div>')}
+async function decideReq(a,patch,title,body){const {error}=await sb.from('appointments').update({...patch,decided_by:me.id,decided_at:new Date().toISOString()}).eq('id',a.id);if(error)throw error;
+ await sb.from('notifications').insert({patient_id:a.patient_id,kind:'doctor_appointment',priority:'important',title,body});await loadDoc()}
+function acceptReq(id){const a=D.ap.find(x=>x.id===id);if(!a)return;
+ modal('Accept request \u00b7 '+esc((P(a.patient_id)||{}).full_name||''),`<label class="l">Appointment date</label><input type="date" name="d" required min="${today()}" value="${a.appt_date>=today()?a.appt_date:today()}"><label class="l">Time (optional)</label><input type="time" name="t"><label class="l">Comment to patient</label><textarea name="c" maxlength="1000" required placeholder="e.g. Please arrive 15 minutes early and bring your card."></textarea>`,async f=>{
+  const c=f.c.trim();if(!c)throw new Error('Please add a comment.');
+  await decideReq(a,{status:'scheduled',appt_date:f.d,appt_time:f.t||null,admin_comment:c},'Appointment accepted','Your '+a.kind+' appointment is confirmed for '+fd(f.d)+(f.t?' at '+f.t:'')+'. '+c)},'Accept')}
+function rejectReq(id){const a=D.ap.find(x=>x.id===id);if(!a)return;
+ modal('Reject request \u00b7 '+esc((P(a.patient_id)||{}).full_name||''),`<label class="l">Reason for rejecting</label><textarea name="c" maxlength="1000" required placeholder="e.g. No slots that week. Please request another date."></textarea>`,async f=>{
+  const c=f.c.trim();if(!c)throw new Error('Please add a reason.');
+  await decideReq(a,{status:'rejected',admin_comment:c},'Appointment request rejected','Your '+a.kind+' request for '+fd(a.appt_date)+' was not accepted. '+c)},'Reject')}
 async function qa(id,s){const {error}=await sb.from('appointments').update({status:s}).eq('id',id);if(error)alert(error.message);loadDoc()}
 async function consult(pid){try{await ensureToday(pid,'with_doctor')}catch(e){return alert(friendly(e))}sel=pid;await loadDoc();recVisit(pid)}
 const UR=['','Negative','Trace','+','++','+++'],opt=a=>a.map(o=>`<option>${o}</option>`).join('');
@@ -431,7 +447,7 @@ function notify(pid){
 /* ---------- chat ---------- */
 const CH={msgs:[]};let chatPt=null;
 const chatUn=()=>me?(me.role==='doctor'?CH.msgs.filter(m=>m.sender_id===m.patient_id&&!m.read).length:CH.msgs.filter(m=>m.sender_id!==me.id&&!m.read).length):0;
-function refreshNav(){if(!$('side')||!me)return;$('side').innerHTML=me.role==='doctor'?navHtml(DITEMS(),sel?'patients':view,{overview:D.al.length,queue:qN(),ambulance:ambN(),chat:chatUn()}):navHtml(PITEMS,ptab,{notes:PD.nt.filter(x=>!x.read).length,chat:chatUn()});showInst()}
+function refreshNav(){if(!$('side')||!me)return;$('side').innerHTML=me.role==='doctor'?navHtml(DITEMS(),sel?'patients':view,{overview:D.al.length,queue:qN(),ambulance:ambN(),bookings:isAdmin()?pendingReqs().length:0,chat:chatUn()}):navHtml(PITEMS,ptab,{notes:PD.nt.filter(x=>!x.read).length,chat:chatUn()});showInst()}
 const nm2=id=>{const s=(me.role==='doctor'?D.staff:PD.staff).find(x=>x.id===id);if(s)return (s.staff_title||'Doctor')+' '+s.full_name;const p=D.pts.find(x=>x.id===id);return p?p.full_name:(id===me.id?'You':'Clinic team')};
 const myLabel=()=>me.role==='doctor'?(me.staff_title||'Doctor')+' '+me.full_name:me.full_name;
 async function loadChat(){const {data}=await sb.from('chat_messages').select('*').eq('patient_id',me.id).order('created_at',{ascending:true}).limit(500);CH.msgs=data||[];refreshNav()}
@@ -559,7 +575,7 @@ function handover(id){
  modal('Handover to doctor',`<label class="l">Summary for the doctor</label><textarea name="handover_note" required maxlength="1500">${esc(pre)}</textarea>`,async f=>{
   const {error}=await sb.from('appointments').update({status:'with_doctor',handover_note:f.handover_note.trim(),handover_by:me.id}).eq('id',id);if(error)throw error;await loadDoc()})}
 function queueView(){
- const t=today(),all=D.ap.filter(a=>a.appt_date===t&&a.status!=='cancelled'),md=isMD();
+ const t=today(),all=D.ap.filter(a=>a.appt_date===t&&!['cancelled','pending','rejected'].includes(a.status)),md=isMD();
  const qb=(l,fn,g)=>`<button class="btn ${g?'g':''}" onclick="${fn}">${l}</button>`;
  const mins=a=>Math.max(0,Math.round((Date.now()-new Date(a.stage_at||a.created_at))/6e4));
  const card=a=>{const p=P(a.patient_id)||{},v=lastV(a.patient_id),f=v&&v.visit_date===t?flags(v):[],s=a.status,b=[];
@@ -669,7 +685,7 @@ function adminDash(){
  const fees=(D.amb||[]).filter(a=>a.status!=='cancelled'),paid=fees.filter(a=>a.paid).reduce((n,a)=>n+Number(a.fee_usd),0),owed=fees.filter(a=>!a.paid).reduce((n,a)=>n+Number(a.fee_usd),0);
  const st=[['users','Patients',D.pts.length,"nav('patients')"],['user','Doctors',by('Doctor'),"nav('staff')"],['user','Midwives',by('Midwife'),"nav('staff')"],['user','Nurses',by('Nurse'),"nav('staff')"],
   ['alert','Without a care team',un.length,"aUn=true;nav('assign')"],
-  ['cal','Appointments today',D.ap.filter(a=>a.appt_date===t&&a.status!=='cancelled').length,"nav('queue')"],['cal','Booked, coming up',D.ap.filter(a=>a.appt_date>t&&a.status==='scheduled').length,"nav('bookings')"],
+  ['cal','Appointments today',D.ap.filter(a=>a.appt_date===t&&!['cancelled','pending','rejected'].includes(a.status)).length,"nav('queue')"],['cal','Booking requests',pendingReqs().length,"nav('bookings')"],['cal','Booked, coming up',D.ap.filter(a=>a.appt_date>t&&a.status==='scheduled').length,"nav('bookings')"],
   ['bed','Admitted',D.pts.filter(p=>p.admitted_at).length,"nav('patients');pFilter='admitted';drawDoc()"],['alert','Priority patients',D.pts.filter(p=>['critical','priority'].includes(riskOf(p).level)).length,"nav('patients')"],['alert','Open ambulance requests',ambN(),"nav('ambulance')"],
   ['file','Ambulance fees paid','$'+paid,"nav('ambulance')"],['file','Ambulance fees unpaid','$'+owed,"nav('ambulance')"]];
  let h=`<h2 style="margin-top:0">Administrator dashboard</h2><div class="mu" style="margin-bottom:10px">One place to manage staff and who looks after each patient.</div><div class="stats">${st.map(s=>`<div class="st click" role="button" tabindex="0" onclick="${s[3]}">${ic(s[0])}<b>${s[2]}</b><span>${s[1]}</span></div>`).join('')}</div>`;
