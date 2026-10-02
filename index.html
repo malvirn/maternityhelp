@@ -128,11 +128,29 @@ th{color:var(--mu);background:transparent}tr:hover td{background:var(--in)}
 .unread{border-color:var(--ac)!important;box-shadow:none}
 .sev3{border-left-color:var(--rs)}.sev2{border-left-color:#e8a33d}.sev1{border-left-color:var(--mu)}
 a{color:var(--al)}
+
+/* ===== settings ===== */
+[hidden]{display:none!important}
+.sg{background:var(--card);border:1px solid var(--bd);border-radius:14px;margin-bottom:14px;overflow:hidden}
+.sg>header{display:flex;gap:12px;align-items:flex-start;padding:16px}.sg>header>svg{width:22px;height:22px;color:var(--al);flex:none;margin-top:2px}.sg>header h3{margin:0;font-size:17px}.sg>header p{margin:2px 0 0;color:var(--mu);font-size:14px}
+.sr{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border-top:1px solid var(--bd)}.sr .t{min-width:0}.sr .t b{display:block;font-weight:600}.sr .t span{color:var(--mu);font-size:14px}
+.sx{padding:14px 16px;border-top:1px solid var(--bd)}.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}.sgrid .l{margin-top:10px}
+.sw{position:relative;width:46px;height:26px;flex:none;display:inline-block}.sw input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;z-index:1}.sw i{position:absolute;inset:0;border-radius:99px;background:var(--bd);transition:background .15s}.sw i::after{content:'';position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 3px rgba(0,0,0,.3)}.sw input:checked+i{background:var(--gr)}.sw input:checked+i::after{transform:translateX(20px)}.sw input:focus-visible+i{outline:2px solid var(--ac);outline-offset:2px}.sw input:disabled{cursor:not-allowed}.sw input:disabled+i{opacity:.55}
+.mode{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px 16px}.mode button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:12px;border:1.5px solid var(--bd);background:var(--in);color:var(--tx);font:inherit;font-weight:600;cursor:pointer}.mode button svg{width:22px;height:22px;color:var(--mu)}.mode button[aria-checked=true]{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 10%,var(--card))}.mode button[aria-checked=true] svg{color:var(--al)}
+.av{position:relative;display:inline-grid;place-items:center;width:var(--s);height:var(--s);border-radius:50%;overflow:hidden;background:color-mix(in srgb,var(--ac) 14%,var(--in));border:1px solid var(--bd);flex:none;font-size:calc(var(--s)*.36);font-weight:700;color:var(--al)}.av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pwm{height:6px;border-radius:99px;background:var(--bd);overflow:hidden;margin-top:8px}.pwm i{display:block;height:100%;width:0;border-radius:99px;transition:width .2s,background .2s}
+.spin{width:15px;height:15px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spn .7s linear infinite;display:inline-block}@keyframes spn{to{transform:rotate(360deg)}}
+.smsg{margin:10px 0 0;font-size:14px;min-height:1px}.msg-ok{color:var(--gr)}.msg-er{color:var(--rs)}
+.qr{width:180px;height:180px;background:#fff;border-radius:10px;padding:8px}.sec{font-family:ui-monospace,monospace;word-break:break-all;background:var(--in);border:1px solid var(--bd);border-radius:8px;padding:6px 10px;display:inline-block}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media(max-width:640px){.sgrid{grid-template-columns:1fr}.sr{flex-wrap:wrap}.mode{gap:8px}}
 </style></head><body><main id="app"></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
-const sb=supabase.createClient('https://swbvlpplhuezdlbzuuhh.supabase.co','sb_publishable_yNNbCu6kVC00rZ-qKzT0ew_JOK77dEZ');
+const SB_URL='https://swbvlpplhuezdlbzuuhh.supabase.co',SB_KEY='sb_publishable_yNNbCu6kVC00rZ-qKzT0ew_JOK77dEZ';
+const sb=supabase.createClient(SB_URL,SB_KEY);
 const I={
+gear:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',cam:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',key:'<circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 21 2M16 7l3 3"/>',
 alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
 out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
 login:'<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/>',
@@ -159,11 +177,15 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const $=id=>document.getElementById(id),app=$('app');
 const tIc=()=>ic(document.documentElement.dataset.theme==='light'?'moon':'sun');
 const tLb=()=>document.documentElement.dataset.theme==='light'?'Night mode':'Light mode';
-function setTheme(t){document.documentElement.dataset.theme=t;try{localStorage.setItem('theme',t)}catch(e){}
+function setTheme(t){document.documentElement.dataset.theme=t;
  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#f5f6f8':'#0d1117';
  document.querySelectorAll('[data-tb]').forEach(b=>{b.innerHTML=tIc()+(b.dataset.tb?'<span>'+tLb()+'</span>':'')})}
-function toggleTheme(){setTheme(document.documentElement.dataset.theme==='light'?'dark':'light')}
-(()=>{let t='dark';try{t=localStorage.getItem('theme')||'dark'}catch(e){}setTheme(t==='light'?'light':'dark')})();
+const MODES=['light','dark','system'],sysTheme=()=>matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+let themeMode='system';try{themeMode=localStorage.getItem('themeMode')||localStorage.getItem('theme')||'system'}catch(e){}if(!MODES.includes(themeMode))themeMode='system';
+function applyMode(m,persist){themeMode=MODES.includes(m)?m:'system';try{localStorage.setItem('themeMode',themeMode)}catch(e){}setTheme(themeMode==='system'?sysTheme():themeMode);const g=document.getElementById('modes');if(g)modeMark();if(persist&&me)saveSettings({theme:themeMode},true)}
+function toggleTheme(){applyMode(document.documentElement.dataset.theme==='light'?'dark':'light',true)}
+try{matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>{if(themeMode==='system'){setTheme(sysTheme());const g=document.getElementById('modes');if(g)modeMark()}})}catch(e){}
+setTheme(themeMode==='system'?sysTheme():themeMode);
 const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
 const fd=s=>s?new Date(s+'T00:00:00').toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}):'-';
 const ageOf=p=>p.dob?Math.floor((Date.now()-new Date(p.dob+'T00:00:00'))/315576e5):'-';
@@ -190,7 +212,7 @@ function navBody(items,active,bd){
    if(open)body+=`<div class="grpwrap">${sub.map(x=>`<button class="nv sub ${active===x[0]?'on':''}" onclick="nav('${x[0]}')">${ic(x[2])}<span>${x[1]}</span>${bd&&bd[x[0]]?`<span class="bd">${bd[x[0]]}</span>`:''}</button>`).join('')}</div>`}
   else{seen.add(k);body+=`<button class="nv ${active===k?'on':''}" onclick="nav('${k}')">${ic(it[2])}<span>${it[1]}</span>${bd&&bd[k]?`<span class="bd">${bd[k]}</span>`:''}</button>`}});
  return body}
-const navHtml=(items,active,bd)=>`<div class="brand"><img class="logo" src="/logo.png" alt=""> Maternity Help</div><div class="who"><b>${esc(me.full_name)}</b><div class="mu">${me.role==='doctor'?esc(me.staff_title||'Doctor'):'Patient \u00b7 '+esc(me.patient_code)}</div></div>${navBody(items,active,bd)}<div style="flex:1"></div><button class="nv" data-inst style="display:none" onclick="installApp()">${ic('dl')}<span>Install app</span></button><button class="nv" onclick="changePwModal()">${ic('lock')}<span>Change password</span></button><button class="nv" data-tb="1" onclick="toggleTheme()">${tIc()}<span>${tLb()}</span></button><button class="nv" onclick="logout()">${ic('out')}<span>Log out</span></button>`;
+const navHtml=(items,active,bd)=>`<div class="brand"><img class="logo" src="/logo.png" alt=""> Maternity Help</div><div class="who" style="display:flex;gap:10px;align-items:center">${avHtml(38)}<div style="min-width:0"><b>${esc(me.full_name)}</b><div class="mu">${me.role==='doctor'?esc(roleLabel()):'Patient \u00b7 '+esc(me.patient_code)}</div></div></div>${navBody(items,active,bd)}<div style="flex:1"></div><button class="nv" data-inst style="display:none" onclick="installApp()">${ic('dl')}<span>Install app</span></button><button class="nv ${active==='settings'?'on':''}" onclick="nav('settings')">${ic('gear')}<span>Settings</span></button><button class="nv" data-tb="1" onclick="toggleTheme()">${tIc()}<span>${tLb()}</span></button><button class="nv" onclick="logout()">${ic('out')}<span>Log out</span></button>`;
 let dip=null;const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone;
 function showInst(){document.querySelectorAll('[data-inst]').forEach(b=>b.style.display=standalone()?'none':'')}
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e;showInst()});
@@ -201,7 +223,7 @@ function toast(msg,fn){document.querySelectorAll('.toast').forEach(t=>t.remove()
 function setBell(n){const b=$('bellc');if(b){b.textContent=n>9?'9+':n;b.style.display=n?'block':'none'}document.title=(n?'('+n+') ':'')+'Maternity Help'}
 let ptLoaded=false,lastAl=-1,lastQ={},qInit=false;
 function nav(k){document.body.classList.remove('nav');if(me.role==='doctor'){view=k;sel=null;ad.sel=null;ad.data=null;if(k==='audit')loadAudit();if(k==='chat')chatPt=null;if(k==='schedule'){scheduleModal(me.id);view='overview';drawDoc();return}pFilter=null;drawDoc()}else{ptab=k;bk={};conf='';drawPt()}}
-async function logout(){chans.forEach(c=>sb.removeChannel(c));chans=[];me=null;sel=null;view='overview';ptab='home';ptLoaded=false;lastAl=-1;lastQ={};qInit=false;CH.msgs=[];chatPt=null;if(CALL)endCall('me');await sb.auth.signOut();authView()}
+async function logout(){chans.forEach(c=>sb.removeChannel(c));chans=[];me=null;sel=null;view='overview';ptab='home';ptLoaded=false;lastAl=-1;lastQ={};qInit=false;CH.msgs=[];chatPt=null;if(CALL)endCall('me');await sb.auth.signOut({scope:'local'});authView()}
 function authView(msg=''){
  document.body.classList.remove('in','nav','sos');sosStop();{const f=document.getElementById('sosfab');if(f)f.remove()}document.title='Maternity Help';
  const reg=mode==='reg',pat=true;
@@ -226,11 +248,12 @@ async function submitAuth(){
  boot()}
 async function boot(){
  const {data:{session}}=await sb.auth.getSession();if(!session)return authView();
+ if(await mfaNeeded())return mfaPrompt();
  let p=null;for(let i=0;i<3&&!p;i++){({data:p}=await sb.from('profiles').select('*').eq('id',session.user.id).maybeSingle());if(!p)await new Promise(r=>setTimeout(r,500))}
  if(!p){await sb.auth.signOut();return authView('Could not load your account.')}
  if(p.role==='doctor'&&p.active===false){await sb.auth.signOut();return authView('Your staff account has been deactivated. Contact the administrator.')}
  if(session.user.user_metadata?.wants==='doctor'&&p.role!=='doctor'){await sb.auth.signOut();return authView('This email is not an approved staff account.')}
- me=p;p.role==='doctor'?doctorView():patientView()}
+ me=p;initSettings(p);loadAvatar();p.role==='doctor'?doctorView():patientView()}
 function modal(title,body,onSave,btnLabel){
  const m=document.createElement('div');m.className='ov';
  m.innerHTML=`<div class="md"><div class="mh"><span>${title}</span><button class="ib" data-x>${ic('x')}</button></div><form>${body}<button class="btn w" type="submit">${ic('check')} ${btnLabel||'Save'}</button></form></div>`;m.querySelector('.md').style.paddingBottom='env(safe-area-inset-bottom, 0px)';
@@ -268,17 +291,18 @@ async function loadPatient(){
   sb.from('step_logs').select('*').eq('patient_id',me.id).gte('log_date',new Date(Date.now()-13*864e5).toISOString().slice(0,10)).order('log_date',{ascending:false}),
   sb.rpc('my_care_team')]);
  PD={ap:a.data||[],nt:n.data||[],svc:s.data||[],staff:st.data||[],al:al.data||[],plan:cp.data||[],amb:am.data||[],steps:sl.data||[],team:tm.data||[]};
- if(ptLoaded){const nw=PD.nt.filter(x=>!x.read&&!oldN.has(x.id));if(nw.length)toast('New notification: '+nw[0].title+(nw.length>1?' (+'+(nw.length-1)+' more)':''),()=>{ptab='notes';drawPt()})}
+ if(ptLoaded){const nw=PD.nt.filter(x=>!x.read&&!oldN.has(x.id));if(nw.length&&ST.notif.sound)playSound(ST.notif.tone||'chime');if(nw.length)toast('New notification: '+nw[0].title+(nw.length>1?' (+'+(nw.length-1)+' more)':''),()=>{ptab='notes';drawPt()})}
  ptLoaded=true;drawPt()}
 function drawPt(){
  if(!$('pv'))return;const un=PD.nt.filter(x=>!x.read).length;
  $('side').innerHTML=navHtml(PITEMS,ptab,{notes:un,chat:chatUn()});setBell(un);showInst();
  if(ptab==='chat'&&$('chat')){paintChat();return}
  if(ptab==='steps'&&document.activeElement&&document.activeElement.tagName==='INPUT'&&$('pv').contains(document.activeElement))return;
- $('pv').innerHTML={home:ptHome,plan:ptPlan,steps:ptSteps,book:ptBook,appts:ptAppts,chat:()=>threadView(me.id),notes:ptNotes,fees:ptFees}[ptab]();
+ $('pv').innerHTML={home:ptHome,plan:ptPlan,steps:ptSteps,book:ptBook,appts:ptAppts,chat:()=>threadView(me.id),notes:ptNotes,fees:ptFees,settings:settingsView}[ptab]();
  if(ptab==='chat')afterChat();
  ambSync();checkReminders()}
 function reminders(){
+ if(!ST.notif.appt)return [];
  const t=today(),tm=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10),r=[];
  const when=a=>svcName(a)+(a.appt_time?' at '+ft(a.appt_time):'');
  PD.ap.forEach(a=>{
@@ -316,7 +340,7 @@ function openNt(id){const x=PD.nt.find(n=>n.id===id);if(!x)return;if(!x.read){x.
 const FIRED=new Set();
 function checkReminders(){if(!me||me.role!=='patient'||!PD||!PD.nt)return;
  const due=PD.nt.filter(x=>x.remind_at&&!x.reminded&&!FIRED.has(x.id)&&new Date(x.remind_at).getTime()<=Date.now());if(!due.length)return;
- const x=due[0];FIRED.add(x.id);playSound(x.remind_sound||'chime',x.remind_sound==='alarm'?3:2);
+ const x=due[0];FIRED.add(x.id);if(ST.notif.sound)playSound(x.remind_sound||'chime',x.remind_sound==='alarm'?3:2);
  try{if(window.Notification&&Notification.permission==='granted')new Notification(x.title,{body:x.body||'Reminder',icon:'/icons/icon-192.png'})}catch(e){}
  ntOverlay(x,true);sb.from('notifications').update({reminded:true}).eq('id',x.id).then(()=>loadPatient())}
 setInterval(checkReminders,15000);
@@ -420,7 +444,7 @@ async function loadDoc(){
   sb.from('alerts').select('*').eq('acknowledged',false).order('created_at',{ascending:false})]);
  const all=a.data||[];D.pts=all.filter(x=>x.role==='patient');D.staff=all.filter(x=>x.role==='doctor');D.vis=b.data||[];D.ap=c.data||[];D.al=d.data||[];
  if(lastAl>=0&&D.al.length>lastAl)toast('New emergency alert from a patient',()=>{view='overview';sel=null;drawDoc()});lastAl=D.al.length;
- if(qInit)D.ap.forEach(a=>{if(a.appt_date!==today())return;const o=lastQ[a.id],nmx=(P(a.patient_id)||{}).full_name||'Patient';if(a.status==='with_doctor'&&(!o||o.s!=='with_doctor')&&isMD()&&a.handover_by!==me.id)toast('Handover: '+nmx+(a.triage_level?' ('+TL[a.triage_level]+')':''),()=>{view='queue';sel=null;drawDoc()});else if(a.triage_level==='emergency'&&(!o||o.t!=='emergency')&&a.triaged_at)toast('EMERGENCY triage: '+nmx,()=>{view='queue';sel=null;drawDoc()})});
+ if(qInit&&ST.notif.general)D.ap.forEach(a=>{if(a.appt_date!==today())return;const o=lastQ[a.id],nmx=(P(a.patient_id)||{}).full_name||'Patient';if(a.status==='with_doctor'&&(!o||o.s!=='with_doctor')&&isMD()&&a.handover_by!==me.id)toast('Handover: '+nmx+(a.triage_level?' ('+TL[a.triage_level]+')':''),()=>{view='queue';sel=null;drawDoc()});else if(a.triage_level==='emergency'&&(!o||o.t!=='emergency')&&a.triaged_at)toast('EMERGENCY triage: '+nmx,()=>{view='queue';sel=null;drawDoc()})});
  lastQ={};D.ap.forEach(a=>{lastQ[a.id]={s:a.status,t:a.triage_level}});qInit=true;
  const [e,f,g,ga]=await Promise.all([sb.from('services').select('*'),isAdmin()?sb.from('staff_emails').select('*').order('email'):{data:[]},sb.from('ambulance_requests').select('*').order('requested_at',{ascending:false}).limit(100),sb.from('patient_assignments').select('*')]);D.svc=e.data||[];D.se=f.data||[];D.amb=g.data||[];D.asg=ga.data||[];drawDoc()}
 function drawDoc(){if(!$('doc'))return;$('side').innerHTML=navHtml(DITEMS(),sel?'patients':view,{overview:D.al.length,queue:qN(),ambulance:ambN(),bookings:isAdmin()?pendingReqs().length:0,medalerts:medAlerts().filter(x=>x.sev===3).length,chat:chatUn()});setBell(D.al.length+openAmb());showInst();sosSync();
@@ -444,6 +468,7 @@ function overview(){
  h+=reqList(true)+confirmList(false)+'<h2>Upcoming bookings</h2>'+(upc.length?upc.map(a=>`<div class="pr" onclick="openPt('${a.patient_id}')"><div><b>${esc((P(a.patient_id)||{}).full_name)}</b><div class="mu">${fd(a.appt_date)} \u00b7 ${dsn(a)}</div></div></div>`).join(''):'<div class="mu">No upcoming bookings.</div>');
  const H2=h;h='';h+=`<h2>Patients (${D.pts.length})</h2>${scopeChips()}${pFilter?`<button class="btn g" style="margin-bottom:10px" onclick="pFilter=null;drawDoc()">Showing admitted only \u00d7</button>`:''}<input placeholder="Search name, ID or phone" oninput="filt(this.value)" style="margin-bottom:10px">`;
  h+=[...pList()].sort((a,b)=>riskRank[riskOf(b).level]-riskRank[riskOf(a).level]).map(p=>{const d=p.status==='delivered';return `<div class="pr" data-q="${esc((p.full_name+' '+p.patient_code+' '+p.phone).toLowerCase())}" onclick="openPt('${p.id}')"><div><b>${esc(p.full_name)}</b> <span class="mu">${esc(p.patient_code)}</span><div class="mu">${d?'Postnatal week '+pnw(p):p.lmp?'Week '+wk(p)+' \u00b7 EDD '+due(p):'No dates'}</div></div><div class="row">${p.admitted_at?'<span class="pill hot">Admitted</span>':''}${riskPill(p)}${isAdmin()?`<button class="btn g" onclick="event.stopPropagation();makeStaffModal('${p.id}')">Make staff</button>`:''}</div></div>`}).join('')||'<div class="mu">No patients registered yet.</div>';
+ if(view==='settings')return settingsView();
  return {overview:H1,bookings:H2,patients:h,staff:staffView(),admin:adminDash(),assign:assignView(),audit:auditPanel(),chat:staffChat(),queue:queueView(),ambulance:ambulanceView(),beds:bedsView(),medalerts:medAlertsView(),reports:reportsView()}[view]||H1}
 function filt(q){q=q.toLowerCase();document.querySelectorAll('.pr[data-q]').forEach(r=>r.style.display=r.dataset.q.includes(q)?'':'none')}
 async function openPt(id){sel=id;D.notes=[];D.plan=[];D.steps=[];drawDoc();scrollTo(0,0);sb.rpc('log_view',{p_patient:id});const [n,p,sl]=await Promise.all([sb.from('clinical_notes').select('*').eq('patient_id',id).order('created_at',{ascending:false}),sb.from('care_plan_items').select('*').eq('patient_id',id).order('done').order('due_date',{ascending:true,nullsFirst:false}),sb.from('step_logs').select('*').eq('patient_id',id).gte('log_date',new Date(Date.now()-13*864e5).toISOString().slice(0,10))]);D.notes=n.data||[];D.plan=p.data||[];D.steps=sl.data||[];if(sel===id)drawDoc()}
@@ -914,6 +939,142 @@ function reportsView(){const t=today(),ante=D.pts.filter(p=>p.status!=='delivere
   h+=portion('file','Medical report for one patient',`<label class="l">Patient</label><select id="rpt-p"><option value="">Select...</option>${[...D.pts].sort((a,b)=>(a.full_name||'').localeCompare(b.full_name||'')).map(p=>`<option value="${p.id}">${esc(p.full_name)} \u00b7 ${esc(p.patient_code||'')}</option>`).join('')}</select><div class="row" style="margin-top:10px"><button class="btn" onclick="const v=document.getElementById('rpt-p').value;v?medReport(v):alert('Choose a patient first.')">${ic('file')} Generate report</button></div><div class="mu" style="margin-top:8px">Opens a printable report: profile, history, risk assessment, visits, appointments, alerts, care plan and notes. Use Print to save as PDF.</div>`);
   h+=portion('file','Export data (CSV)',`<div class="row"><button class="btn g" onclick="exportCsv('patients')">Patients</button><button class="btn g" onclick="exportCsv('visits')">Visits</button><button class="btn g" onclick="exportCsv('appointments')">Appointments (30 days)</button></div><div class="mu" style="margin-top:8px">Opens in Excel or Google Sheets. Contains confidential patient data.</div>`)}
  return h}
+
+// ===== Settings =====
+const DEF_N={appt:true,checkup:true,med:true,sound:true,general:true,tone:'chime'},IDLES=[0,5,15,30,60];
+let ST={notif:{...DEF_N},idle:0},AVURL='',SV={f:{},sess:null,fac:null,enr:null,off:false,t:0};
+const roleLabel=()=>isAdmin()?'Administrator':me.role==='doctor'?(me.staff_title||'Doctor'):'Patient';
+const initials=n=>(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+const avHtml=sz=>`<span class="av" style="--s:${sz}px">${esc(initials(me&&me.full_name))}${AVURL?`<img src="${AVURL}" alt="Profile photo" onerror="this.remove()">`:''}</span>`;
+function initSettings(p){const x=p.settings||{};ST={notif:{...DEF_N,...(x.notif||{})},idle:IDLES.includes(x.idle)?x.idle:0};if(x.theme&&MODES.includes(x.theme))applyMode(x.theme,false);idleStart()}
+async function saveSettings(patch,quiet){
+ if(patch.notif)ST.notif={...ST.notif,...patch.notif};if('idle' in patch)ST.idle=patch.idle;
+ const val={theme:patch.theme||themeMode,notif:ST.notif,idle:ST.idle};
+ const {error}=await sb.from('profiles').update({settings:val}).eq('id',me.id);
+ if(error){toast('Could not save: '+error.message);return false}
+ me.settings=val;if(!quiet)toast('Saved');return true}
+async function loadAvatar(){if(!me||!me.avatar_url){AVURL='';return}const {data}=await sb.storage.from('avatars').createSignedUrl(me.avatar_url,3600);AVURL=data&&data.signedUrl?data.signedUrl:'';refreshNav();const b=$('avbox');if(b)b.innerHTML=avHtml(72)}
+setInterval(()=>{if(me&&me.avatar_url)loadAvatar()},45*60*1000);
+async function busy(btn,fn){if(!btn||btn.disabled)return;const h=btn.innerHTML;btn.disabled=true;btn.setAttribute('aria-busy','true');btn.innerHTML='<span class="spin" aria-hidden="true"></span> Please wait';try{return await fn()}finally{btn.disabled=false;btn.removeAttribute('aria-busy');btn.innerHTML=h}}
+const setMsg=(id,t,ok)=>{const e=$(id);if(e){e.textContent=t||'';e.className='smsg '+(t?(ok?'msg-ok':'msg-er'):'')}};
+// idle auto-logout
+let idleI=null,idleWarned=false,lastTouch=0;
+function touchAct(){const n=Date.now();if(n-lastTouch<2000)return;lastTouch=n;idleWarned=false;try{localStorage.setItem('lastActive',String(n))}catch(e){}}
+['pointerdown','keydown','touchstart','scroll','mousemove'].forEach(e=>addEventListener(e,touchAct,{passive:true,capture:true}));
+function idleStart(){clearInterval(idleI);idleI=null;if(!ST.idle)return;lastTouch=0;touchAct();idleI=setInterval(idleCheck,10000)}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)idleCheck()});
+function idleCheck(){if(!me||!ST.idle||CALL||document.body.classList.contains('sos'))return;let la=Date.now();try{la=+localStorage.getItem('lastActive')||la}catch(e){}const left=ST.idle*60000-(Date.now()-la);if(left<=0)return idleOut();if(left<=60000&&!idleWarned&&ST.idle>=5){idleWarned=true;toast('You will be signed out in about a minute because of inactivity.')}}
+async function idleOut(){clearInterval(idleI);const m='You were signed out after '+ST.idle+' minutes of inactivity.';await logout();authView(m)}
+// two-step sign-in
+async function mfaNeeded(){try{const {data}=await sb.auth.mfa.getAuthenticatorAssuranceLevel();return !!(data&&data.nextLevel==='aal2'&&data.currentLevel!=='aal2')}catch(e){return false}}
+function mfaPrompt(msg=''){document.body.classList.remove('in','nav','sos');
+ app.innerHTML=`<div class="card auth"><div style="display:flex;justify-content:center"><img class="logo big" src="/logo.png" alt="Maternity Help"></div><h1>Two-step verification</h1><p class="tag">Enter the 6-digit code from your authenticator app</p><label class="l" for="mfc">Verification code</label><div class="f">${ic('lock')}<input id="mfc" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" onkeydown="if(event.key==='Enter')mfaLogin(document.getElementById('mfb'))"></div><button class="btn w" id="mfb" onclick="mfaLogin(this)">${ic('check')} Verify</button><p class="err" id="msg" role="alert">${esc(msg)}</p><div style="text-align:center"><button class="btn g" onclick="mfaBack()">Cancel</button></div></div>`;setTimeout(()=>{const i=$('mfc');i&&i.focus()},60)}
+async function mfaLogin(btn){await busy(btn,async()=>{const code=($('mfc').value||'').replace(/\D/g,'');if(code.length!==6)return $('msg').textContent='Enter the 6-digit code.';
+ const {data:fs}=await sb.auth.mfa.listFactors();const f=((fs&&fs.totp)||[])[0];if(!f)return $('msg').textContent='No authenticator is set up for this account. Contact the administrator.';
+ const {error}=await sb.auth.mfa.challengeAndVerify({factorId:f.id,code});if(error)return $('msg').textContent='That code is not valid or has expired. Try again.';boot()})}
+async function mfaBack(){await sb.auth.signOut({scope:'local'});authView()}
+// password
+const pwScore=p=>[/[a-z]/,/[A-Z]/,/\d/,/[^A-Za-z0-9]/].filter(r=>r.test(p)).length+(p.length>=12?1:0);
+function pwMeter(v){const b=$('pwm-bar'),t=$('pwm-t');if(!b)return;const sc=v?pwScore(v):0,short=v&&v.length<8,lv=!v?['',0,'var(--bd)']:short?['Too short',1,'var(--rs)']:sc<=1?['Weak',1,'var(--rs)']:sc===2?['Fair',2,'#e8a33d']:sc===3?['Good',3,'var(--gr)']:['Strong',4,'var(--gr)'];b.style.width=(lv[1]*25)+'%';b.style.background=lv[2];t.textContent=v?'Strength: '+lv[0]:''}
+function eyeBtn(id,label){return `<button class="ib" type="button" aria-label="Show ${label}" aria-pressed="false" onclick="const i=document.getElementById('${id}');const s=i.type==='password';i.type=s?'text':'password';this.setAttribute('aria-pressed',s);this.setAttribute('aria-label',(s?'Hide ':'Show ')+'${label}')">${ic('eye')}</button>`}
+async function verifyPw(pw){try{const v=supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:'mh-verify'}});const {error}=await v.auth.signInWithPassword({email:me.email,password:pw});if(error)return false;await v.auth.signOut({scope:'local'});return true}catch(e){return false}}
+async function changePw(btn){await busy(btn,async()=>{
+ const f=SV.f,cur=f.cur||'',n=f.npw||'',c=f.cpw||'',er=[];
+ if(!cur)er.push('Enter your current password.');
+ if(n.length<8)er.push('New password must be at least 8 characters.');else if(n.length>72)er.push('New password must be 72 characters or fewer.');else if(pwScore(n)<2)er.push('Use a mix of letters and numbers. Capitals and symbols make it stronger.');
+ if(n&&cur&&n===cur)er.push('New password must be different from your current password.');
+ if(!c)er.push('Confirm your new password.');else if(n&&c!==n)er.push('New password and confirmation do not match.');
+ if(er.length)return setMsg('m-pw',er.join(' '),false);
+ if(!(await verifyPw(cur)))return setMsg('m-pw','Your current password is incorrect.',false);
+ const {error}=await sb.auth.updateUser({password:n});if(error)return setMsg('m-pw',/same|different/i.test(error.message)?'New password must be different from your current password.':error.message,false);
+ await sb.auth.signOut({scope:'others'});
+ SV.f.cur=SV.f.npw=SV.f.cpw='';['st-cur','st-new','st-cnf'].forEach(i=>{const e=$(i);if(e)e.value=''});pwMeter('');
+ setMsg('m-pw','Password changed. Your other devices were signed out.',true);toast('Password changed');loadSessions()})}
+// profile
+async function profSave(btn){await busy(btn,async()=>{
+ const F=SV.f,name=(F.name??me.full_name??'').trim().replace(/\s+/g,' '),phone=(F.phone??me.phone??'').trim(),email=(F.email??me.email??'').trim().toLowerCase(),epw=F.epw||'',er=[];
+ if(name.length<2||name.length>80)er.push('Enter your full name (2 to 80 characters).');
+ if(phone&&!/^\+?[0-9][0-9\s()\-]{6,18}$/.test(phone))er.push('Enter a valid phone number, for example +263 77 123 4567.');
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)||email.length>120)er.push('Enter a valid email address.');
+ const ec=email!==(me.email||'').toLowerCase();if(ec&&!epw)er.push('Enter your current password to change your email.');
+ if(er.length)return setMsg('m-prof',er.join(' '),false);
+ const patch={};if(name!==me.full_name)patch.full_name=name;if(phone!==(me.phone||''))patch.phone=phone||null;
+ if(!Object.keys(patch).length&&!ec)return setMsg('m-prof','Nothing to save. You have not changed anything.',false);
+ if(ec&&!(await verifyPw(epw)))return setMsg('m-prof','Your current password is incorrect.',false);
+ if(Object.keys(patch).length){const {error}=await sb.from('profiles').update(patch).eq('id',me.id);if(error)return setMsg('m-prof',friendly(error),false);Object.assign(me,patch)}
+ let note='Profile saved.';
+ if(ec){const {error}=await sb.auth.updateUser({email});if(error)return setMsg('m-prof',(Object.keys(patch).length?'Your name and phone were saved, but the email could not be changed: ':'')+error.message,false);note=(Object.keys(patch).length?'Profile saved. ':'')+'We sent a confirmation link to '+email+'. Your login email changes after you confirm it.'}
+ SV.f={};const pe=$('st-epw');if(pe)pe.value='';setMsg('m-prof',note,true);toast('Profile updated');refreshNav()})}
+function avUpload(inp){const file=inp.files&&inp.files[0];inp.value='';if(!file)return;
+ if(!/^image\/(jpeg|png|webp)$/.test(file.type))return setMsg('m-av','Choose a JPG, PNG or WebP image.',false);
+ if(file.size>8*1024*1024)return setMsg('m-av','That image is too large. Choose one under 8 MB.',false);
+ setMsg('m-av','Uploading photo...',true);const url=URL.createObjectURL(file),img=new Image();
+ img.onerror=()=>{URL.revokeObjectURL(url);setMsg('m-av','That file could not be read as an image.',false)};
+ img.onload=async()=>{try{const z=320,c=document.createElement('canvas');c.width=c.height=z;const x=c.getContext('2d'),m=Math.min(img.width,img.height);x.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,z,z);URL.revokeObjectURL(url);
+  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.86));if(!blob)throw new Error('Could not process the image.');
+  const path=me.id+'/avatar.jpg',up=await sb.storage.from('avatars').upload(path,blob,{upsert:true,contentType:'image/jpeg',cacheControl:'3600'});if(up.error)throw up.error;
+  const {error}=await sb.from('profiles').update({avatar_url:path}).eq('id',me.id);if(error)throw error;me.avatar_url=path;await loadAvatar();const rm=$('avrm');if(rm)rm.hidden=false;setMsg('m-av','Photo updated.',true);toast('Profile photo updated')}catch(e){setMsg('m-av','Could not update the photo: '+(e.message||e),false)}};
+ img.src=url}
+async function avRemove(btn){if(!confirm('Remove your profile photo?'))return;await busy(btn,async()=>{await sb.storage.from('avatars').remove([me.id+'/avatar.jpg']);const {error}=await sb.from('profiles').update({avatar_url:null}).eq('id',me.id);if(error)return setMsg('m-av',friendly(error),false);me.avatar_url=null;AVURL='';refreshNav();const b=$('avbox');if(b)b.innerHTML=avHtml(72);btn.hidden=true;setMsg('m-av','Photo removed.',true)})}
+// appearance and notifications
+function modeMark(){document.querySelectorAll('#modes button').forEach(b=>b.setAttribute('aria-checked',b.dataset.m===themeMode));const n=$('mode-now');if(n)n.textContent=themeMode==='system'?'Following your device. Currently '+sysTheme()+'.':''}
+function pickMode(m){applyMode(m,true);toast('Theme set to '+(m==='system'?'system default':m))}
+async function togN(k,el){const ok=await saveSettings({notif:{[k]:el.checked}});if(!ok){el.checked=!el.checked;ST.notif[k]=el.checked}}
+async function setTone(v){await saveSettings({notif:{tone:v}});playSound(v)}
+async function setIdle(v){const n=+v,ok=await saveSettings({idle:n});if(ok){idleStart();toast(n?'You will be signed out after '+n+' minutes of inactivity.':'Automatic logout is off.')}else{const e=$('st-idle');if(e)e.value=ST.idle}}
+// two-factor
+async function loadFactors(){const {data,error}=await sb.auth.mfa.listFactors();SV.fac=error?{error:error.message}:{ver:((data&&data.all)||[]).filter(x=>x.factor_type==='totp'&&x.status==='verified'),unv:((data&&data.all)||[]).filter(x=>x.factor_type==='totp'&&x.status==='unverified')};renderMfa()}
+function renderMfa(){const el=$('sec-mfa');if(!el)return;const f=SV.fac;
+ if(!f){el.innerHTML='<div class="mu"><span class="spin"></span> Loading...</div>';return}
+ if(f.error){el.innerHTML=`<div class="msg-er smsg">${esc(f.error)}</div>`;return}
+ if(SV.enr){el.innerHTML=`<div class="mu" style="margin-bottom:10px">1. Open an authenticator app (Google Authenticator, Microsoft Authenticator or similar).<br>2. Scan this code, or type the key in.<br>3. Enter the 6-digit code it shows.</div><div class="row" style="align-items:flex-start;gap:16px"><img class="qr" alt="QR code to add Maternity Help to your authenticator app" src="${SV.enr.qr}"><div style="flex:1;min-width:200px"><div class="mu">Setup key</div><div class="sec">${esc(SV.enr.secret)}</div><label class="l" for="st-mfa">6-digit code</label><input id="st-mfa" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*"><div class="row" style="margin-top:10px"><button class="btn" onclick="mfaVerify(this)">${ic('check')} Verify and turn on</button><button class="btn g" onclick="mfaCancel(this)">Cancel</button></div></div></div><div class="smsg" id="m-mfa" role="alert"></div>`;return}
+ if(f.ver.length){el.innerHTML=SV.off?`<div class="mu">Enter a code from your authenticator app to turn two-step verification off.</div><label class="l" for="st-mfa">6-digit code</label><input id="st-mfa" inputmode="numeric" autocomplete="one-time-code" maxlength="6" style="max-width:200px"><div class="row" style="margin-top:10px"><button class="btn" onclick="mfaOff(this)">Turn off</button><button class="btn g" onclick="SV.off=false;renderMfa()">Cancel</button></div><div class="smsg" id="m-mfa" role="alert"></div>`:`<div class="row" style="justify-content:space-between"><div><span class="pill ok">On</span> <span class="mu">An authenticator code is required every time you log in.</span></div><button class="btn g" onclick="SV.off=true;renderMfa()">Turn off</button></div><div class="smsg" id="m-mfa" role="alert"></div>`;return}
+ el.innerHTML=`<div class="row" style="justify-content:space-between"><div><span class="pill">Off</span> <span class="mu">Add a code from an authenticator app when you log in.</span></div><button class="btn" onclick="mfaStart(this)">Set up</button></div><div class="smsg" id="m-mfa" role="alert"></div>`}
+async function mfaStart(btn){await busy(btn,async()=>{if(!SV.fac||SV.fac.error)await loadFactors();for(const u of (SV.fac&&SV.fac.unv)||[])await sb.auth.mfa.unenroll({factorId:u.id});
+ const {data,error}=await sb.auth.mfa.enroll({factorType:'totp',friendlyName:'Maternity Help '+Date.now()});
+ if(error){setMsg('m-mfa',/disabled|not enabled|not allowed/i.test(error.message)?'Two-step verification is not turned on for this system yet. Ask the administrator to enable MFA (TOTP) in the Supabase authentication settings.':error.message,false);return}
+ SV.enr={id:data.id,qr:data.totp.qr_code,secret:data.totp.secret};renderMfa();const i=$('st-mfa');i&&i.focus()})}
+async function mfaVerify(btn){await busy(btn,async()=>{const code=($('st-mfa').value||'').replace(/\D/g,'');if(code.length!==6)return setMsg('m-mfa','Enter the 6-digit code from your app.',false);
+ const {error}=await sb.auth.mfa.challengeAndVerify({factorId:SV.enr.id,code});if(error)return setMsg('m-mfa','That code is not valid or has expired. Check the time on your phone and try again.',false);
+ SV.enr=null;toast('Two-step verification is on');await loadFactors();loadSessions()})}
+async function mfaCancel(btn){await busy(btn,async()=>{if(SV.enr)await sb.auth.mfa.unenroll({factorId:SV.enr.id});SV.enr=null;await loadFactors()})}
+async function mfaOff(btn){await busy(btn,async()=>{const code=($('st-mfa').value||'').replace(/\D/g,''),f=SV.fac.ver[0];if(code.length!==6)return setMsg('m-mfa','Enter the 6-digit code from your app.',false);
+ const v=await sb.auth.mfa.challengeAndVerify({factorId:f.id,code});if(v.error)return setMsg('m-mfa','That code is not valid or has expired.',false);
+ const {error}=await sb.auth.mfa.unenroll({factorId:f.id});if(error)return setMsg('m-mfa',error.message,false);SV.off=false;toast('Two-step verification is off');await loadFactors()})}
+// sessions
+const uaName=ua=>{ua=ua||'';const b=/Edg\//.test(ua)?'Edge':/OPR\//.test(ua)?'Opera':/Chrome\//.test(ua)?'Chrome':/Firefox\//.test(ua)?'Firefox':/Safari\//.test(ua)?'Safari':'Browser';const o=/Android/.test(ua)?'Android':/iPhone|iPad/.test(ua)?'iOS':/Windows/.test(ua)?'Windows':/Mac OS/.test(ua)?'macOS':/Linux/.test(ua)?'Linux':'unknown device';return b+' on '+o};
+const ago=d=>{const m=Math.round((Date.now()-new Date(d).getTime())/6e4);return m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' day(s) ago'};
+async function loadSessions(){const {data,error}=await sb.rpc('my_sessions');SV.sess=error?{error:error.message}:(data||[]);SV.t=Date.now();renderSess()}
+function renderSess(){const el=$('sec-sess');if(!el)return;const l=SV.sess;
+ if(!l){el.innerHTML='<div class="sx mu"><span class="spin"></span> Loading sessions...</div>';return}
+ if(l.error){el.innerHTML=`<div class="sx msg-er">${esc(l.error)}</div>`;return}
+ const others=l.filter(x=>!x.is_current).length;
+ el.innerHTML=l.map(x=>`<div class="sr"><div class="row" style="gap:12px;flex-wrap:nowrap">${ic('phone')}<div class="t"><b>${esc(uaName(x.user_agent))}${x.is_current?' <span class="pill ok">This device</span>':''}</b><span>${x.ip?esc(x.ip)+' \u00b7 ':''}Active ${ago(x.last_active)} \u00b7 Signed in ${new Date(x.created_at).toLocaleDateString()}</span></div></div>${x.is_current?'':`<button class="btn g" onclick="revokeSess('${x.id}',this)">Sign out</button>`}</div>`).join('')+(others?`<div class="sx"><button class="btn g" onclick="signOutOthers(this)">${ic('out')} Log out of all other devices (${others})</button></div>`:'')}
+async function revokeSess(id,btn){await busy(btn,async()=>{const {error}=await sb.rpc('revoke_my_session',{p_id:id});if(error)return toast('Could not sign out that device: '+error.message);toast('Device signed out');loadSessions()})}
+async function signOutOthers(btn){if(!confirm('Log out of all other devices? You will stay signed in here.'))return;await busy(btn,async()=>{const {error}=await sb.auth.signOut({scope:'others'});if(error)return toast('Could not log out other devices: '+error.message);toast('Other devices logged out');loadSessions()})}
+function testSound(){playSound(ST.notif.tone||'chime');toast(ST.notif.sound?'This is how notifications will sound.':'Test sound. Sound notifications are currently turned off.')}
+// page
+function settingsView(){setTimeout(settingsMount,0);const F=SV.f,pt=me.role!=='doctor',n=ST.notif;
+ const sw=(k,id,dis)=>`<label class="sw"><input type="checkbox" role="switch" aria-labelledby="${id}" ${(dis||n[k])?'checked':''} ${dis?'disabled':''} onchange="togN('${k}',this)"><i></i></label>`;
+ const row=(id,t,d,c)=>`<div class="sr"><div class="t"><b id="${id}">${t}</b><span>${d}</span></div>${c}</div>`;
+ const modes=[['light','Light','sun'],['dark','Dark','moon'],['system','System default','gear']];
+ return `<h2 style="margin-top:0">Settings</h2><div class="mu" style="margin-bottom:14px">Manage your profile, appearance, notifications and account security.</div>
+<section class="sg" aria-labelledby="h-prof"><header>${ic('user')}<div><h3 id="h-prof">Profile</h3><p>Your photo and contact details. Your role and ID are set by the hospital.</p></div></header>
+<div class="sr"><div class="row" style="gap:14px;flex-wrap:nowrap"><span id="avbox">${avHtml(72)}</span><div class="t"><b>${esc(me.full_name)}</b><span>${esc(roleLabel())}${pt&&me.patient_code?' \u00b7 '+esc(me.patient_code):''}</span></div></div><div class="row"><button class="btn g" onclick="document.getElementById('avf').click()">${ic('cam')} Change photo</button><input id="avf" type="file" accept="image/jpeg,image/png,image/webp" hidden onchange="avUpload(this)" aria-label="Choose a profile photo"><button class="btn g" id="avrm" onclick="avRemove(this)" ${me.avatar_url?'':'hidden'}>Remove</button></div></div>
+<div class="sx"><div class="smsg" id="m-av" role="status" style="margin:0 0 8px"></div><div class="sgrid"><div><label class="l" for="st-name">Full name</label><input id="st-name" value="${esc(F.name??me.full_name??'')}" maxlength="80" autocomplete="name" oninput="SV.f.name=this.value"></div><div><label class="l" for="st-phone">Phone number</label><input id="st-phone" type="tel" value="${esc(F.phone??me.phone??'')}" maxlength="20" autocomplete="tel" oninput="SV.f.phone=this.value"></div><div><label class="l" for="st-email">Email address</label><input id="st-email" type="email" value="${esc(F.email??me.email??'')}" maxlength="120" autocomplete="email" oninput="SV.f.email=this.value"></div><div><label class="l" for="st-epw">Current password (only to change email)</label><div class="f"><input id="st-epw" type="password" autocomplete="current-password" value="${esc(F.epw||'')}" oninput="SV.f.epw=this.value">${eyeBtn('st-epw','password')}</div></div><div><label class="l" for="st-role">Role</label><input id="st-role" value="${esc(roleLabel())}" disabled></div>${pt?`<div><label class="l" for="st-id">Patient ID</label><input id="st-id" value="${esc(me.patient_code||'')}" disabled></div>`:`<div><label class="l" for="st-reg">Professional registration no.</label><input id="st-reg" value="${esc(me.professional_reg_no||'Not recorded')}" disabled></div>`}</div>
+<div class="row" style="margin-top:14px"><button class="btn" onclick="profSave(this)">${ic('check')} Save profile</button></div><div class="smsg" id="m-prof" role="status"></div></div></section>
+<section class="sg" aria-labelledby="h-app"><header>${ic('sun')}<div><h3 id="h-app">Appearance</h3><p>Choose how Maternity Help looks. Changes apply straight away and are remembered.</p></div></header><div class="mode" id="modes" role="radiogroup" aria-label="Theme">${modes.map(m=>`<button type="button" role="radio" data-m="${m[0]}" aria-checked="${themeMode===m[0]}" onclick="pickMode('${m[0]}')">${ic(m[2])}<span>${m[1]}</span></button>`).join('')}</div><div class="mu" id="mode-now" style="padding:0 16px 14px">${themeMode==='system'?'Following your device. Currently '+sysTheme()+'.':''}</div></section>
+<section class="sg" aria-labelledby="h-not"><header>${ic('bell')}<div><h3 id="h-not">Notifications</h3><p>Choose what you hear about. Changes save automatically.</p></div></header>
+${pt?row('n-appt','Appointment reminders','Upcoming, missed and rescheduled appointments.',sw('appt','n-appt'))+row('n-chk','Checkup reminders','When an antenatal or postnatal checkup is due.',sw('checkup','n-chk'))+row('n-med','Medication reminders','Reminders about your prescribed medication.',sw('med','n-med')):''}
+${row('n-gen','General system notifications',pt?'Hospital messages, test results and other updates.':'Pop-ups for queue and handover updates.',sw('general','n-gen'))}
+${row('n-snd','Sound notifications','Play a sound for new notifications and reminders.',sw('sound','n-snd'))}
+${row('n-emg','Emergency alerts','Ambulance and emergency alerts are always on to keep everyone safe.',sw('','n-emg',true))}
+<div class="sr"><div class="t"><b id="n-tone">Notification sound</b><span>Pick a sound and play it to test.</span></div><div class="row"><select aria-labelledby="n-tone" style="width:auto" onchange="setTone(this.value)">${SOUNDS.map(o=>`<option value="${o[0]}"${(ST.notif.tone||'chime')===o[0]?' selected':''}>${o[1]}</option>`).join('')}</select><button class="btn g" onclick="testSound()">Play test sound</button></div></div></section>
+<section class="sg" aria-labelledby="h-pw"><header>${ic('lock')}<div><h3 id="h-pw">Change password</h3><p>You need your current password. Other devices are signed out after a change.</p></div></header><div class="sx"><div class="sgrid"><div style="grid-column:1/-1"><label class="l" for="st-cur">Current password</label><div class="f"><input id="st-cur" type="password" autocomplete="current-password" value="${esc(F.cur||'')}" oninput="SV.f.cur=this.value">${eyeBtn('st-cur','current password')}</div></div><div><label class="l" for="st-new">New password</label><div class="f"><input id="st-new" type="password" autocomplete="new-password" maxlength="72" value="${esc(F.npw||'')}" oninput="SV.f.npw=this.value;pwMeter(this.value)" aria-describedby="pwm-t">${eyeBtn('st-new','new password')}</div><div class="pwm" aria-hidden="true"><i id="pwm-bar"></i></div><div class="mu" id="pwm-t" aria-live="polite"></div></div><div><label class="l" for="st-cnf">Confirm new password</label><div class="f"><input id="st-cnf" type="password" autocomplete="new-password" maxlength="72" value="${esc(F.cpw||'')}" oninput="SV.f.cpw=this.value">${eyeBtn('st-cnf','confirmation')}</div></div></div><div class="mu" style="margin-top:8px">At least 8 characters with a mix of letters and numbers.</div><div class="row" style="margin-top:12px"><button class="btn" onclick="changePw(this)">${ic('key')} Update password</button></div><div class="smsg" id="m-pw" role="status" aria-live="polite"></div></div></section>
+<section class="sg" aria-labelledby="h-mfa"><header>${ic('shield')}<div><h3 id="h-mfa">Two-step verification</h3><p>Protect your account with a code from an authenticator app.</p></div></header><div class="sx" id="sec-mfa"></div></section>
+<section class="sg" aria-labelledby="h-ses"><header>${ic('phone')}<div><h3 id="h-ses">Active sessions</h3><p>Devices where you are logged in. Sign out any you do not recognise.</p></div></header><div id="sec-sess"></div></section>
+<section class="sg" aria-labelledby="h-idl"><header>${ic('clock')}<div><h3 id="h-idl">Automatic logout</h3><p>Sign out automatically when you have not used the app for a while.</p></div></header><div class="sr"><div class="t"><b id="n-idl">Log out after inactivity</b><span>Recommended on shared or hospital devices.</span></div><select id="st-idle" aria-labelledby="n-idl" style="width:auto" onchange="setIdle(this.value)">${IDLES.map(v=>`<option value="${v}"${ST.idle===v?' selected':''}>${v?v+' minutes':'Never'}</option>`).join('')}</select></div></section>`}
+function settingsMount(){if(!$('sec-sess'))return;renderSess();renderMfa();pwMeter(SV.f.npw||'');if(Date.now()-SV.t>30000){loadSessions();loadFactors()}}
 function staffView(){
  if(!isAdmin())return '';
  const reg=[...D.staff].sort((a,b)=>stTitle(a).localeCompare(stTitle(b))||(a.full_name||'').localeCompare(b.full_name||'')),cnt=id=>(D.asg||[]).filter(a=>a.staff_id===id).length;
