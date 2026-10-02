@@ -50,9 +50,9 @@ label.ck{display:flex;gap:10px;align-items:center;padding:7px 0}label.ck input{w
 .tls{display:flex;justify-content:space-between;font-size:12px;color:var(--mu)}
 .tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:8px 10px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}th{font:600 12px 'Inter',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mu)}td.n{white-space:normal;min-width:180px}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;justify-content:center;z-index:9}
-.md{background:var(--card);border:1px solid var(--bd);border-top:3px solid var(--ac);border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:92vh;display:flex;flex-direction:column;padding:16px 16px 0}
-.md form{overflow-y:auto;padding-bottom:14px}
-.md form>.btn.w{position:sticky;bottom:0;background:var(--card);margin-top:10px}
+.md{background:var(--card);border:1px solid var(--bd);border-top:3px solid var(--ac);border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:92vh;max-height:92dvh;display:flex;flex-direction:column;padding:16px 16px 0}
+.md form{overflow-y:auto;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+.md form>.btn.w{position:sticky;bottom:0;margin-top:10px;box-shadow:0 0 0 8px var(--card)}
 .mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font:700 20px 'Inter',system-ui,sans-serif;text-transform:uppercase}
 body.in main{max-width:none;padding:0}.lay{display:flex;min-height:100vh}
 .side{width:236px;flex:none;background:var(--card);border-right:1px solid var(--bd);padding:16px 12px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh;overflow:auto;position:sticky;transition:width .15s}
