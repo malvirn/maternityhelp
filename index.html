@@ -183,6 +183,27 @@ a{color:var(--al)}
 .qr{width:180px;height:180px;background:#fff;border-radius:10px;padding:8px}.sec{font-family:ui-monospace,monospace;word-break:break-all;background:var(--in);border:1px solid var(--bd);border-radius:8px;padding:6px 10px;display:inline-block}
 :focus-visible{outline:2px solid var(--ac);outline-offset:2px}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media(max-width:640px){.sgrid{grid-template-columns:1fr}.sr{flex-wrap:wrap}.mode{gap:8px}}
+.bf{display:flex;justify-content:center;margin:2px 0 4px}.bf svg{width:210px;max-width:70%;height:auto;overflow:visible}
+.bf-bg{fill:var(--ac);opacity:.10}.bf-gr{fill:var(--ac);opacity:.12}
+.bf-all{transform-origin:120px 192px;animation:bfb 4s ease-in-out infinite}
+.bf-head{transform-origin:116px 100px;animation:bft 5s ease-in-out infinite}
+.bf-baby2,.bf-baby{transform-origin:150px 140px;animation:bfy 3.2s ease-in-out infinite}
+.bf-hand{animation:bfw 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.bf-foot{animation:bfk 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.bf-ht{animation:bfh 4.2s ease-in infinite;opacity:0;transform-box:fill-box;transform-origin:center}.bf-ht.h2{animation-delay:1.4s}.bf-ht.h3{animation-delay:2.8s}
+.bf-st{animation:bfs 2.6s ease-in-out infinite}.bf-st.s2{animation-delay:.9s}.bf-st.s3{animation-delay:1.7s}
+@keyframes bfb{0%,100%{transform:scale(1)}50%{transform:scale(1.014,1.02)}}
+@keyframes bft{0%,100%{transform:rotate(1deg)}50%{transform:rotate(6deg)}}
+@keyframes bfy{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.6px)}}
+@keyframes bfw{0%,100%{transform:translate(0,0)}50%{transform:translate(3px,-4px)}}
+@keyframes bfk{0%,100%{transform:translate(0,0)}50%{transform:translate(2px,-3px)}}
+@keyframes bfh{0%{opacity:0;transform:translateY(8px) scale(.6)}20%{opacity:.95}100%{opacity:0;transform:translateY(-34px) scale(1.15)}}
+@keyframes bfs{0%,100%{opacity:.25}50%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.bf *{animation:none!important}.bf-ht{opacity:.9}}
+.lnk{background:none;border:0;color:var(--al);font:600 14px 'Inter',system-ui,sans-serif;cursor:pointer;padding:4px 0}.lnk:hover{text-decoration:underline}
+.orl{display:flex;align-items:center;gap:10px;color:var(--mu);font-size:13px;margin:14px 0 10px}.orl::before,.orl::after{content:"";flex:1;height:1px;background:var(--bd)}
+.gbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1f1f1f;border:1px solid #dadce0;border-radius:10px;padding:12px 16px;font:600 15px 'Inter',system-ui,sans-serif;cursor:pointer}.gbtn:hover{background:#f7f8f8}
+.okm{color:var(--gr)}
 </style></head><body><main id="app"></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
@@ -267,17 +288,47 @@ function setBell(n){const b=$('bellc');if(b){b.textContent=n>9?'9+':n;b.style.di
 let ptLoaded=false,lastAl=-1,lastQ={},qInit=false;
 function nav(k){document.body.classList.remove('nav');if(me.role==='doctor'){view=k;sel=null;ad.sel=null;ad.data=null;if(k==='audit')loadAudit();if(k==='chat')chatPt=null;if(k==='schedule'){scheduleModal(me.id);view='overview';drawDoc();return}pFilter=null;drawDoc()}else{ptab=k;bk={};conf='';drawPt()}}
 async function logout(){chans.forEach(c=>sb.removeChannel(c));chans=[];me=null;sel=null;view='overview';ptab='home';ptLoaded=false;lastAl=-1;lastQ={};qInit=false;CH.msgs=[];GR.g=null;GR.msgs=[];chatPt=null;if(CALL)endCall('me');await sb.auth.signOut({scope:'local'});authView()}
+const BF=`<div class="bf"><svg viewBox="0 0 240 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A mother breastfeeding her baby"><defs><path id="bf-h" d="M0 -3C-6 -10 -14 -2 0 8C14 -2 6 -10 0 -3Z"/></defs><circle class="bf-bg" cx="120" cy="104" r="86"/><ellipse class="bf-gr" cx="120" cy="192" rx="74" ry="7"/><g class="bf-all"> <path d="M60 192C56 148 76 118 112 114L128 114C164 118 184 148 180 192Z" fill="#e8537a"/> <path d="M96 150C118 158 150 152 174 140" stroke="#e8537a" stroke-width="16" stroke-linecap="round" fill="none"/> <rect x="108" y="94" width="16" height="22" rx="7" fill="#8d5a3b"/> <g class="bf-head">  <circle cx="116" cy="50" r="11" fill="#2b1a14"/>  <circle cx="116" cy="78" r="22" fill="#8d5a3b"/>  <path d="M93 76C92 50 140 50 139 76C132 63 100 63 93 76Z" fill="#2b1a14"/>  <path d="M105 81q5 4 10 0M121 81q5 4 10 0" stroke="#3b2418" stroke-width="2" stroke-linecap="round" fill="none"/>  <path d="M110 91q6 5 12 0" stroke="#3b2418" stroke-width="2" stroke-linecap="round" fill="none"/>  <circle cx="103" cy="88" r="4" fill="#ff8fa3" opacity=".4"/><circle cx="129" cy="88" r="4" fill="#ff8fa3" opacity=".4"/> </g> <g class="bf-baby">  <ellipse cx="158" cy="140" rx="31" ry="15" transform="rotate(24 158 140)" fill="#ffd166"/>  <path d="M146 128l10 22M158 124l10 22M170 130l8 18" stroke="#f4b942" stroke-width="3" stroke-linecap="round" opacity=".8"/> </g> <path d="M90 114C102 108 126 110 142 118C152 126 146 142 130 144C110 146 94 138 86 124Z" fill="#2a9d8f"/> <path d="M96 120C110 118 128 122 138 130" stroke="#47b8a8" stroke-width="2.5" stroke-linecap="round" fill="none" opacity=".8"/><g class="bf-baby2"> <circle cx="140" cy="130" r="13" fill="#a8704c"/> <path d="M129 124C132 114 148 114 151 124C145 120 135 120 129 124Z" fill="#7fd1c7"/> <path d="M135 133q3.5 3 7 0" stroke="#3b2418" stroke-width="1.7" stroke-linecap="round" fill="none"/> <circle cx="134" cy="138" r="2.6" fill="#ff8fa3" opacity=".5"/> <circle class="bf-hand" cx="155" cy="122" r="4.5" fill="#a8704c"/> <circle class="bf-foot" cx="187" cy="153" r="5" fill="#a8704c"/></g> <circle cx="178" cy="144" r="7" fill="#8d5a3b"/></g><use href="#bf-h" class="bf-ht h1" x="150" y="64" fill="#e8537a"/><use href="#bf-h" class="bf-ht h2" x="176" y="84" fill="#ff8fa3"/><use href="#bf-h" class="bf-ht h3" x="92" y="52" fill="#ff8fa3"/><circle class="bf-st s1" cx="52" cy="70" r="2.5" fill="#ffd166"/><circle class="bf-st s2" cx="196" cy="56" r="2" fill="#ffd166"/><circle class="bf-st s3" cx="40" cy="120" r="2" fill="#ffd166"/></svg></div>`;
+const GLOGO='<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-2.9-.8-4.7s.3-3.3.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.9 2.3-8.5 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>';
+let RECOV=/type=recovery/.test(location.hash),HASHERR=(()=>{const m=location.hash.match(/error_description=([^&]+)/);return m?decodeURIComponent(m[1].replace(/\+/g,' ')):''})();
 function authView(msg=''){
  document.body.classList.remove('in','nav','sos');sosStop();{const f=document.getElementById('sosfab');if(f)f.remove()}document.title='Maternity Help';
  const reg=mode==='reg',pat=true;
- app.innerHTML=`<div class="card auth"><div style="text-align:right"><button class="ib" data-tb="" title="Change theme" onclick="toggleTheme()">${tIc()}</button></div><div style="display:flex;justify-content:center"><img class="logo big" src="/logo.png" alt="Maternity Help"></div><h1>${reg?'Register':'Sign in'}</h1><p class="tag">Care for you and your baby, every week</p><div class="mu">${reg?'Create your account':'Use your Maternity Help account'}</div>
+ app.innerHTML=`<div class="card auth"><div style="text-align:right"><button class="ib" data-tb="" title="Change theme" onclick="toggleTheme()">${tIc()}</button></div><div style="display:flex;justify-content:center"><img class="logo big" src="/logo.png" alt="Maternity Help"></div>${BF}<h1>${reg?'Register':'Sign in'}</h1><p class="tag">Care for you and your baby, every week</p><div class="mu">${reg?'Create your account':'Use your Maternity Help account'}</div>
  <div class="seg"><button class="btn ${!reg?'on':''}" onclick="mode='login';authView()">Log in</button><button class="btn ${reg?'on':''}" onclick="mode='reg';authView()">Register</button></div>
  ${reg?`<div class="mu" style="margin-bottom:6px">Sign-up is for patients. Doctors, midwives and nurses get their accounts from the hospital administrator.</div>
  <label class="l">Full name</label><div class="f">${ic('user')}<input id="fn" autocomplete="name"></div>
  ${pat?`<label class="l">Phone</label><div class="f">${ic('msg')}<input id="ph" type="tel" autocomplete="tel"></div><label class="l">Weeks pregnant now (1-40)</label><div class="f">${ic('cal')}<input id="wks" type="number" min="1" max="40"></div>`:''}`:''}
  <label class="l">Email</label><div class="f">${ic('mail')}<input id="em" type="email" autocomplete="email"></div>
  <label class="l">Password</label><div class="f">${ic('lock')}<input id="pw" type="password" autocomplete="${reg?'new-password':'current-password'}"><button class="ib" type="button" onclick="const i=$('pw');i.type=i.type==='password'?'text':'password'">${ic('eye')}</button></div>
- <button class="btn w" onclick="submitAuth()">${ic('login')} ${reg?'Create account':'Sign in'}</button><p class="err" id="msg">${esc(msg)}</p><div class="mu">Maternity Help \u00b7 Clinic system</div><div style="text-align:center;margin-top:8px"><button class="btn g" data-inst style="display:none" onclick="installApp()">${ic('dl')} Install app</button></div></div>`;showInst()}
+ ${reg?'':`<div style="text-align:right;margin:2px 0 6px"><button class="lnk" type="button" onclick="forgotView()">Forgot password?</button></div>`}
+ <button class="btn w" onclick="submitAuth()">${ic('login')} ${reg?'Create account':'Sign in'}</button><div class="orl">or</div><button class="gbtn" type="button" onclick="googleAuth()">${GLOGO} Continue with Google</button><p class="err" id="msg">${esc(msg)}</p><div class="mu">Maternity Help \u00b7 Clinic system</div><div style="text-align:center;margin-top:8px"><button class="btn g" data-inst style="display:none" onclick="installApp()">${ic('dl')} Install app</button></div></div>`;showInst()}
+
+async function googleAuth(){
+ const m=$('msg');if(m)m.textContent='';
+ try{const r=await fetch(SB_URL+'/auth/v1/settings',{headers:{apikey:SB_KEY}});const j=await r.json();
+  if(j&&j.external&&j.external.google===false){if(m)m.textContent='Google sign-in has not been switched on yet. Please use your email and password, or ask the administrator.';return}}catch(e){}
+ const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+'/',queryParams:{prompt:'select_account'}}});
+ if(error&&m)m.textContent=error.message}
+function authShell(title,sub,inner,msg,ok){
+ document.body.classList.remove('in','nav','sos');
+ app.innerHTML=`<div class="card auth"><div style="text-align:right"><button class="ib" data-tb="" title="Change theme" onclick="toggleTheme()">${tIc()}</button></div><div style="display:flex;justify-content:center"><img class="logo big" src="/logo.png" alt="Maternity Help"></div>${BF}<h1>${title}</h1><div class="mu">${sub}</div>${inner}<p class="${ok?'okm':'err'}" id="msg">${esc(msg||'')}</p></div>`}
+function forgotView(msg,ok){
+ authShell('Forgot password','Enter your email and we will send you a link to choose a new password.',`<label class="l">Email</label><div class="f">${ic('mail')}<input id="em" type="email" autocomplete="email" onkeydown="if(event.key==='Enter')sendReset()"></div><button class="btn w" id="rsb" onclick="sendReset()">${ic('mail')} Send reset link</button><div style="text-align:center;margin-top:10px"><button class="lnk" onclick="mode='login';authView()">Back to sign in</button></div>`,msg,ok)}
+async function sendReset(){
+ const em=$('em').value.trim().toLowerCase(),m=$('msg'),b=$('rsb');m.className='err';m.textContent='';
+ if(!/^\S+@\S+\.\S+$/.test(em))return m.textContent='Enter a valid email address.';
+ b.disabled=true;const {error}=await sb.auth.resetPasswordForEmail(em,{redirectTo:location.origin+'/'});b.disabled=false;
+ if(error)return m.textContent=/rate|too many|seconds/i.test(error.message)?'Too many requests. Please wait a few minutes and try again.':error.message;
+ m.className='okm';m.textContent='If an account exists for that email, a reset link has been sent. Check your inbox and spam folder.'}
+function resetView(msg){
+ authShell('Choose a new password','Enter a new password for your account.',`<label class="l">New password</label><div class="f">${ic('lock')}<input id="np" type="password" autocomplete="new-password"></div><label class="l">Confirm new password</label><div class="f">${ic('lock')}<input id="np2" type="password" autocomplete="new-password" onkeydown="if(event.key==='Enter')saveNewPw()"></div><button class="btn w" id="npb" onclick="saveNewPw()">${ic('check')} Save new password</button>`,msg)}
+async function saveNewPw(){
+ const a=$('np').value,b2=$('np2').value,m=$('msg'),btn=$('npb');m.textContent='';
+ if(a.length<8)return m.textContent='Use at least 8 characters.';if(a!==b2)return m.textContent='The two passwords do not match.';
+ btn.disabled=true;const {error}=await sb.auth.updateUser({password:a});btn.disabled=false;
+ if(error)return m.textContent=/same|different/i.test(error.message)?'Choose a password you have not used before.':error.message;
+ RECOV=false;history.replaceState(null,'',location.pathname);await sb.auth.signOut();mode='login';authView('Password changed. Log in with your new password.')}
 async function submitAuth(){
  const em=$('em').value.trim().toLowerCase(),pw=$('pw').value,m=$('msg');m.textContent='';
  if(!em||pw.length<8)return m.textContent='Enter your email and a password of at least 8 characters.';
@@ -290,7 +341,9 @@ async function submitAuth(){
  }else{const {error}=await sb.auth.signInWithPassword({email:em,password:pw});if(error)return m.textContent=error.message}
  boot()}
 async function boot(){
- const {data:{session}}=await sb.auth.getSession();if(!session)return authView();
+ const {data:{session}}=await sb.auth.getSession();
+ if(RECOV&&session)return resetView();
+ if(!session){const e=HASHERR;HASHERR='';if(e){history.replaceState(null,'',location.pathname);return authView(/expired|invalid/i.test(e)?'That link has expired or was already used. Use Forgot password to get a new one.':e)}return authView()}
  if(await mfaNeeded())return mfaPrompt();
  let p=null;for(let i=0;i<3&&!p;i++){({data:p}=await sb.from('profiles').select('*').eq('id',session.user.id).maybeSingle());if(!p)await new Promise(r=>setTimeout(r,500))}
  if(!p){await sb.auth.signOut();return authView('Could not load your account.')}
