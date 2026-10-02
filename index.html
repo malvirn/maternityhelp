@@ -422,11 +422,16 @@ let D={pts:[],vis:[],ap:[],al:[],notes:[],plan:[],audit:[],staff:[],svc:[],se:[]
 const DITEMS=()=>{const base=[['overview','Overview','home'],['queue','Queue','clock'],['ambulance','Ambulance','alert'],['patients','Patients','users'],['chat','Messages','msg'],['bookings','Bookings','cal'],['beds','Beds','bed'],['medalerts','Medical alerts','alert'],['reports','Reports','file'],['schedule','My schedule','cal']];return isAdmin()?[['admin','Admin dashboard','shield']].concat(base,[['staff','Staff','users'],['assign','Assignments','user'],['audit','Audit log','shield']]):base};
 const dsn=a=>{const s=D.svc.find(x=>x.id===a.service_id),f=D.staff.find(x=>x.id===a.staff_id);return esc((s?s.name:a.kind)+(a.appt_time?' at '+String(a.appt_time).slice(0,5):'')+(f?' with '+(f.staff_title||'Doctor')+' '+f.full_name:'')+(a.bed_no?' \u00b7 Bed '+a.bed_no:''))};
 const P=id=>D.pts.find(p=>p.id===id),lastV=id=>D.vis.find(v=>v.patient_id===id);
+const DEFTH={bp_sys:{high:140,severe_high:160},bp_dia:{high:90,severe_high:110},temp_c:{high:38,severe_high:39},pulse:{low:50,high:100,severe_high:120},fetal_heart_rate:{low:110,high:160,severe_low:100,severe_high:170},fundal_mismatch_cm:{high:3,severe_high:5}};
+const TH=k=>(((typeof D!=='undefined'&&D.th)||[]).find(x=>x.key===k))||DEFTH[k]||{};
+const geT=(x,t)=>x!=null&&t!=null&&+x>=+t,leT=(x,t)=>x!=null&&t!=null&&+x<=+t;
 function flags(v){const f=[];if(!v)return f;
- if(v.bp_sys>=160||v.bp_dia>=110)f.push('Severe high blood pressure ('+v.bp_sys+'/'+v.bp_dia+')');
- else if(v.bp_sys>=140||v.bp_dia>=90)f.push('High blood pressure ('+v.bp_sys+'/'+v.bp_dia+')');
- if(v.temp_c>=38)f.push('Raised temperature ('+v.temp_c+' C)');
- if(v.fetal_heart_rate&&(v.fetal_heart_rate<110||v.fetal_heart_rate>160))f.push('Fetal heart rate outside 110-160 ('+v.fetal_heart_rate+')');
+ const bs=TH('bp_sys'),bd=TH('bp_dia'),tp=TH('temp_c'),fh=TH('fetal_heart_rate'),pl=TH('pulse');
+ if(geT(v.bp_sys,bs.severe_high)||geT(v.bp_dia,bd.severe_high))f.push('Severe high blood pressure ('+v.bp_sys+'/'+v.bp_dia+')');
+ else if(geT(v.bp_sys,bs.high)||geT(v.bp_dia,bd.high))f.push('High blood pressure ('+v.bp_sys+'/'+v.bp_dia+')');
+ if(geT(v.temp_c,tp.high))f.push('Raised temperature ('+v.temp_c+' C)');
+ if(v.pulse!=null&&((pl.low!=null&&+v.pulse<+pl.low)||(pl.high!=null&&+v.pulse>+pl.high)))f.push('Maternal pulse outside '+pl.low+'-'+pl.high+' ('+v.pulse+')');
+ if(v.fetal_heart_rate&&((fh.low!=null&&+v.fetal_heart_rate<+fh.low)||(fh.high!=null&&+v.fetal_heart_rate>+fh.high)))f.push('Fetal heart rate outside '+fh.low+'-'+fh.high+' ('+v.fetal_heart_rate+')');
  const u=(v.urine_protein||'').toLowerCase();if(u&&!/^(neg|nil|-|0|trace)/.test(u))f.push('Protein in urine ('+v.urine_protein+')');
  return f}
 async function doctorView(){
@@ -446,7 +451,7 @@ async function loadDoc(){
  if(lastAl>=0&&D.al.length>lastAl)toast('New emergency alert from a patient',()=>{view='overview';sel=null;drawDoc()});lastAl=D.al.length;
  if(qInit&&ST.notif.general)D.ap.forEach(a=>{if(a.appt_date!==today())return;const o=lastQ[a.id],nmx=(P(a.patient_id)||{}).full_name||'Patient';if(a.status==='with_doctor'&&(!o||o.s!=='with_doctor')&&isMD()&&a.handover_by!==me.id)toast('Handover: '+nmx+(a.triage_level?' ('+TL[a.triage_level]+')':''),()=>{view='queue';sel=null;drawDoc()});else if(a.triage_level==='emergency'&&(!o||o.t!=='emergency')&&a.triaged_at)toast('EMERGENCY triage: '+nmx,()=>{view='queue';sel=null;drawDoc()})});
  lastQ={};D.ap.forEach(a=>{lastQ[a.id]={s:a.status,t:a.triage_level}});qInit=true;
- const [e,f,g,ga]=await Promise.all([sb.from('services').select('*'),isAdmin()?sb.from('staff_emails').select('*').order('email'):{data:[]},sb.from('ambulance_requests').select('*').order('requested_at',{ascending:false}).limit(100),sb.from('patient_assignments').select('*')]);D.svc=e.data||[];D.se=f.data||[];D.amb=g.data||[];D.asg=ga.data||[];drawDoc()}
+ const [e,f,g,ga,pg,th]=await Promise.all([sb.from('services').select('*'),isAdmin()?sb.from('staff_emails').select('*').order('email'):{data:[]},sb.from('ambulance_requests').select('*').order('requested_at',{ascending:false}).limit(100),sb.from('patient_assignments').select('*'),sb.from('pregnancies').select('*'),sb.from('clinical_thresholds').select('*')]);D.preg=(pg&&pg.data)||[];D.th=(th&&th.data)||[];D.svc=e.data||[];D.se=f.data||[];D.amb=g.data||[];D.asg=ga.data||[];drawDoc()}
 function drawDoc(){if(!$('doc'))return;$('side').innerHTML=navHtml(DITEMS(),sel?'patients':view,{overview:D.al.length,queue:qN(),ambulance:ambN(),bookings:isAdmin()?pendingReqs().length:0,medalerts:medAlerts().filter(x=>x.sev===3).length,chat:chatUn()});setBell(D.al.length+openAmb());showInst();sosSync();
  if(!sel&&view==='chat'&&chatPt&&$('chat')){paintChat();return}
  $('doc').innerHTML=sel&&P(sel)?detail(P(sel)):overview();if(!sel&&view==='chat'&&chatPt)afterChat()}
@@ -487,6 +492,7 @@ function detail(p){
  ${f.length?`<div class="card" style="border-color:var(--ac);margin-top:12px">${f.map(x=>`<div class="fl">${ic('alert')} ${esc(x)}</div>`).join('')}<div class="mu">From the latest recorded visit. Review clinically.</div></div>`:''}
  <div class="row" style="margin:14px 0">${d?'':isMD()?`<button class="btn" onclick="consult('${p.id}')">${ic('act')} Start consultation</button>`:`<button class="btn" onclick="startTriage('${p.id}')">${ic('act')} Start triage</button>`}<button class="btn g" onclick="recVisit('${p.id}')">${ic('act')} Record vitals</button><button class="btn g" onclick="addNote('${p.id}')">${ic('file')} Add clinical note</button><button class="btn g" onclick="followUp('${p.id}')">${ic('cal')} Schedule follow-up</button><button class="btn g" onclick="editPt('${p.id}')">${ic('edit')} Edit profile</button><button class="btn g" onclick="openChat('${p.id}')">${ic('msg')} Message</button><button class="btn g" onclick="startCall(true,'${p.id}')">${ic('video')} Video call</button>${d||!isMD()?'':`<button class="btn g" onclick="admit('${p.id}')">${ic('bed')} ${p.admitted_at?'Discharge':'Admit patient'}</button><button class="btn g" onclick="deliver('${p.id}')">${ic('check')} Mark delivered</button>`}</div>
  <div class="card"><h3>Patient profile</h3><div class="grid">${g('Gestational age',d?'Delivered '+fd(p.delivered_on):p.lmp?'Week '+wk(p)+' ('+tri(wk(p))+')':'')}${g('Estimated due date',due(p))}${g('Gravida / Para',(p.gravida??'-')+' / '+(p.para??'-'))}${g('Date of birth',p.dob?fd(p.dob):'')}${g('Address',p.address)}${g('Blood group',p.blood_group)}${g('Allergies',p.allergies)}${g('Current medications',p.current_medications)}${g('Medical history',p.medical_history)}${g('Previous pregnancies and outcomes',p.previous_pregnancies)}</div></div>
+ ${pregCard(p)}
  <div class="card"><h3>Pregnancy timeline</h3>${timeline(p)}${up.length?`<div class="mu" style="margin-top:8px">Next appointment: ${fd(up[0].appt_date)} (${esc(up[0].kind)})</div>`:''}</div>
  <h2>Care plan</h2><div class="card">${D.plan.map(x=>`<div class="li" style="margin-bottom:6px"><div class="fl" style="color:${x.done?'var(--tx)':'var(--mu)'}">${ic(x.done?'check':'clock')}<div><b>${esc(x.title)}</b><div class="mu">${x.due_date?fd(x.due_date)+(x.due_time?' at '+String(x.due_time).slice(0,5):''):'No date'}${x.notes?' \u00b7 '+esc(x.notes):''}</div></div></div><div class="row"><button class="btn g" onclick="togglePlan('${x.id}',${!x.done})">${x.done?'Undo':'Mark done'}</button><button class="ib" onclick="delPlan('${x.id}')">${ic('x')}</button></div></div>`).join('')||'<div class="mu">No care plan items yet.</div>'}<button class="btn" style="margin-top:8px" onclick="addPlan('${p.id}')">${ic('plus')} Add care plan item</button></div>
  <h2>Daily steps</h2><div class="card">${stepsCard(p)}</div>
@@ -871,9 +877,9 @@ function medAlerts(){const out=[],t=today();
  D.pts.forEach(p=>{
   const ante=p.status!=='delivered',w=ante&&p.lmp?wk(p):null,v=lastV(p.id),r=riskOf(p);
   if(ante&&['critical','priority'].includes(r.level))add(p,'risk',r.level==='critical'?3:2,'High-risk pregnancy'+(w?' \u00b7 week '+w:''),r.reasons.join(' \u00b7 '));
-  if(ante&&v){flags(v).forEach(f=>add(p,'comp',/Severe|outside 110/.test(f)?3:2,f,'Visit of '+fd(v.visit_date)));
+  if(ante&&v){flags(v).forEach(f=>add(p,'comp',/^Severe|^Fetal heart rate/.test(f)?3:2,f,'Visit of '+fd(v.visit_date)));
    const gl=(v.urine_glucose||'').toLowerCase();if(gl&&!/^(neg|nil|-|0|trace)/.test(gl))add(p,'comp',2,'Glucose in urine ('+v.urine_glucose+')','Screen for gestational diabetes \u00b7 visit of '+fd(v.visit_date));
-   if(v.fundal_height_cm&&w&&w>=24&&Math.abs(v.fundal_height_cm-w)>3)add(p,'comp',2,'Fundal height '+v.fundal_height_cm+' cm does not match week '+w,'Possible growth problem \u00b7 visit of '+fd(v.visit_date))}
+   if(v.fundal_height_cm&&w&&w>=24&&Math.abs(v.fundal_height_cm-w)>(TH('fundal_mismatch_cm').high??3))add(p,'comp',2,'Fundal height '+v.fundal_height_cm+' cm does not match week '+w,'Possible growth problem \u00b7 visit of '+fd(v.visit_date))}
   const od=overdueInfo(p);if(od)add(p,'overdue',od.days>14?2:1,p.status==='delivered'?'Postnatal check overdue':'Checkup overdue',od.text);
   (D.al||[]).filter(a=>a.patient_id===p.id&&!a.acknowledged).forEach(a=>add(p,'warn',3,'Unresolved emergency alert ('+a.level+')',(a.symptoms||[]).join(', ')+' \u00b7 '+new Date(a.created_at).toLocaleString()));
   (D.amb||[]).filter(a=>a.patient_id===p.id&&['requested','dispatched'].includes(a.status)).forEach(a=>add(p,'warn',3,'Active ambulance request ('+a.status+')',a.address||''));
@@ -883,11 +889,49 @@ function medAlerts(){const out=[],t=today();
   if(ante&&w&&w>=28&&!teamOf(p.id).length)add(p,'warn',2,'No care team assigned (week '+w+')','Assign a doctor, midwife or nurse');
   D.ap.filter(a=>a.patient_id===p.id&&a.status==='admitted'&&!a.bed_released_at&&a.bed_no&&!stayOn(a)).forEach(a=>add(p,'warn',1,'Bed '+a.bed_no+' stay has ended','Free the bed or extend the stay'))});
  return out.sort((a,b)=>b.sev-a.sev)}
+
+/* ---------- pregnancy record (Stage 1) ---------- */
+const pregAct=id=>(D.preg||[]).find(x=>x.patient_id===id&&x.status==='active');
+const pregOf=id=>pregAct(id)||(D.preg||[]).filter(x=>x.patient_id===id).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)))[0];
+const RLV={unassessed:['Not yet assessed',''],low:['Low risk',''],moderate:['Moderate risk','hot'],high:['High risk','hot']};
+function pregCard(p){
+ const pr=pregOf(p.id);
+ if(!pr)return '<div class="card"><h3>Pregnancy</h3><div class="mu">No pregnancy record. Record the last menstrual period in Edit profile to start one.</div></div>';
+ const act=pr.status==='active',w=p.lmp?wk(p):null,cw=w==null?null:Math.min(w,42),pct=cw==null?0:Math.max(0,Math.min(100,Math.round(cw/40*100)));
+ const left=pr.edd?Math.round((new Date(pr.edd+'T00:00:00').getTime()-Date.now())/864e5):null,lv=RLV[pr.risk_level]||RLV.unassessed;
+ const g=(l,v)=>`<div><span>${l}</span>${esc(v==null||v===''?'-':v)}</div>`;
+ return `<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">Pregnancy</h3><span class="pill">${act?'Active':esc(pr.status==='delivered'?'Delivered':'Ended')}</span></div>
+ <div class="grid" style="margin-top:8px">${g('Gestational age',act&&w!=null?'Week '+cw+' \u00b7 '+tri(cw):'')}${g('Estimated due date',pr.edd?fd(pr.edd):'')}${g('Dating',pr.edd_source==='lmp'?'From last menstrual period':pr.edd_source==='ultrasound'?'Ultrasound':'Manual')}${g(act?'Time to due date':'Outcome date',act?(left==null?'':left>=0?left+' day(s)':Math.abs(left)+' day(s) past due date'):pr.outcome_on?fd(pr.outcome_on):'')}</div>
+ ${act&&cw!=null?`<div style="margin-top:10px;background:var(--bd);border-radius:99px;height:8px" title="${pct}% of 40 weeks"><div style="width:${pct}%;height:8px;border-radius:99px;background:var(--ac)"></div></div><div class="mu" style="margin-top:4px">${pct}% of 40 weeks</div>`:''}
+ <div class="row" style="justify-content:space-between;margin-top:14px"><b>Risk assessment</b><span class="pill ${lv[1]}">${lv[0]}</span></div>
+ ${(pr.risk_factors||[]).length?`<div class="mu" style="margin-top:4px">Factors: ${pr.risk_factors.map(esc).join(', ')}</div>`:''}
+ ${pr.risk_note?`<div style="margin-top:4px">${esc(pr.risk_note)}</div>`:''}
+ <div class="mu" style="margin-top:4px">${pr.risk_updated_at?'Updated '+new Date(pr.risk_updated_at).toLocaleDateString()+(pr.risk_updated_by===me.id?' by you':''):'No clinician has assessed this pregnancy yet. This is different from a low-risk finding.'}</div>
+ <div class="mu">Decision support only. Risk is set by a clinician and does not diagnose.</div>
+ ${act?`<button class="btn g" style="margin-top:8px" onclick="riskModal('${p.id}')">${ic('edit')} Update risk assessment</button>`:''}</div>`}
+function riskModal(pid){const pr=pregAct(pid);if(!pr)return alert('No active pregnancy record.');
+ const o=(v,l)=>`<option value="${v}"${pr.risk_level===v?' selected':''}>${l}</option>`;
+ modal('Risk assessment',`<label class="l">Risk level</label><select name="risk_level">${o('unassessed','Not yet assessed')}${o('low','Low risk')}${o('moderate','Moderate risk')}${o('high','High risk')}</select>${fld('Risk factors (separate with commas)','risk_factors','text',(pr.risk_factors||[]).join(', '),'maxlength="400"')}<label class="l">Clinical note</label><textarea name="risk_note" maxlength="1000">${esc(pr.risk_note||'')}</textarea><div class="mu">Decision support only. The assessment is your clinical judgement.</div>`,async f=>{
+  const fac=(f.risk_factors||'').split(',').map(x=>x.trim()).filter(Boolean);
+  if(fac.length>10||fac.some(x=>x.length>60))throw new Error('Use at most 10 risk factors of 60 characters each.');
+  const {data,error}=await sb.from('pregnancies').update({risk_level:f.risk_level,risk_factors:fac,risk_note:nz((f.risk_note||'').trim()),risk_updated_by:me.id,risk_updated_at:new Date().toISOString()}).eq('id',pr.id).select();
+  if(error)throw error;if(!data||!data.length)throw new Error('You do not have permission to change this record.');
+  await loadDoc();toast('Risk assessment saved.')})}
+const THK=['bp_sys','bp_dia','temp_c','pulse','fetal_heart_rate','fundal_mismatch_cm'];
+function thModal(){if(!isMD())return;const rows=(D.th||[]).slice().sort((a,b)=>THK.indexOf(a.key)-THK.indexOf(b.key));
+ modal('Alert thresholds',`<div class="mu" style="margin-bottom:8px">Readings beyond these values are flagged for clinical review. Start from your clinic protocol. Leave a box empty to turn that limit off.</div>${rows.map(r=>`<div style="margin-top:10px"><b>${esc(r.label)}</b> <span class="mu">${esc(r.unit||'')}</span><div class="two">${fld('Low','th_'+r.key+'_low','number',r.low??'','step="0.1"')}${fld('High','th_'+r.key+'_high','number',r.high??'','step="0.1"')}${fld('Severe low','th_'+r.key+'_severe_low','number',r.severe_low??'','step="0.1"')}${fld('Severe high','th_'+r.key+'_severe_high','number',r.severe_high??'','step="0.1"')}</div></div>`).join('')}`,async f=>{
+  const upd=[];for(const r of rows){const v={};for(const c of ['low','high','severe_low','severe_high'])v[c]=nm(f['th_'+r.key+'_'+c]);
+   if(v.low!=null&&v.high!=null&&v.low>=v.high)throw new Error(r.label+': low must be below high.');
+   if(v.high!=null&&v.severe_high!=null&&v.severe_high<v.high)throw new Error(r.label+': severe high cannot be below high.');
+   if(v.low!=null&&v.severe_low!=null&&v.severe_low>v.low)throw new Error(r.label+': severe low cannot be above low.');
+   upd.push([r.key,v])}
+  for(const [k,v] of upd){const {data,error}=await sb.from('clinical_thresholds').update({...v,updated_by:me.id,updated_at:new Date().toISOString()}).eq('key',k).select();if(error)throw error;if(!data||!data.length)throw new Error('Only a doctor can change thresholds.')}
+  await loadDoc();toast('Thresholds saved.')})}
 let maf='all';
 function remindCheckup(pid){const p=P(pid);if(!p||!confirm('Send '+p.full_name+' a checkup reminder?'))return;
  sb.from('notifications').insert({patient_id:pid,kind:'follow_up',priority:'important',title:p.status==='delivered'?'Postnatal check due':'Antenatal checkup due',body:'Your checkup is due. Please book an appointment or visit the clinic soon.'}).then(({error})=>error?alert(friendly(error)):toast('Reminder sent.'))}
 function medAlertsView(){const all=medAlerts(),cats=[['all','All'],['risk','High-risk'],['comp','Complications'],['overdue','Overdue checkups'],['warn','Other critical']],n=k=>k==='all'?all.length:all.filter(x=>x.cat===k).length,l=maf==='all'?all:all.filter(x=>x.cat===maf);
- let h=`<h2 style="margin-top:0">Medical alerts</h2><div class="mu" style="margin-bottom:10px">Calculated live from visits, appointments, emergency alerts and pregnancy dates. Review clinically.</div><div class="stats">${tile('alert','Critical',all.filter(x=>x.sev===3).length,"maf='all';drawDoc()",all.some(x=>x.sev===3))}${tile('heart','High-risk pregnancies',new Set(all.filter(x=>x.cat==='risk').map(x=>x.p.id)).size,"maf='risk';drawDoc()")}${tile('act','Complications',n('comp'),"maf='comp';drawDoc()")}${tile('clock','Overdue checkups',n('overdue'),"maf='overdue';drawDoc()")}</div>
+ let h=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Medical alerts</h2>${isMD()?`<button class="btn g" style="padding:4px 12px" onclick="thModal()">${ic('gear')} Alert thresholds</button>`:''}</div><div class="mu" style="margin-bottom:10px">Calculated live from visits, appointments, emergency alerts and pregnancy dates. Review clinically.</div><div class="stats">${tile('alert','Critical',all.filter(x=>x.sev===3).length,"maf='all';drawDoc()",all.some(x=>x.sev===3))}${tile('heart','High-risk pregnancies',new Set(all.filter(x=>x.cat==='risk').map(x=>x.p.id)).size,"maf='risk';drawDoc()")}${tile('act','Complications',n('comp'),"maf='comp';drawDoc()")}${tile('clock','Overdue checkups',n('overdue'),"maf='overdue';drawDoc()")}</div>
  <div class="row" style="margin:12px 0">${cats.map(c=>`<button class="btn ${maf===c[0]?'':'g'}" style="padding:4px 12px" onclick="maf='${c[0]}';drawDoc()">${c[1]} (${n(c[0])})</button>`).join('')}</div>`;
  h+=l.length?l.map(x=>`<div class="card sev${x.sev}"><div class="row" style="justify-content:space-between"><b style="cursor:pointer" onclick="openPt('${x.p.id}')">${esc(x.p.full_name)}</b><span class="row"><span class="pill ${LV[x.sev][1]}">${LV[x.sev][0]}</span><span class="pill">${{risk:'High-risk',comp:'Complication',overdue:'Overdue',warn:'Warning'}[x.cat]}</span></span></div><div style="margin-top:4px"><b>${esc(x.title)}</b></div><div class="mu">${esc(x.detail||'')}</div><div class="row" style="margin-top:8px"><button class="btn g" style="padding:4px 10px" onclick="openPt('${x.p.id}')">Open record</button><button class="btn g" style="padding:4px 10px" onclick="openChat('${x.p.id}')">Message</button>${x.cat==='overdue'?`<button class="btn" style="padding:4px 10px" onclick="remindCheckup('${x.p.id}')">${ic('bell')} Remind patient</button>`:''}</div></div>`).join(''):'<div class="card">No alerts in this category.</div>';
  return h}
@@ -1134,12 +1178,13 @@ function riskOf(p){
  if(activeAmb)reasons.push('Active ambulance request');
  const v=lastV(p.id);(v?flags(v):[]).forEach(f=>reasons.push(f+(v.visit_date===today()?'':' (visit of '+fd(v.visit_date)+')')));
  if(p.admitted_at)reasons.push('Currently admitted');
+ const pa=pregAct(p.id);if(pa&&pa.risk_level==='high')reasons.push('Clinician-assessed high risk'+((pa.risk_factors||[]).length?': '+pa.risk_factors.join(', '):''));else if(pa&&pa.risk_level==='moderate')reasons.push('Clinician-assessed moderate risk'+((pa.risk_factors||[]).length?': '+pa.risk_factors.join(', '):''));
  const missed=(D.ap||[]).filter(a=>a.patient_id===p.id&&a.status==='missed').length;
  if(missed>=2)reasons.push(missed+' missed appointments');
  if((p.gravida||0)>=5)reasons.push('Grand multipara (gravida '+p.gravida+')');
  if(p.dob){const age=ageOf(p);if(age!=='-'&&(age<18||age>35))reasons.push('Age '+age+(age<18?' \u2013 adolescent pregnancy':' \u2013 advanced maternal age'))}
  let level='normal';
- if(activeAlert||activeAmb)level='critical';else if(reasons.length>=2||p.admitted_at)level='priority';else if(reasons.length===1)level='watch';
+ if(activeAlert||activeAmb)level='critical';else if(reasons.length>=2||p.admitted_at||(pa&&pa.risk_level==='high'))level='priority';else if(reasons.length===1)level='watch';
  return {level,reasons}}
 function riskPill(p){const r=riskOf(p);if(r.level==='normal')return '';
  return `<span class="pill hot" style="cursor:help" title="${esc(r.reasons.join('. '))}" onclick="event.stopPropagation();alert(${JSON.stringify(RISK_LB[r.level]+' \u2013 '+p.full_name+'\n\n')}+[${r.reasons.map(x=>JSON.stringify('\u2022 '+x)).join(',')}].join('\n'))">${RISK_LB[r.level]}</span>`}
