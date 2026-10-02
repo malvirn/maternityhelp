@@ -160,7 +160,7 @@ input,select,textarea,.f{border-radius:10px}input:focus,select:focus,textarea:fo
 .nv.on{background:color-mix(in srgb,var(--ac) 11%,transparent);color:var(--al);box-shadow:none;font-weight:600}.nv.on::before{content:'';position:absolute;left:-12px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:var(--gr)}
 .nv .bd,.nv.on .bd{background:var(--rs);color:#fff}.grpwrap{border-left-color:var(--bd)}
 .md{border-top:1px solid var(--bd);border-radius:18px 18px 0 0}.md::before{display:none}
-.toast{background:var(--tx);color:var(--bg);border-radius:12px}
+.toast{background:var(--tx);color:var(--bg);border-radius:12px;touch-action:pan-y;user-select:none;-webkit-user-select:none;animation:tin .2s ease-out}.toast span{flex:1}.toast .tx{background:transparent;border:0;color:inherit;display:grid;place-items:center;padding:4px;margin:-4px -4px -4px 0;opacity:.75;cursor:pointer;flex:none}@keyframes tin{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
 th{color:var(--mu);background:transparent}tr:hover td{background:var(--in)}
 .bar{border-radius:99px;height:8px}.bar i{background:var(--gr)}
 .now{background:var(--ac)}.big{font-weight:700}.tag{color:var(--mu)}.err{color:var(--rs)}
@@ -183,23 +183,11 @@ a{color:var(--al)}
 .qr{width:180px;height:180px;background:#fff;border-radius:10px;padding:8px}.sec{font-family:ui-monospace,monospace;word-break:break-all;background:var(--in);border:1px solid var(--bd);border-radius:8px;padding:6px 10px;display:inline-block}
 :focus-visible{outline:2px solid var(--ac);outline-offset:2px}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media(max-width:640px){.sgrid{grid-template-columns:1fr}.sr{flex-wrap:wrap}.mode{gap:8px}}
-.bf{display:flex;justify-content:center;margin:2px 0 4px}.bf svg{width:210px;max-width:70%;height:auto;overflow:visible}
-.bf-bg{fill:var(--ac);opacity:.10}.bf-gr{fill:var(--ac);opacity:.12}
-.bf-all{transform-origin:120px 192px;animation:bfb 4s ease-in-out infinite}
-.bf-head{transform-origin:116px 100px;animation:bft 5s ease-in-out infinite}
-.bf-baby2,.bf-baby{transform-origin:150px 140px;animation:bfy 3.2s ease-in-out infinite}
-.bf-hand{animation:bfw 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
-.bf-foot{animation:bfk 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
-.bf-ht{animation:bfh 4.2s ease-in infinite;opacity:0;transform-box:fill-box;transform-origin:center}.bf-ht.h2{animation-delay:1.4s}.bf-ht.h3{animation-delay:2.8s}
-.bf-st{animation:bfs 2.6s ease-in-out infinite}.bf-st.s2{animation-delay:.9s}.bf-st.s3{animation-delay:1.7s}
-@keyframes bfb{0%,100%{transform:scale(1)}50%{transform:scale(1.014,1.02)}}
-@keyframes bft{0%,100%{transform:rotate(1deg)}50%{transform:rotate(6deg)}}
-@keyframes bfy{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.6px)}}
-@keyframes bfw{0%,100%{transform:translate(0,0)}50%{transform:translate(3px,-4px)}}
-@keyframes bfk{0%,100%{transform:translate(0,0)}50%{transform:translate(2px,-3px)}}
-@keyframes bfh{0%{opacity:0;transform:translateY(8px) scale(.6)}20%{opacity:.95}100%{opacity:0;transform:translateY(-34px) scale(1.15)}}
-@keyframes bfs{0%,100%{opacity:.25}50%{opacity:1}}
-@media(prefers-reduced-motion:reduce){.bf *{animation:none!important}.bf-ht{opacity:.9}}
+.wlc{text-align:center;margin:6px 0 2px}.wlc b{display:block;font-size:17px;color:var(--tx)}
+.wlc .wl{position:relative;height:40px;margin-top:4px}.wlc .wl span{position:absolute;left:0;right:0;top:0;color:var(--mu);font-size:14px;line-height:1.35;opacity:0;animation:wlf 20s infinite}
+.wlc .wl span:nth-child(2){animation-delay:4s}.wlc .wl span:nth-child(3){animation-delay:8s}.wlc .wl span:nth-child(4){animation-delay:12s}.wlc .wl span:nth-child(5){animation-delay:16s}
+@keyframes wlf{0%{opacity:0;transform:translateY(6px)}4%,18%{opacity:1;transform:none}22%,100%{opacity:0;transform:translateY(-6px)}}
+@media(prefers-reduced-motion:reduce){.wlc .wl span{animation:none}.wlc .wl span:first-child{opacity:1}}
 .lnk{background:none;border:0;color:var(--al);font:600 14px 'Inter',system-ui,sans-serif;cursor:pointer;padding:4px 0}.lnk:hover{text-decoration:underline}
 .orl{display:flex;align-items:center;gap:10px;color:var(--mu);font-size:13px;margin:14px 0 10px}.orl::before,.orl::after{content:"";flex:1;height:1px;background:var(--bd)}
 .gbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1f1f1f;border:1px solid #dadce0;border-radius:10px;padding:12px 16px;font:600 15px 'Inter',system-ui,sans-serif;cursor:pointer}.gbtn:hover{background:#f7f8f8}
@@ -283,16 +271,30 @@ addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e;showInst()})
 addEventListener('appinstalled',()=>{dip=null;showInst()});
 async function installApp(){if(!dip)return alert('To install: open the browser menu (three dots) and tap Install app or Add to Home screen.');dip.prompt();await dip.userChoice;dip=null}
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
-function toast(msg,fn){document.querySelectorAll('.toast').forEach(t=>t.remove());const t=document.createElement('div');t.className='toast';t.innerHTML=ic('bell')+'<span>'+esc(msg)+'</span>';t.onclick=()=>{t.remove();fn&&fn()};document.body.appendChild(t);try{navigator.vibrate&&navigator.vibrate(200)}catch(e){}setTimeout(()=>t.remove(),8000)}
+function toast(msg,fn){
+ document.querySelectorAll('.toast').forEach(t=>t.remove());
+ const t=document.createElement('div');t.className='toast';
+ t.innerHTML=ic('bell')+'<span>'+esc(msg)+'</span><button class="tx" type="button" aria-label="Dismiss">'+ic('x')+'</button>';
+ let x0=0,y0=0,dx=0,dy=0,drag=false,tm;
+ const kill=d=>{clearTimeout(tm);t.style.transition='transform .18s ease,opacity .18s ease';t.style.transform=d?'translateX('+(d*120)+'%)':'translateY(-130%)';t.style.opacity='0';setTimeout(()=>t.remove(),190)};
+ const arm=()=>{clearTimeout(tm);tm=setTimeout(()=>kill(0),fn?7000:4000)};
+ t.addEventListener('pointerdown',e=>{if(e.target.closest('.tx'))return;drag=true;x0=e.clientX;y0=e.clientY;dx=dy=0;clearTimeout(tm);t.style.transition='none';try{t.setPointerCapture(e.pointerId)}catch(_){}});
+ t.addEventListener('pointermove',e=>{if(!drag)return;dx=e.clientX-x0;dy=e.clientY-y0;t.style.transform='translate('+dx+'px,'+Math.min(0,dy)+'px)';t.style.opacity=String(Math.max(.3,1-Math.abs(dx)/260))});
+ const end=()=>{if(!drag)return;drag=false;if(Math.abs(dx)>60)return kill(dx>0?1:-1);if(dy<-40)return kill(0);
+  if(Math.abs(dx)<6&&Math.abs(dy)<6){clearTimeout(tm);t.remove();fn&&fn();return}
+  t.style.transition='transform .15s ease,opacity .15s ease';t.style.transform='';t.style.opacity='';arm()};
+ t.addEventListener('pointerup',end);t.addEventListener('pointercancel',end);
+ t.querySelector('.tx').onclick=e=>{e.stopPropagation();kill(0)};
+ document.body.appendChild(t);try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}arm()}
 function setBell(n){const b=$('bellc');if(b){b.textContent=n>9?'9+':n;b.style.display=n?'block':'none'}document.title=(n?'('+n+') ':'')+'Maternity Help'}
 let ptLoaded=false,lastAl=-1,lastQ={},qInit=false;
 function nav(k){document.body.classList.remove('nav');if(me.role==='doctor'){view=k;sel=null;ad.sel=null;ad.data=null;if(k==='audit')loadAudit();if(k==='chat')chatPt=null;if(k==='schedule'){scheduleModal(me.id);view='overview';drawDoc();return}pFilter=null;drawDoc()}else{ptab=k;bk={};conf='';drawPt()}}
 async function logout(){chans.forEach(c=>sb.removeChannel(c));chans=[];me=null;sel=null;view='overview';ptab='home';ptLoaded=false;lastAl=-1;lastQ={};qInit=false;CH.msgs=[];GR.g=null;GR.msgs=[];chatPt=null;if(CALL)endCall('me');await sb.auth.signOut({scope:'local'});authView()}
-const BF=`<div class="bf"><svg viewBox="0 0 240 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A mother breastfeeding her baby"><defs><path id="bf-h" d="M0 -3C-6 -10 -14 -2 0 8C14 -2 6 -10 0 -3Z"/></defs><circle class="bf-bg" cx="120" cy="104" r="86"/><ellipse class="bf-gr" cx="120" cy="192" rx="74" ry="7"/><g class="bf-all"> <path d="M60 192C56 148 76 118 112 114L128 114C164 118 184 148 180 192Z" fill="#e8537a"/> <path d="M96 150C118 158 150 152 174 140" stroke="#e8537a" stroke-width="16" stroke-linecap="round" fill="none"/> <rect x="108" y="94" width="16" height="22" rx="7" fill="#8d5a3b"/> <g class="bf-head">  <circle cx="116" cy="50" r="11" fill="#2b1a14"/>  <circle cx="116" cy="78" r="22" fill="#8d5a3b"/>  <path d="M93 76C92 50 140 50 139 76C132 63 100 63 93 76Z" fill="#2b1a14"/>  <path d="M105 81q5 4 10 0M121 81q5 4 10 0" stroke="#3b2418" stroke-width="2" stroke-linecap="round" fill="none"/>  <path d="M110 91q6 5 12 0" stroke="#3b2418" stroke-width="2" stroke-linecap="round" fill="none"/>  <circle cx="103" cy="88" r="4" fill="#ff8fa3" opacity=".4"/><circle cx="129" cy="88" r="4" fill="#ff8fa3" opacity=".4"/> </g> <g class="bf-baby">  <ellipse cx="158" cy="140" rx="31" ry="15" transform="rotate(24 158 140)" fill="#ffd166"/>  <path d="M146 128l10 22M158 124l10 22M170 130l8 18" stroke="#f4b942" stroke-width="3" stroke-linecap="round" opacity=".8"/> </g> <path d="M90 114C102 108 126 110 142 118C152 126 146 142 130 144C110 146 94 138 86 124Z" fill="#2a9d8f"/> <path d="M96 120C110 118 128 122 138 130" stroke="#47b8a8" stroke-width="2.5" stroke-linecap="round" fill="none" opacity=".8"/><g class="bf-baby2"> <circle cx="140" cy="130" r="13" fill="#a8704c"/> <path d="M129 124C132 114 148 114 151 124C145 120 135 120 129 124Z" fill="#7fd1c7"/> <path d="M135 133q3.5 3 7 0" stroke="#3b2418" stroke-width="1.7" stroke-linecap="round" fill="none"/> <circle cx="134" cy="138" r="2.6" fill="#ff8fa3" opacity=".5"/> <circle class="bf-hand" cx="155" cy="122" r="4.5" fill="#a8704c"/> <circle class="bf-foot" cx="187" cy="153" r="5" fill="#a8704c"/></g> <circle cx="178" cy="144" r="7" fill="#8d5a3b"/></g><use href="#bf-h" class="bf-ht h1" x="150" y="64" fill="#e8537a"/><use href="#bf-h" class="bf-ht h2" x="176" y="84" fill="#ff8fa3"/><use href="#bf-h" class="bf-ht h3" x="92" y="52" fill="#ff8fa3"/><circle class="bf-st s1" cx="52" cy="70" r="2.5" fill="#ffd166"/><circle class="bf-st s2" cx="196" cy="56" r="2" fill="#ffd166"/><circle class="bf-st s3" cx="40" cy="120" r="2" fill="#ffd166"/></svg></div>`;
+const BF=`<div class="wlc"><b>Welcome to Maternity Help</b><div class="wl"><span>Book antenatal visits and see your fees</span><span>Message your care team any time</span><span>Track your care plan and daily steps</span><span>Get updates from the clinic in the group chat</span><span>Help is one tap away when you need it</span></div></div>`;
 const GLOGO='<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-2.9-.8-4.7s.3-3.3.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.9 2.3-8.5 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>';
 let RECOV=/type=recovery/.test(location.hash),HASHERR=(()=>{const m=location.hash.match(/error_description=([^&]+)/);return m?decodeURIComponent(m[1].replace(/\+/g,' ')):''})();
 function authView(msg=''){
- document.body.classList.remove('in','nav','sos');sosStop();{const f=document.getElementById('sosfab');if(f)f.remove()}document.title='Maternity Help';
+ document.querySelectorAll('.toast').forEach(t=>t.remove());document.body.classList.remove('in','nav','sos');sosStop();{const f=document.getElementById('sosfab');if(f)f.remove()}document.title='Maternity Help';
  const reg=mode==='reg',pat=true;
  app.innerHTML=`<div class="card auth"><div style="text-align:right"><button class="ib" data-tb="" title="Change theme" onclick="toggleTheme()">${tIc()}</button></div><div style="display:flex;justify-content:center"><img class="logo big" src="/logo.png" alt="Maternity Help"></div>${BF}<h1>${reg?'Register':'Sign in'}</h1><p class="tag">Care for you and your baby, every week</p><div class="mu">${reg?'Create your account':'Use your Maternity Help account'}</div>
  <div class="seg"><button class="btn ${!reg?'on':''}" onclick="mode='login';authView()">Log in</button><button class="btn ${reg?'on':''}" onclick="mode='reg';authView()">Register</button></div>
@@ -408,7 +410,7 @@ async function loadPatient(){
   sb.from('step_logs').select('*').eq('patient_id',me.id).gte('log_date',new Date(Date.now()-13*864e5).toISOString().slice(0,10)).order('log_date',{ascending:false}),
   sb.rpc('my_care_team')]);
  PD={ap:a.data||[],nt:n.data||[],svc:s.data||[],staff:st.data||[],al:al.data||[],plan:cp.data||[],amb:am.data||[],steps:sl.data||[],team:tm.data||[]};
- if(ptLoaded){const nw=PD.nt.filter(x=>!x.read&&!oldN.has(x.id));if(nw.length&&ST.notif.sound)playSound(ST.notif.tone||'chime');if(nw.length)toast('New notification: '+nw[0].title+(nw.length>1?' (+'+(nw.length-1)+' more)':''),()=>{ptab='notes';drawPt()})}
+ if(ptLoaded){const nw=PD.nt.filter(x=>!x.read&&!oldN.has(x.id));if(nw.length&&ST.notif.sound)playSound(ST.notif.tone||'chime');if(nw.length&&ptab!=='notes')toast('New notification: '+nw[0].title+(nw.length>1?' (+'+(nw.length-1)+' more)':''),()=>{ptab='notes';drawPt()})}
  ptLoaded=true;drawPt()}
 function drawPt(){
  if(!$('pv'))return;trackNav();const un=PD.nt.filter(x=>!x.read).length;
