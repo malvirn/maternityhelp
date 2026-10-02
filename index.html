@@ -266,7 +266,7 @@ function toast(msg,fn){document.querySelectorAll('.toast').forEach(t=>t.remove()
 function setBell(n){const b=$('bellc');if(b){b.textContent=n>9?'9+':n;b.style.display=n?'block':'none'}document.title=(n?'('+n+') ':'')+'Maternity Help'}
 let ptLoaded=false,lastAl=-1,lastQ={},qInit=false;
 function nav(k){document.body.classList.remove('nav');if(me.role==='doctor'){view=k;sel=null;ad.sel=null;ad.data=null;if(k==='audit')loadAudit();if(k==='chat')chatPt=null;if(k==='schedule'){scheduleModal(me.id);view='overview';drawDoc();return}pFilter=null;drawDoc()}else{ptab=k;bk={};conf='';drawPt()}}
-async function logout(){chans.forEach(c=>sb.removeChannel(c));chans=[];me=null;sel=null;view='overview';ptab='home';ptLoaded=false;lastAl=-1;lastQ={};qInit=false;CH.msgs=[];chatPt=null;if(CALL)endCall('me');await sb.auth.signOut({scope:'local'});authView()}
+async function logout(){chans.forEach(c=>sb.removeChannel(c));chans=[];me=null;sel=null;view='overview';ptab='home';ptLoaded=false;lastAl=-1;lastQ={};qInit=false;CH.msgs=[];GR.g=null;GR.msgs=[];chatPt=null;if(CALL)endCall('me');await sb.auth.signOut({scope:'local'});authView()}
 function authView(msg=''){
  document.body.classList.remove('in','nav','sos');sosStop();{const f=document.getElementById('sosfab');if(f)f.remove()}document.title='Maternity Help';
  const reg=mode==='reg',pat=true;
@@ -327,7 +327,7 @@ const friendly=e=>{const m=e.message||String(e);return /violates check constrain
 const fld=(l,n,t='text',v='',x='')=>`<label class="l">${l}</label><input name="${n}" type="${t}" value="${esc(v)}" ${x}>`;
 /* ---------- patient ---------- */
 let ptab='home',PD={ap:[],nt:[],svc:[],staff:[],al:[],plan:[],amb:[],steps:[],team:[]},bk={},conf='';
-const PITEMS=[['home','Home','home'],['plan','Care plan','file'],['steps','Daily steps','act'],['book','Book appointment','cal'],['appts','Appointments','clock'],['fees','Fees','file'],['chat','Messages','msg'],['notes','Notifications','bell']];
+const PITEMS=[['home','Home','home'],['plan','Care plan','file'],['steps','Daily steps','act'],['book','Book appointment','cal'],['appts','Appointments','clock'],['fees','Fees','file'],['chat','Messages','msg'],['group','Group chat','users'],['notes','Notifications','bell']];
 const KINDS=[['message','Hospital message'],['test_result','New test result'],['medication','Medication reminder'],['follow_up','Follow-up appointment'],['checkup','Antenatal checkup'],['lab','Laboratory appointment'],['ultrasound','Ultrasound appointment'],['doctor_appointment','Doctor appointment'],['missed','Missed appointment']];
 const ft=t=>t?String(t).slice(0,5):'';
 const overdue=a=>a.status==='scheduled'&&new Date(a.appt_date+'T'+(a.appt_time?String(a.appt_time).slice(0,5):'23:59')).getTime()<Date.now();
@@ -337,10 +337,10 @@ const svcName=a=>(PD.svc.find(x=>x.id===a.service_id)||{}).name||a.kind;
 const stfName=a=>{const f=PD.staff.find(x=>x.id===a.staff_id);return f?f.staff_title+' '+f.full_name:''};
 async function patientView(){
  shell('pv');beat();
- await loadPatient();await loadChat();
+ await loadPatient();await loadChat();loadGroup();
  const f='patient_id=eq.'+me.id,ch=sb.channel('pm');
  ['notifications','appointments','alerts','care_plan_items','ambulance_requests'].forEach(t=>ch.on('postgres_changes',{event:'*',schema:'public',table:t,filter:f},loadPatient));
- ch.on('postgres_changes',{event:'*',schema:'public',table:'chat_messages',filter:f},onChat).on('postgres_changes',{event:'INSERT',schema:'public',table:'call_signals',filter:f},onSig);
+ ch.on('postgres_changes',{event:'*',schema:'public',table:'chat_messages',filter:f},onChat).on('postgres_changes',{event:'INSERT',schema:'public',table:'group_messages'},onGroup).on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_groups'},onGroup).on('postgres_changes',{event:'INSERT',schema:'public',table:'call_signals',filter:f},onSig);
  chans.push(ch.subscribe())}
 async function loadPatient(){
  const oldN=new Set(PD.nt.map(x=>x.id));
@@ -362,7 +362,7 @@ function drawPt(){
  $('side').innerHTML=navHtml(PITEMS,ptab,{notes:un,chat:chatUn()});setBell(un);showInst();
  if(ptab==='chat'&&$('chat')){paintChat();return}
  if(ptab==='steps'&&document.activeElement&&document.activeElement.tagName==='INPUT'&&$('pv').contains(document.activeElement))return;
- $('pv').innerHTML={home:ptHome,plan:ptPlan,steps:ptSteps,book:ptBook,appts:ptAppts,chat:()=>threadView(me.id),notes:ptNotes,fees:ptFees,settings:settingsView}[ptab]();
+ $('pv').innerHTML={home:ptHome,plan:ptPlan,steps:ptSteps,book:ptBook,appts:ptAppts,chat:()=>threadView(me.id),group:groupView,notes:ptNotes,fees:ptFees,settings:settingsView}[ptab]();
  if(ptab==='chat')afterChat();
  ambSync();checkReminders()}
 function reminders(){
@@ -483,7 +483,7 @@ async function sendAlert(){
  toast((lvl==='EMERGENCY'?'Emergency':'Labour')+' alert sent. The team has been notified.');loadPatient()}
 /* ---------- doctor ---------- */
 let D={pts:[],vis:[],ap:[],al:[],notes:[],plan:[],audit:[],staff:[],svc:[],se:[],amb:[],steps:[],asg:[],ract:[],rv:[],rem:[]},sel=null,view='overview',pFilter=null,pScope=null,aUn=false;
-const DITEMS=()=>{const base=[['overview','Overview','home'],['queue','Queue','clock'],['ambulance','Ambulance','alert'],['patients','Patients','users'],['chat','Messages','msg'],['bookings','Bookings','cal'],['beds','Beds','bed'],['medalerts','Medical alerts','alert'],['reports','Reports','file'],['schedule','My schedule','cal']];return isAdmin()?[['admin','Admin dashboard','shield']].concat(base,[['staff','Staff','users'],['assign','Assignments','user'],['audit','Audit log','shield']]):base};
+const DITEMS=()=>{const base=[['overview','Overview','home'],['queue','Queue','clock'],['ambulance','Ambulance','alert'],['patients','Patients','users'],['chat','Messages','msg'],['group','Group chat','users'],['bookings','Bookings','cal'],['beds','Beds','bed'],['medalerts','Medical alerts','alert'],['reports','Reports','file'],['schedule','My schedule','cal']];return isAdmin()?[['admin','Admin dashboard','shield']].concat(base,[['staff','Staff','users'],['assign','Assignments','user'],['audit','Audit log','shield']]):base};
 const dsn=a=>{const s=D.svc.find(x=>x.id===a.service_id),f=D.staff.find(x=>x.id===a.staff_id);return esc((s?s.name:a.kind)+(a.appt_time?' at '+String(a.appt_time).slice(0,5):'')+(f?' with '+(f.staff_title||'Doctor')+' '+f.full_name:'')+(a.bed_no?' \u00b7 Bed '+a.bed_no:''))};
 const P=id=>D.pts.find(p=>p.id===id),lastV=id=>D.vis.find(v=>v.patient_id===id);
 const DEFTH={bp_sys:{high:140,severe_high:160},bp_dia:{high:90,severe_high:110},temp_c:{high:38,severe_high:39},pulse:{low:50,high:100,severe_high:120},fetal_heart_rate:{low:110,high:160,severe_low:100,severe_high:170},fundal_mismatch_cm:{high:3,severe_high:5}};
@@ -500,10 +500,10 @@ function flags(v){const f=[];if(!v)return f;
  return f}
 async function doctorView(){
  shell('doc');beat();view=isAdmin()?'admin':isMD()?'overview':'queue';
- await loadDoc();await loadChatAll();
+ await loadDoc();await loadChatAll();loadGroup();
  const ch=sb.channel('da');['alerts','appointments','visits','ambulance_requests'].forEach(t=>ch.on('postgres_changes',{event:'*',schema:'public',table:t},loadDoc));
  ch.on('postgres_changes',{event:'INSERT',schema:'public',table:'profiles'},loadDoc);
- ch.on('postgres_changes',{event:'*',schema:'public',table:'chat_messages'},onChat).on('postgres_changes',{event:'INSERT',schema:'public',table:'call_signals'},onSig);chans.push(ch.subscribe())}
+ ch.on('postgres_changes',{event:'*',schema:'public',table:'chat_messages'},onChat).on('postgres_changes',{event:'INSERT',schema:'public',table:'group_messages'},onGroup).on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_groups'},onGroup).on('postgres_changes',{event:'INSERT',schema:'public',table:'call_signals'},onSig);chans.push(ch.subscribe())}
 async function loadDoc(){
  const back=new Date(Date.now()-30*864e5).toISOString().slice(0,10);
  const [a,b,c,d]=await Promise.all([
@@ -540,7 +540,7 @@ function overview(){
  const H2=h;h='';h+=`<h2>Patients (${D.pts.length})</h2>${scopeChips()}${pFilter?`<button class="btn g" style="margin-bottom:10px" onclick="pFilter=null;drawDoc()">Showing admitted only \u00d7</button>`:''}<input placeholder="Search name, ID or phone" oninput="filt(this.value)" style="margin-bottom:10px">`;
  h+=[...pList()].sort((a,b)=>riskRank[riskOf(b).level]-riskRank[riskOf(a).level]).map(p=>{const d=p.status==='delivered';return `<div class="pr" data-q="${esc((p.full_name+' '+p.patient_code+' '+p.phone).toLowerCase())}" onclick="openPt('${p.id}')"><div><b>${esc(p.full_name)}</b> <span class="mu">${esc(p.patient_code)}</span><div class="mu">${d?'Postnatal week '+pnw(p):p.lmp?'Week '+wk(p)+' \u00b7 EDD '+due(p):'No dates'}</div></div><div class="row">${p.admitted_at?'<span class="pill hot">Admitted</span>':''}${riskPill(p)}${isAdmin()?`<button class="btn g" onclick="event.stopPropagation();makeStaffModal('${p.id}')">Make staff</button>`:''}</div></div>`}).join('')||'<div class="mu">No patients registered yet.</div>';
  if(view==='settings')return settingsView();
- return {overview:H1,bookings:H2,patients:h,staff:staffView(),admin:adminDash(),assign:assignView(),audit:auditPanel(),chat:staffChat(),queue:queueView(),ambulance:ambulanceView(),beds:bedsView(),medalerts:medAlertsView(),reports:reportsView()}[view]||H1}
+ return {overview:H1,bookings:H2,patients:h,staff:staffView(),admin:adminDash(),assign:assignView(),audit:auditPanel(),chat:staffChat(),group:groupView(),queue:queueView(),ambulance:ambulanceView(),beds:bedsView(),medalerts:medAlertsView(),reports:reportsView()}[view]||H1}
 function filt(q){q=q.toLowerCase();document.querySelectorAll('.pr[data-q]').forEach(r=>r.style.display=r.dataset.q.includes(q)?'':'none')}
 async function openPt(id){sel=id;D.notes=[];D.plan=[];D.steps=[];drawDoc();scrollTo(0,0);sb.rpc('log_view',{p_patient:id});const [n,p,sl]=await Promise.all([sb.from('clinical_notes').select('*').eq('patient_id',id).order('created_at',{ascending:false}),sb.from('care_plan_items').select('*').eq('patient_id',id).order('done').order('due_date',{ascending:true,nullsFirst:false}),sb.from('step_logs').select('*').eq('patient_id',id).gte('log_date',new Date(Date.now()-13*864e5).toISOString().slice(0,10))]);D.notes=n.data||[];D.plan=p.data||[];D.steps=sl.data||[];if(sel===id)drawDoc()}
 function timeline(p){
@@ -691,6 +691,35 @@ function staffChat(){
  const tl=c=>{const d=new Date(c);return dayLbl(d)==='Today'?d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):dayLbl(d)};
  setTimeout(()=>loadPeerAv(rows.map(r=>r.pid)),0);
  return `<h2 style="margin-top:0">Messages</h2>`+(rows.map(r=>{const nm=(D.pts.find(x=>x.id===r.pid)||{}).full_name||'Patient';return `<div class="wrow" onclick="openChat('${r.pid}')">${avFor(r.pid,nm,48)}<div class="wm"><b>${esc(nm)}</b><span>${r.last.sender_id===me.id?'You: ':''}${esc(r.last.body.slice(0,80))}</span></div><div class="wr"><span>${tl(r.last.created_at)}</span>${r.un?`<span class="wb">${r.un}</span>`:''}</div></div>`}).join('')||'<div class="mu">No conversations yet. Open a patient and tap Message to start one.</div>')}
+/* ---------- group chat: every patient and staff member is in it; admin can lock it to admin-only ---------- */
+const GR={g:null,msgs:[]};
+async function loadGroup(){try{const {data:g}=await sb.from('chat_groups').select('*').order('created_at').limit(1);GR.g=(g||[])[0]||null;
+ if(GR.g){const {data}=await sb.from('group_messages').select('*').eq('group_id',GR.g.id).order('created_at',{ascending:false}).limit(300);GR.msgs=(data||[]).reverse()}}catch(e){}
+ if($('gchat'))paintGroup()}
+const inGroup=()=>me&&(me.role==='doctor'?(view==='group'&&!sel):ptab==='group');
+function gBubbles(){let last='',out='';
+ GR.msgs.forEach(m=>{const d=new Date(m.created_at),k=dayLbl(d),mine=m.sender_id===me.id;if(k!==last){out+=`<div class="wad"><span>${k}</span></div>`;last=k}
+  out+=`<div class="bub ${mine?'me':''}">${mine?'':`<b class="wan">${esc(m.sender_name||'Member')}${m.sender_role==='staff'?' \u00b7 staff':''}</b>`}${esc(m.body)}<span class="wat">${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div>`});
+ return out||'<div class="wnote" style="margin:auto">No messages yet.</div>'}
+function paintGroup(){const el=$('gchat');if(!el)return;el.innerHTML=gBubbles();el.scrollTop=el.scrollHeight}
+function groupView(){
+ const g=GR.g;if(!g)return '<h2 style="margin-top:0">Group chat</h2><div class="mu">Loading...</div>';
+ const adm=isAdmin(),lock=g.admin_only&&!adm;
+ setTimeout(paintGroup,0);
+ return `<div class="wa"><div class="wahd"><button class="ib" onclick="${me.role==='doctor'?"nav('overview')":"nav('home')"}" title="Back">${ic('back')}</button><span class="av" style="--s:40px">${ic('users')}</span><div class="wt"><b>${esc(g.name)}</b><small>${g.admin_only?'Only admins can send messages':'Patients and staff'}</small></div></div>${adm?`<label class="wnote" style="display:flex;gap:8px;align-items:center;justify-content:center;background:var(--in)"><input type="checkbox" ${g.admin_only?'checked':''} onchange="setGroupLock(this.checked)" style="width:auto;margin:0"> Only admin can send messages</label>`:''}<div class="chat" id="gchat"></div>${lock?`<div class="wnote" style="background:#f0f2f5;color:#54656f">Only admins can send messages in this group.</div>`:`<div class="wain"><input id="gin" placeholder="Type a message" maxlength="2000" autocomplete="off" onkeydown="if(event.key==='Enter')sendGroup()"><button class="snd" onclick="sendGroup()" title="Send">${ic('send')}</button></div>`}</div><div class="wnote">Group updates are visible to all patients and staff. Do not share private health details here.</div>`}
+async function sendGroup(){
+ const i=$('gin');if(!i||!GR.g)return;const body=i.value.trim();if(!body)return;i.value='';
+ const {data,error}=await sb.from('group_messages').insert({group_id:GR.g.id,sender_id:me.id,body}).select().single();
+ if(error){i.value=body;return alert(/row-level security/i.test(error.message)?'Only admins can send messages in this group right now.':error.message)}
+ if(!GR.msgs.some(x=>x.id===data.id))GR.msgs.push(data);paintGroup();i.focus()}
+async function setGroupLock(on){
+ const {data,error}=await sb.from('chat_groups').update({admin_only:!!on}).eq('id',GR.g.id).select().single();
+ if(error){alert(friendly(error));return}GR.g=data;me.role==='doctor'?drawDoc():drawPt();toast(on?'Only admins can send messages now.':'Everyone can send messages again.')}
+function onGroup(pl){
+ const m=pl.new;if(!m||!me)return;
+ if(pl.table==='chat_groups'){GR.g=m;if(inGroup()){const v=$('gin')?$('gin').value:'';me.role==='doctor'?drawDoc():drawPt();const e=$('gin');if(e)e.value=v}return}
+ if(GR.msgs.some(x=>x.id===m.id))return;GR.msgs.push(m);
+ if(inGroup())paintGroup();else if(m.sender_id!==me.id)toast((m.sender_name||'Someone')+' posted in Group chat',()=>nav('group'))}
 function openChat(pid){view='chat';chatPt=pid;sel=null;drawDoc()}
 function paintChat(){const el=$('chat');if(!el)return;el.innerHTML=bubbles(me.role==='doctor'?chatPt:me.id);el.scrollTop=el.scrollHeight}
 function afterChat(){refreshPres();loadPeerAv([chatPeer(me.role==='doctor'?chatPt:me.id).id]);paintChat();markThread(me.role==='doctor'?chatPt:me.id)}
