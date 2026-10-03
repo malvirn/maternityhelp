@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Accounts | Maternity Help</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F5F4; --surface:#FFFFFF; --sunk:#EAEFED; --ink:#16302B; --muted:#5B6F6A; --line:#D9E1DE;
+  --accent:#1F6E5E; --accent-ink:#FFFFFF; --pos:#23704A; --neg:#A8402B; --warn:#9A6210; --info:#3D5A8A; --plum:#7A5C99;
+  --sans:"IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --serif:"IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --r:6px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0F1A18; --surface:#16231F; --sunk:#1C2B27; --ink:#E4ECE9; --muted:#9BB0AA; --line:#2A3B36;
+         --accent:#4FB39B; --accent-ink:#0F1A18; --pos:#5CC08A; --neg:#E07A62; --warn:#E0A84A; --info:#8DA9D6; --plum:#B59AD4; }
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);font-variant-numeric:tabular-nums;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--serif);font-weight:600;margin:0;line-height:1.25}
+h1{font-size:1.6rem} h2{font-size:1.15rem} h3{font-size:1rem}
+a{color:var(--accent)}
+.muted{color:var(--muted)} .pos{color:var(--pos)} .neg{color:var(--neg)} .warn{color:var(--warn)}
+.num{text-align:right;white-space:nowrap}
+.hidden{display:none !important}
+
+/* shell */
+.app{display:grid;grid-template-columns:220px 1fr;min-height:100%}
+.nav{background:var(--ink);color:#DCE7E3;padding:20px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+@media (prefers-color-scheme: dark){ .nav{background:#0A1311} }
+.brand{font-family:var(--serif);font-size:1.1rem;color:#fff;padding:0 8px 16px}
+.brand small{display:block;font-family:var(--sans);font-size:.8rem;color:#9DB5AE;font-weight:400}
+.nav button{all:unset;cursor:pointer;padding:8px 10px;border-radius:var(--r);color:#C9D8D3}
+.nav button:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav button[aria-current="page"]{background:rgba(255,255,255,.12);color:#fff;font-weight:500}
+.nav button:focus-visible{outline:2px solid #8FD3C1}
+.who{margin-top:auto;font-size:.85rem;color:#9DB5AE;padding:8px 10px;border-top:1px solid rgba(255,255,255,.12)}
+.who b{color:#fff;font-weight:500;display:block}
+.nav a.back{color:#C9D8D3;padding:8px 10px;border-radius:var(--r);text-decoration:none;white-space:nowrap}
+.nav a.back:hover{background:rgba(255,255,255,.07);color:#fff}
+.linkbtn{background:none;border:0;padding:0;color:inherit;text-decoration:underline;cursor:pointer}
+main{min-width:0;padding:24px 28px 60px}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;justify-content:space-between;margin-bottom:20px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .nav{position:sticky;top:0;z-index:5;height:auto;flex-direction:row;overflow-x:auto;padding:10px;gap:2px;align-items:center}
+  .brand{padding:0 10px 0 4px;white-space:nowrap;font-size:1rem}
+  .brand small{display:none}
+  .nav button{white-space:nowrap}
+  .who{margin:0 0 0 auto;border:0;white-space:nowrap}
+  .who b{display:none}
+  main{padding:16px 14px 60px}
+}
+
+/* controls */
+.btn{border:1px solid var(--line);background:var(--surface);padding:7px 14px;border-radius:var(--r);cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:500}
+.btn.danger{color:var(--neg)}
+.btn.small{padding:3px 9px;font-size:.85rem}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:6px 12px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+input,select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:7px 9px;min-width:0}
+input[type=date]{padding:6px 8px}
+textarea{resize:vertical;min-height:60px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.9rem}
+label.f > span{color:var(--muted)}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))} .g3{grid-template-columns:repeat(3,minmax(0,1fr))} .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:700px){ .g2,.g3,.g4{grid-template-columns:1fr} }
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.check{display:flex;gap:8px;align-items:center}
+
+/* surfaces */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.panel > h2,.panel > h3{margin-bottom:10px}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.stack{display:flex;flex-direction:column;gap:16px}
+.cols{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
+.c4{grid-column:span 4} .c5{grid-column:span 5} .c6{grid-column:span 6} .c7{grid-column:span 7} .c8{grid-column:span 8} .c12{grid-column:span 12}
+@media (max-width:1100px){ .c4,.c5,.c6,.c7,.c8{grid-column:span 12} }
+.scroll{overflow-x:auto}
+
+/* statement line: the dashboard's signature */
+.statement{display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 22px;padding:22px 24px;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:var(--r)}
+.statement .term{display:flex;flex-direction:column}
+.statement .term span:first-child{color:var(--muted);font-size:.9rem}
+.statement .amt{font-family:var(--serif);font-size:clamp(1.5rem,3.4vw,2.4rem);line-height:1.1}
+.statement .op{font-family:var(--serif);font-size:clamp(1.3rem,3vw,2rem);color:var(--muted);padding-bottom:2px}
+.statement .result .amt{font-weight:600}
+.statement .range{flex-basis:100%;color:var(--muted);font-size:.85rem;margin-top:6px}
+
+.figures{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.figures > div{padding:14px 16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.figures > div:nth-child(4n){border-right:0}
+.figures > div:nth-last-child(-n+4){border-bottom:0}
+.figures .k{color:var(--muted);font-size:.85rem}
+.figures .v{font-size:1.25rem;font-weight:500;margin-top:2px}
+.figures .s{font-size:.82rem;color:var(--muted)}
+@media (max-width:900px){
+  .figures{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .figures > div{border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .figures > div:nth-child(2n){border-right:0}
+  .figures > div:nth-last-child(-n+2){border-bottom:0}
+}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th{font-weight:500;color:var(--muted);text-align:left;border-bottom:1px solid var(--line);padding:7px 8px;white-space:nowrap}
+td{border-bottom:1px solid var(--line);padding:7px 8px;vertical-align:top}
+tr:last-child td{border-bottom:0}
+tfoot td{font-weight:600;border-top:2px solid var(--line)}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--sunk)}
+tr.header td{font-weight:600}
+tr.inactive td{color:var(--muted)}
+.pill{display:inline-block;font-size:.75rem;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-left:4px;white-space:nowrap}
+.pill.ok{color:var(--pos);border-color:currentColor} .pill.bad{color:var(--neg);border-color:currentColor} .pill.mid{color:var(--warn);border-color:currentColor}
+.list{list-style:none;margin:0;padding:0}
+.list li{padding:8px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px}
+.list li:last-child{border-bottom:0}
+.alert{padding:10px 12px;border-radius:var(--r);border:1px solid var(--line);border-left-width:4px;margin-bottom:8px;background:var(--surface)}
+.alert.critical{border-left-color:var(--neg)} .alert.warning{border-left-color:var(--warn)} .alert.info{border-left-color:var(--info)}
+.alert b{display:block;font-weight:500}
+.empty{color:var(--muted);padding:6px 0}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;background:none;padding:8px 12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--muted)}
+.tabs button[aria-selected="true"]{border-bottom-color:var(--accent);color:var(--ink);font-weight:500}
+.chart-box{position:relative;height:260px}
+.chart-box.tall{height:300px}
+
+/* journal line editor */
+.lines{width:100%}
+.lines td{border-bottom:0;padding:4px 4px}
+.lines select,.lines input{width:100%}
+.lines .amt{width:110px}
+.diff{font-weight:500}
+
+/* dialog + toast */
+dialog{border:1px solid var(--line);border-radius:var(--r);padding:0;width:min(860px,96vw);background:var(--surface);color:var(--ink)}
+dialog::backdrop{background:rgba(10,20,18,.45)}
+.dlg-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.dlg-body{padding:16px 18px;max-height:76vh;overflow:auto}
+.toast{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));max-width:420px;padding:12px 14px;border-radius:var(--r);background:var(--ink);color:var(--bg);opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;pointer-events:none;z-index:50}
+.toast.show{opacity:1;transform:none}
+.toast.err{background:var(--neg);color:#fff}
+.login{max-width:380px;margin:12vh auto;padding:28px}
+.loading{color:var(--muted);padding:20px 0}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<dialog id="modal" aria-labelledby="modal-title">
+  <div class="dlg-head"><h2 id="modal-title"></h2><button class="btn small" data-close type="button">Close</button></div>
+  <div class="dlg-body" id="modal-body"></div>
+</dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+"use strict";
+/* ---------- configuration ---------- */
+const SUPABASE_URL = "https://swbvlpplhuezdlbzuuhh.supabase.co";
+const SUPABASE_KEY = "sb_publishable_yNNbCu6kVC00rZ-qKzT0ew_JOK77dEZ";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ---------- state ---------- */
+const S = {
+  session: null, access: null, look: null, page: "dashboard", charts: {},
+  dash: { preset: "month", from: null, to: null },
+  gl: { tab: "ledger", from: null, to: null, account: "", type: "", source: "", search: "", offset: 0, asOf: null },
+  jl: { from: null, to: null, type: "", search: "", offset: 0 },
+  acc: { asOf: null },
+  tx: { tab: "receipt" }
+};
+const PAGE = 200;
+
+/* ---------- labels ---------- */
+const METHOD = { cash: "Cash", bank: "Bank transfer", ecocash: "EcoCash", innbucks: "InnBucks", insurance: "Medical aid", other: "Other / not recorded" };
+const ETYPE = { manual: "Manual", auto: "Automatic", document: "Document", opening: "Opening balance", closing: "Year-end closing", reversal: "Reversal" };
+const SOURCE = { appointment: "Appointment", bed_charge: "Ward charge", ambulance: "Ambulance", receipt: "Receipt", refund: "Refund", invoice: "Invoice",
+  bill: "Supplier bill", bill_payment: "Bill payment", expense: "Expense", manual: "Manual", opening: "Opening balances", period_close: "Period close" };
+const TYPES = { asset: "Asset", liability: "Liability", equity: "Equity", revenue: "Revenue", expense: "Expense" };
+const SUBTYPES = {
+  asset: ["general","cash","bank","mobile_money","receivable_patient","receivable_insurance","receivable_other","inventory","prepayment","fixed_asset","contra_asset"],
+  liability: ["general","payable_supplier","accrued","payroll_liability","tax_payable","patient_deposit","long_term_liability"],
+  equity: ["general","capital","retained_earnings","opening_balance","drawings"],
+  revenue: ["general","operating_revenue","other_income"],
+  expense: ["general","operating_expense","depreciation","other_expense"]
+};
+const SUBLABEL = { general: "General", cash: "Cash", bank: "Bank", mobile_money: "Mobile money", receivable_patient: "Patient receivables (control)",
+  receivable_insurance: "Medical aid receivable", receivable_other: "Other receivable", inventory: "Inventory", prepayment: "Prepayment", fixed_asset: "Equipment / fixed asset",
+  contra_asset: "Contra asset (e.g. depreciation)", payable_supplier: "Supplier payables (control)", accrued: "Accrued expense", payroll_liability: "Payroll liability",
+  tax_payable: "Tax payable", patient_deposit: "Patient deposits", long_term_liability: "Long-term liability", capital: "Capital", retained_earnings: "Retained earnings",
+  opening_balance: "Opening balance equity", drawings: "Drawings", operating_revenue: "Operating revenue", other_income: "Other income",
+  operating_expense: "Operating expense", depreciation: "Depreciation", other_expense: "Other expense" };
+const MAPKIND = { fee_item: "Appointment fee item", appt_kind: "Appointment type", charge_category: "Ward charge category", ambulance: "Ambulance" };
+
+/* ---------- helpers ---------- */
+const $ = (sel, el = document) => el.querySelector(sel);
+const $$ = (sel, el = document) => Array.from(el.querySelectorAll(sel));
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const cur = () => (S.access && S.access.currency) || "USD";
+function money(n) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: cur(), minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n || 0));
+}
+function amt(n) { const v = Number(n || 0); return v === 0 ? "" : money(v); }
+function parseISO(s) { const [y, m, d] = String(s).slice(0, 10).split("-").map(Number); return new Date(Date.UTC(y, m - 1, d)); }
+function toISO(d) { return d.toISOString().slice(0, 10); }
+function addDays(s, n) { const d = parseISO(s); d.setUTCDate(d.getUTCDate() + n); return toISO(d); }
+function fd(s) { if (!s) return ""; const d = parseISO(s); return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }); }
+function fdt(s) { if (!s) return ""; return new Date(s).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }); }
+function today() { return (S.access && S.access.today) || toISO(new Date()); }
+function monthStart(s) { return s.slice(0, 8) + "01"; }
+function newKey() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  const a = new Uint8Array(16); crypto.getRandomValues(a); return Array.from(a, b => b.toString(16).padStart(2, "0")).join("");
+}
+const AMOUNT_RE = /^\d{1,12}(\.\d{1,2})?$/;
+function cents(v) { const s = String(v || "").trim(); if (!s) return 0; if (!AMOUNT_RE.test(s)) return NaN; return Math.round(parseFloat(s) * 100); }
+function role() { return S.access ? S.access.role : null; }
+const canPost = () => ["accountant", "controller"].includes(role());
+const isCtl = () => role() === "controller";
+const isAdmin = () => !!(S.access && S.access.is_admin);
+
+async function rpc(fn, args = {}) {
+  const { data, error } = await sb.rpc(fn, args);
+  if (error) throw new Error(error.message || "The request failed");
+  return data;
+}
+let toastTimer;
+function toast(msg, err = false) {
+  const t = $("#toast"); t.textContent = msg; t.className = "toast show" + (err ? " err" : "");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = "toast", err ? 6500 : 3500);
+}
+async function busy(btn, fn) {
+  if (btn.disabled) return;
+  const label = btn.textContent; btn.disabled = true; btn.textContent = "Working…";
+  try { await fn(); } catch (e) { toast(e.message, true); } finally { btn.disabled = false; btn.textContent = label; }
+}
+function openModal(title, html) {
+  $("#modal-title").textContent = title; $("#modal-body").innerHTML = html;
+  const d = $("#modal"); if (!d.open) d.showModal();
+  return $("#modal-body");
+}
+function closeModal() { const d = $("#modal"); if (d.open) d.close(); }
+$("#modal").addEventListener("click", e => { if (e.target.matches("[data-close]") || e.target === $("#modal")) closeModal(); });
+
+function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function chart(id, cfg) {
+  if (S.charts[id]) { S.charts[id].destroy(); delete S.charts[id]; }
+  const el = document.getElementById(id); if (!el || !window.Chart) return;
+  Chart.defaults.font.family = cssVar("--sans"); Chart.defaults.color = cssVar("--muted"); Chart.defaults.borderColor = cssVar("--line");
+  S.charts[id] = new Chart(el, cfg);
+}
+function destroyCharts() { Object.values(S.charts).forEach(c => c.destroy()); S.charts = {}; }
+
+function opt(v, label, sel) { return `<option value="${esc(v)}"${String(v) === String(sel ?? "") ? " selected" : ""}>${esc(label)}</option>`; }
+function accountOptions(filter, sel, blank = "Choose an account") {
+  const list = (S.look ? S.look.accounts : []).filter(filter);
+  return opt("", blank, sel) + list.map(a => opt(a.id, `${a.code}  ${a.name}`, sel)).join("");
+}
+const postable = a => !a.is_header && a.is_active;
+const payFrom = a => postable(a) && ["cash", "bank", "mobile_money"].includes(a.subtype);
+const costAcct = a => postable(a) && (a.type === "expense" || ["inventory", "prepayment", "fixed_asset"].includes(a.subtype));
+function patientOptions(sel, blank = "Choose a patient") {
+  return opt("", blank, sel) + (S.look ? S.look.patients : []).map(p => opt(p.id, p.name + (p.code ? ` (${p.code})` : ""), sel)).join("");
+}
+function supplierOptions(sel, onlyActive = true, blank = "Choose a supplier") {
+  return opt("", blank, sel) + (S.look ? S.look.suppliers : []).filter(s => !onlyActive || s.is_active).map(s => opt(s.id, s.name, sel)).join("");
+}
+/* form field access by name that works in every browser and never collides with built-in form properties */
+function form(el) {
+  if (!el) return el;
+  return new Proxy(el, { get(t, k) {
+    const named = typeof k === "string" && t.elements ? t.elements.namedItem(k) : null;
+    if (named) return named;
+    const v = t[k]; return typeof v === "function" ? v.bind(t) : v;
+  } });
+}
+function acctById(id) { return (S.look ? S.look.accounts : []).find(a => a.id === id); }
+async function loadLookups() { S.look = await rpc("acc_lookups"); }
+
+/* ---------- shell ---------- */
+const NAV = [
+  ["dashboard", "Dashboard"], ["ledger", "General ledger"], ["journal", "Journal entries"], ["accounts", "Chart of accounts"],
+  ["periods", "Periods"], ["transactions", "Transactions"], ["settings", "Settings"]
+];
+function renderShell() {
+  const pages = NAV.filter(([k]) => k !== "transactions" || canPost());
+  $("#root").innerHTML = `
+  <div class="app">
+    <nav class="nav" aria-label="Accounting">
+      <div class="brand">Maternity Help<small>Accounts</small></div>
+      ${pages.map(([k, l]) => `<button type="button" data-nav="${k}">${l}</button>`).join("")}
+      <a class="back" href="/">Back to Maternity Help</a>
+      <div class="who"><b>${esc(S.access.name || "Signed in")}</b>${esc(roleLabel(role()))}<br>
+        <button type="button" id="signout" class="linkbtn">Sign out</button></div>
+    </nav>
+    <main>
+      <div class="top"><h1 id="page-title"></h1><div class="toolbar" id="toolbar"></div></div>
+      <div id="view"></div>
+    </main>
+  </div>`;
+  $$("[data-nav]").forEach(b => b.addEventListener("click", () => go(b.dataset.nav)));
+  $("#signout").addEventListener("click", async () => { await sb.auth.signOut(); });
+}
+function roleLabel(r) { return { viewer: "Viewer", accountant: "Accountant", controller: "Financial controller" }[r] || ""; }
+function go(page) {
+  S.page = page; destroyCharts();
+  $$("[data-nav]").forEach(b => { if (b.dataset.nav === page) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+  $("#toolbar").innerHTML = "";
+  const r = { dashboard: renderDashboard, ledger: renderLedger, journal: renderJournal, accounts: renderAccounts,
+              periods: renderPeriods, transactions: renderTransactions, settings: renderSettings }[page];
+  r().catch(e => { $("#view").innerHTML = `<div class="panel"><b>Could not load this page.</b><p class="muted">${esc(e.message)}</p></div>`; });
+}
+function setTitle(t) { $("#page-title").textContent = t; document.title = `${t} | Maternity Help accounts`; }
+function loading() { $("#view").innerHTML = `<div class="loading">Loading…</div>`; }
+
+/* ---------- dashboard ---------- */
+function rangeFor(preset) {
+  const t = today(); const d = parseISO(t); const y = d.getUTCFullYear(), m = d.getUTCMonth();
+  const fsm = ((S.look && S.look.settings && S.look.settings.fiscal_year_start_month) || 1) - 1;
+  switch (preset) {
+    case "day": return [t, t];
+    case "week": { const s = addDays(t, -((d.getUTCDay() + 6) % 7)); return [s, addDays(s, 6)]; }
+    case "month": return [toISO(new Date(Date.UTC(y, m, 1))), toISO(new Date(Date.UTC(y, m + 1, 0)))];
+    case "quarter": { const q = Math.floor(m / 3) * 3; return [toISO(new Date(Date.UTC(y, q, 1))), toISO(new Date(Date.UTC(y, q + 3, 0)))]; }
+    case "year": { const sy = m >= fsm ? y : y - 1; return [toISO(new Date(Date.UTC(sy, fsm, 1))), toISO(new Date(Date.UTC(sy + 1, fsm, 0)))]; }
+    default: return [S.dash.from || t, S.dash.to || t];
+  }
+}
+async function renderDashboard() {
+  setTitle("Dashboard");
+  const presets = [["day", "Today"], ["week", "This week"], ["month", "This month"], ["quarter", "This quarter"], ["year", "This year"], ["custom", "Custom"]];
+  $("#toolbar").innerHTML = `
+    <div class="seg" role="group" aria-label="Period">${presets.map(([k, l]) => `<button type="button" data-preset="${k}" aria-pressed="${S.dash.preset === k}">${l}</button>`).join("")}</div>
+    <span class="row ${S.dash.preset === "custom" ? "" : "hidden"}" id="custom">
+      <input type="date" id="d-from" aria-label="From" value="${esc(S.dash.from || monthStart(today()))}">
+      <input type="date" id="d-to" aria-label="To" value="${esc(S.dash.to || today())}">
+      <button class="btn" id="d-apply" type="button">Show</button></span>`;
+  $$("[data-preset]").forEach(b => b.addEventListener("click", () => {
+    S.dash.preset = b.dataset.preset;
+    if (S.dash.preset === "custom") { $$("[data-preset]").forEach(x => x.setAttribute("aria-pressed", x === b)); $("#custom").classList.remove("hidden"); return; }
+    renderDashboard();
+  }));
+  $("#d-apply").addEventListener("click", () => {
+    const f = $("#d-from").value, t = $("#d-to").value;
+    if (!f || !t || f > t) return toast("Choose a start date on or before the end date", true);
+    S.dash.from = f; S.dash.to = t; renderDashboard();
+  });
+  loading();
+  const [from, to] = rangeFor(S.dash.preset);
+  const d = await rpc("acc_dashboard", { p_from: from, p_to: to });
+  const s = d.summary, rc = d.receivables, inv = d.invoices, bills = d.bills;
+  const profit = Number(s.profit);
+  $("#view").innerHTML = `
+  <div class="stack">
+    <div class="statement" aria-label="Profit and loss for the period">
+      <div class="term"><span>Revenue</span><span class="amt">${money(s.revenue)}</span></div>
+      <span class="op" aria-hidden="true">−</span>
+      <div class="term"><span>Expenses</span><span class="amt">${money(s.expenses)}</span></div>
+      <span class="op" aria-hidden="true">=</span>
+      <div class="term result"><span>${profit < 0 ? "Loss" : "Profit"}</span><span class="amt ${profit < 0 ? "neg" : "pos"}">${money(Math.abs(profit))}</span></div>
+      <div class="range">${fd(from)} to ${fd(to)}. Balances are as at ${fd(to)}; invoice and bill status is as at today.</div>
+    </div>
+
+    <div class="figures">
+      <div><div class="k">Owed by patients</div><div class="v">${money(rc.outstanding)}</div><div class="s">${rc.patients_owing} patient(s)</div></div>
+      <div><div class="k">Payments received</div><div class="v">${money(d.payments.total)}</div><div class="s">${d.payments.count} receipt(s) in period</div></div>
+      <div><div class="k">Refunds paid</div><div class="v">${money(d.refunds.total)}</div><div class="s">${d.refunds.count} refund(s) in period</div></div>
+      <div><div class="k">Cash and bank</div><div class="v">${money(d.cash_bank.total)}</div><div class="s">${d.cash_bank.accounts.length} account(s)</div></div>
+      <div><div class="k">Pending invoices</div><div class="v">${money(inv.pending_amount)}</div><div class="s">${inv.pending_count} not yet due</div></div>
+      <div><div class="k">Overdue invoices</div><div class="v ${Number(inv.overdue_amount) > 0 ? "neg" : ""}">${money(inv.overdue_amount)}</div><div class="s">${inv.overdue_count} past due</div></div>
+      <div><div class="k">Unpaid supplier bills</div><div class="v">${money(bills.unpaid_amount)}</div><div class="s">${bills.unpaid_count} open, ${bills.overdue_count} overdue</div></div>
+      <div><div class="k">Owed by medical aid</div><div class="v">${money(rc.insurance)}</div><div class="s">${money(rc.credits)} patient credit to refund</div></div>
+    </div>
+
+    <div class="cols">
+      <div class="panel c8"><div class="panel-head"><h2>Revenue and expenses</h2><span class="muted">by ${esc(d.range.bucket)}</span></div>
+        <div class="chart-box tall"><canvas id="ch-series" aria-label="Revenue and expenses chart"></canvas></div></div>
+      <div class="panel c4"><h2>Alerts</h2>${alertsHtml(d.alerts)}</div>
+
+      <div class="panel c6"><h2>Income by service</h2>${d.income_by_service.length ? `<div class="chart-box"><canvas id="ch-svc"></canvas></div>` : `<p class="empty">No income in this period.</p>`}</div>
+      <div class="panel c6"><h2>Payments by method</h2>${d.payment_methods.length ? `<div class="chart-box"><canvas id="ch-pm"></canvas></div>` : `<p class="empty">No payments in this period.</p>`}</div>
+
+      <div class="panel c7"><div class="panel-head"><h2>Monthly summary</h2><span class="muted">Financial year ${esc(d.range.fiscal_year)}</span></div>
+        <div class="scroll"><table><thead><tr><th>Month</th><th class="num">Revenue</th><th class="num">Expenses</th><th class="num">Net</th><th>Status</th></tr></thead>
+        <tbody>${d.monthly.map(m => `<tr><td>${esc(m.period)}</td><td class="num">${money(m.revenue)}</td><td class="num">${money(m.expenses)}</td>
+          <td class="num ${Number(m.net) < 0 ? "neg" : ""}">${money(m.net)}</td><td>${statusPill(m.status)}</td></tr>`).join("") || `<tr><td colspan="5" class="empty">No periods set up for this year.</td></tr>`}</tbody>
+        <tfoot><tr><td>Year to date</td><td class="num">${money(sum(d.monthly, "revenue"))}</td><td class="num">${money(sum(d.monthly, "expenses"))}</td><td class="num">${money(sum(d.monthly, "net"))}</td><td></td></tr></tfoot></table></div></div>
+      <div class="panel c5"><h2>Annual summary</h2>
+        <div class="scroll"><table><thead><tr><th>Financial year</th><th class="num">Revenue</th><th class="num">Expenses</th><th class="num">Net</th></tr></thead>
+        <tbody>${d.annual.map(a => `<tr><td>${esc(a.fiscal_year)}</td><td class="num">${money(a.revenue)}</td><td class="num">${money(a.expenses)}</td><td class="num ${Number(a.net) < 0 ? "neg" : ""}">${money(a.net)}</td></tr>`).join("") || `<tr><td colspan="4" class="empty">No postings yet.</td></tr>`}</tbody></table></div>
+        <h3 style="margin-top:18px">Cash and bank balances</h3>
+        <ul class="list">${d.cash_bank.accounts.map(a => `<li><span>${esc(a.code)} ${esc(a.name)}</span><span class="${Number(a.balance) < 0 ? "neg" : ""}">${money(a.balance)}</span></li>`).join("")}</ul></div>
+
+      <div class="panel c6"><h2>Recent transactions</h2>
+        <div class="scroll"><table><thead><tr><th>Entry</th><th>Date</th><th>Description</th><th class="num">Amount</th></tr></thead><tbody>
+        ${d.recent.map(r => `<tr class="click" data-entry="${r.id}"><td>${esc(r.entry_no)}${r.status === "reversed" ? `<span class="pill bad">Reversed</span>` : ""}</td>
+          <td>${fd(r.entry_date)}</td><td>${esc(r.description)}<div class="muted" style="font-size:.82rem">${esc(ETYPE[r.entry_type] || r.entry_type)}, ${esc(SOURCE[r.source_type] || r.source_type)}</div></td>
+          <td class="num">${money(r.amount)}</td></tr>`).join("") || `<tr><td colspan="4" class="empty">No transactions yet.</td></tr>`}</tbody></table></div></div>
+      <div class="panel c6"><h2>Upcoming obligations</h2>
+        ${d.obligations.length ? `<ul class="list">${d.obligations.map(o => `<li><span>${esc(o.ref)}, ${esc(o.party)}<br><span class="muted">Due ${fd(o.due_date)}</span>${o.overdue ? `<span class="pill bad">Overdue</span>` : ""}</span><span>${money(o.amount)}</span></li>`).join("")}</ul>`
+          : `<p class="empty">No supplier bills due in the next 30 days.</p>`}
+        ${Number(rc.credits) > 0 ? `<h3 style="margin-top:16px">Patient credits to refund</h3><ul class="list">${rc.credit_list.map(p => `<li><span>${esc(p.name)}</span><span>${money(p.credit)}</span></li>`).join("")}</ul>` : ""}</div>
+
+      <div class="panel c6"><h2>Pending and overdue invoices</h2>
+        ${inv.list.length ? `<div class="scroll"><table><thead><tr><th>Invoice</th><th>Patient</th><th>Due</th><th class="num">Outstanding</th></tr></thead><tbody>
+          ${inv.list.map(i => `<tr><td>${esc(i.invoice_no)}</td><td>${esc(i.patient)}</td><td>${fd(i.due_date)}${i.overdue ? `<span class="pill bad">Overdue</span>` : ""}</td><td class="num">${money(i.outstanding)}</td></tr>`).join("")}</tbody></table></div>`
+          : `<p class="empty">No unpaid invoices.</p>`}</div>
+      <div class="panel c6"><h2>Patients with the largest balances</h2>
+        ${rc.top.length ? `<ul class="list">${rc.top.map(p => `<li><span>${esc(p.name)}</span><span>${money(p.bal)}</span></li>`).join("")}</ul>` : `<p class="empty">No patient owes money.</p>`}</div>
+    </div>
+  </div>`;
+  bindEntryLinks($("#view"));
+  const acc = cssVar("--accent"), neg = cssVar("--neg");
+  chart("ch-series", { type: "bar", data: { labels: d.series.map(x => x.label), datasets: [
+      { label: "Revenue", data: d.series.map(x => Number(x.revenue)), backgroundColor: acc },
+      { label: "Expenses", data: d.series.map(x => Number(x.expenses)), backgroundColor: neg }] },
+    options: { maintainAspectRatio: false, plugins: { tooltip: { callbacks: { label: c => `${c.dataset.label}: ${money(c.raw)}` } } },
+      scales: { y: { beginAtZero: true, ticks: { callback: v => money(v) } } } } });
+  if (d.income_by_service.length) chart("ch-svc", { type: "bar", data: { labels: d.income_by_service.map(x => x.name),
+      datasets: [{ label: "Income", data: d.income_by_service.map(x => Number(x.amount)), backgroundColor: acc }] },
+    options: { indexAxis: "y", maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => money(c.raw) } } },
+      scales: { x: { beginAtZero: true, ticks: { callback: v => money(v) } } } } });
+  if (d.payment_methods.length) {
+    const palette = [acc, cssVar("--info"), cssVar("--warn"), cssVar("--plum"), cssVar("--pos"), cssVar("--muted")];
+    chart("ch-pm", { type: "doughnut", data: { labels: d.payment_methods.map(x => `${METHOD[x.method] || x.method} (${x.count})`),
+        datasets: [{ data: d.payment_methods.map(x => Number(x.amount)), backgroundColor: palette, borderColor: cssVar("--surface") }] },
+      options: { maintainAspectRatio: false, plugins: { legend: { position: "right" }, tooltip: { callbacks: { label: c => `${c.label}: ${money(c.raw)}` } } } } });
+  }
+}
+function sum(arr, k) { return arr.reduce((a, x) => a + Number(x[k] || 0), 0); }
+function statusPill(s) { return `<span class="pill ${s === "open" ? "ok" : s === "locked" ? "bad" : "mid"}">${esc(s[0].toUpperCase() + s.slice(1))}</span>`; }
+function alertsHtml(list) {
+  if (!list.length) return `<p class="empty">Nothing needs attention.</p>`;
+  return list.map(a => `<div class="alert ${esc(a.level)}"${a.entry_id ? ` data-entry="${a.entry_id}" style="cursor:pointer"` : ""}><b>${esc(a.title)}</b><span class="muted">${esc(a.detail)}</span></div>`).join("");
+}
+function bindEntryLinks(root) {
+  $$("[data-entry]", root).forEach(el => el.addEventListener("click", () => showEntry(el.dataset.entry)));
+}
+
+/* ---------- journal entry detail + reversal ---------- */
+async function showEntry(id) {
+  const e = await rpc("acc_journal_entry", { p_id: id }).catch(err => { toast(err.message, true); return null; });
+  if (!e) return;
+  const canRev = e.reversible && canPost() && (e.entry_type !== "opening" || isCtl());
+  const body = openModal(`Journal entry ${e.entry_no}`, `
+    <div class="grid g3" style="margin-bottom:14px">
+      <div><span class="muted">Date</span><br>${fd(e.entry_date)} (${esc(e.period)})</div>
+      <div><span class="muted">Type</span><br>${esc(ETYPE[e.entry_type] || e.entry_type)}, ${esc(SOURCE[e.source_type] || e.source_type)}</div>
+      <div><span class="muted">Status</span><br>${e.status === "reversed" ? `<span class="neg">Reversed</span>` : "Posted"}</div>
+      <div class="c12" style="grid-column:1/-1"><span class="muted">Description</span><br>${esc(e.description)}${e.reference ? `<br><span class="muted">Reference ${esc(e.reference)}</span>` : ""}</div>
+    </div>
+    <div class="scroll"><table><thead><tr><th>#</th><th>Account</th><th>Details</th><th class="num">Debit</th><th class="num">Credit</th></tr></thead><tbody>
+      ${e.lines.map(l => `<tr><td>${l.line_no}</td><td>${esc(l.account_code)} ${esc(l.account_name)}</td>
+        <td>${esc(l.description || "")}${l.patient ? `<div class="muted">Patient: ${esc(l.patient)}</div>` : ""}${l.supplier ? `<div class="muted">Supplier: ${esc(l.supplier)}</div>` : ""}</td>
+        <td class="num">${amt(l.debit)}</td><td class="num">${amt(l.credit)}</td></tr>`).join("")}</tbody>
+      <tfoot><tr><td></td><td>Total</td><td></td><td class="num">${money(e.total)}</td><td class="num">${money(e.total)}</td></tr></tfoot></table></div>
+    <p class="muted" style="font-size:.85rem">Posted by ${esc(e.created_by || "Unknown")} on ${fdt(e.created_at)}.
+      ${e.reversal_of ? ` Reverses <a href="#" data-goto="${e.reversal_of.id}">${esc(e.reversal_of.entry_no)}</a>.` : ""}
+      ${e.reversed_by ? ` Reversed by <a href="#" data-goto="${e.reversed_by.id}">${esc(e.reversed_by.entry_no)}</a>: ${esc(e.reversal_reason || "")}.` : ""}</p>
+    ${canRev ? `<form id="rev-form" class="panel" style="margin-top:12px" data-key="${newKey()}"><h3 style="margin-bottom:8px">Reverse this entry</h3>
+      <p class="muted" style="margin-top:0">A reversal posts an equal and opposite entry. The original stays in the ledger.</p>
+      <div class="grid g3"><label class="f c12" style="grid-column:span 2"><span>Reason</span><input name="reason" required minlength="3" maxlength="300"></label>
+      <label class="f"><span>Reversal date</span><input type="date" name="date" value="${today() >= e.entry_date ? today() : e.entry_date}" min="${e.entry_date}" required></label></div>
+      <div class="row" style="margin-top:10px"><button class="btn danger" type="submit">Reverse entry</button></div></form>` : ""}
+    ${!e.reversible && ["appointment", "bed_charge", "ambulance"].includes(e.source_type) && e.status === "posted" && e.entry_type !== "reversal"
+      ? `<p class="muted">This entry follows a Maternity Help record. To correct it, change or cancel the appointment, ward charge or ambulance request.</p>` : ""}`);
+  $$("[data-goto]", body).forEach(a => a.addEventListener("click", ev => { ev.preventDefault(); showEntry(a.dataset.goto); }));
+  const f = form($("#rev-form", body));
+  if (f) f.addEventListener("submit", ev => {
+    ev.preventDefault();
+    const btn = $("button[type=submit]", f);
+    busy(btn, async () => {
+      const r = await rpc("acc_reverse_entry", { p_entry: e.id, p_reason: f.reason.value.trim(), p_date: f.date.value, p_idem: f.dataset.key });
+      toast(`Reversed. Reversal entry ${r.entry_no} posted.`);
+      await loadLookups(); showEntry(e.id); refreshAfterChange();
+    });
+  });
+}
+function refreshAfterChange() { if (["dashboard", "ledger", "journal", "accounts", "periods"].includes(S.page)) go(S.page); }
+
+/* ---------- general ledger + trial balance ---------- */
+async function renderLedger() {
+  setTitle("General ledger");
+  const g = S.gl; g.from = g.from || monthStart(today()); g.to = g.to || today(); g.asOf = g.asOf || today();
+  $("#view").innerHTML = `
+    <div class="tabs" role="tablist"><button role="tab" data-tab="ledger" aria-selected="${g.tab === "ledger"}">Ledger</button>
+      <button role="tab" data-tab="tb" aria-selected="${g.tab === "tb"}">Trial balance</button></div><div id="gl-body"></div>`;
+  $$("[data-tab]").forEach(b => b.addEventListener("click", () => { g.tab = b.dataset.tab; renderLedger(); }));
+  if (g.tab === "tb") return renderTrialBalance();
+  $("#gl-body").innerHTML = `
+    <form class="panel" id="gl-filter" style="margin-bottom:16px"><div class="grid g4">
+      <label class="f"><span>From</span><input type="date" name="from" value="${g.from}" required></label>
+      <label class="f"><span>To</span><input type="date" name="to" value="${g.to}" required></label>
+      <label class="f" style="grid-column:span 2"><span>Account (group accounts include their sub-accounts)</span><select name="account">${accountOptions(() => true, g.account, "All accounts")}</select></label>
+      <label class="f"><span>Entry type</span><select name="type">${opt("", "All types", g.type)}${Object.entries(ETYPE).map(([k, v]) => opt(k, v, g.type)).join("")}</select></label>
+      <label class="f"><span>Source</span><select name="source">${opt("", "All sources", g.source)}${Object.entries(SOURCE).map(([k, v]) => opt(k, v, g.source)).join("")}</select></label>
+      <label class="f"><span>Search</span><input name="search" value="${esc(g.search)}" placeholder="Entry number, description, reference"></label>
+      <div class="row" style="align-items:flex-end"><button class="btn primary" type="submit">Show ledger</button></div>
+    </div></form><div id="gl-result" class="loading">Loading…</div>`;
+  $("#gl-filter").addEventListener("submit", ev => {
+    ev.preventDefault(); const f = form(ev.target);
+    if (f.from.value > f.to.value) return toast("The start date must be on or before the end date", true);
+    Object.assign(g, { from: f.from.value, to: f.to.value, account: f.account.value, type: f.type.value, source: f.source.value, search: f.search.value.trim(), offset: 0 });
+    loadLedger();
+  });
+  await loadLedger();
+}
+async function loadLedger() {
+  const g = S.gl; const box = $("#gl-result"); box.className = "loading"; box.textContent = "Loading…";
+  const r = await rpc("acc_general_ledger", { p_from: g.from, p_to: g.to, p_account: g.account || null, p_entry_type: g.type || null,
+    p_source: g.source || null, p_search: g.search || null, p_limit: PAGE, p_offset: g.offset });
+  const single = r.single_account;
+  box.className = "panel";
+  box.innerHTML = `
+    <div class="panel-head"><h2>${single ? esc(acctLabel(g.account)) : "All accounts"}</h2>
+      <span class="muted">${r.total_count} line(s), ${fd(g.from)} to ${fd(g.to)}</span></div>
+    <div class="scroll"><table><thead><tr><th>Date</th><th>Entry</th><th>Account</th><th>Description</th><th class="num">Debit</th><th class="num">Credit</th>${single ? `<th class="num">Balance</th>` : ""}</tr></thead>
+    <tbody>
+      ${single ? `<tr><td>${fd(g.from)}</td><td></td><td colspan="4" class="muted">Opening balance</td><td class="num">${money(r.opening)}</td></tr>` : ""}
+      ${r.rows.map(x => `<tr class="click" data-entry="${x.entry_id}"><td>${fd(x.entry_date)}</td>
+        <td>${esc(x.entry_no)}${x.status === "reversed" ? `<span class="pill bad">Reversed</span>` : ""}${x.entry_type === "reversal" ? `<span class="pill">Reversal</span>` : ""}</td>
+        <td>${esc(x.account_code)} ${esc(x.account_name)}</td>
+        <td>${esc(x.description)}${x.line_description && x.line_description !== x.description ? `<div class="muted">${esc(x.line_description)}</div>` : ""}
+          ${x.patient ? `<div class="muted">Patient: ${esc(x.patient)}</div>` : ""}${x.supplier ? `<div class="muted">Supplier: ${esc(x.supplier)}</div>` : ""}
+          ${x.reference ? `<div class="muted">Ref ${esc(x.reference)}</div>` : ""}</td>
+        <td class="num">${amt(x.debit)}</td><td class="num">${amt(x.credit)}</td>${single ? `<td class="num">${money(x.balance)}</td>` : ""}</tr>`).join("")
+        || `<tr><td colspan="${single ? 7 : 6}" class="empty">No postings match these filters.</td></tr>`}
+    </tbody>
+    <tfoot><tr><td colspan="4">Totals for the filtered lines</td><td class="num">${money(r.total_debit)}</td><td class="num">${money(r.total_credit)}</td>${single ? `<td class="num">${money(r.closing)}</td>` : ""}</tr></tfoot></table></div>
+    <div class="row" style="justify-content:space-between;margin-top:10px">
+      <span class="muted">${r.total_count ? `Showing ${g.offset + 1} to ${Math.min(g.offset + PAGE, r.total_count)}` : ""}</span>
+      <span class="row"><button class="btn small" id="gl-prev" ${g.offset === 0 ? "disabled" : ""}>Previous</button>
+      <button class="btn small" id="gl-next" ${g.offset + PAGE >= r.total_count ? "disabled" : ""}>Next</button></span></div>`;
+  bindEntryLinks(box);
+  $("#gl-prev").addEventListener("click", () => { g.offset = Math.max(0, g.offset - PAGE); loadLedger(); });
+  $("#gl-next").addEventListener("click", () => { g.offset += PAGE; loadLedger(); });
+}
+function acctLabel(id) { const a = acctById(id); return a ? `${a.code} ${a.name}` : "Account"; }
+async function renderTrialBalance() {
+  const g = S.gl;
+  $("#gl-body").innerHTML = `<div class="panel"><div class="panel-head"><h2>Trial balance</h2>
+    <form class="row" id="tb-form"><label class="row"><span class="muted">As at</span><input type="date" name="asof" value="${g.asOf}" required></label><button class="btn" type="submit">Show</button></form></div>
+    <div id="tb-result" class="loading">Loading…</div></div>`;
+  $("#tb-form").addEventListener("submit", ev => { ev.preventDefault(); g.asOf = form(ev.target).asof.value; renderTrialBalance(); });
+  const r = await rpc("acc_trial_balance", { p_as_of: g.asOf });
+  const ok = Number(r.total_debit) === Number(r.total_credit);
+  $("#tb-result").className = "scroll";
+  $("#tb-result").innerHTML = `<table><thead><tr><th>Code</th><th>Account</th><th>Type</th><th class="num">Debit</th><th class="num">Credit</th></tr></thead><tbody>
+    ${r.rows.map(x => `<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(TYPES[x.type])}</td><td class="num">${amt(x.debit)}</td><td class="num">${amt(x.credit)}</td></tr>`).join("")
+      || `<tr><td colspan="5" class="empty">No balances yet.</td></tr>`}</tbody>
+    <tfoot><tr><td></td><td>Totals ${ok ? `<span class="pill ok">Balanced</span>` : `<span class="pill bad">Out of balance</span>`}</td><td></td>
+    <td class="num">${money(r.total_debit)}</td><td class="num">${money(r.total_credit)}</td></tr></tfoot></table>`;
+}
+
+/* ---------- journal entries ---------- */
+async function renderJournal() {
+  setTitle("Journal entries");
+  const j = S.jl; j.from = j.from || monthStart(today()); j.to = j.to || today();
+  if (canPost()) { $("#toolbar").innerHTML = `<button class="btn primary" id="new-je" type="button">New journal entry</button>`; $("#new-je").addEventListener("click", () => journalForm("manual")); }
+  $("#view").innerHTML = `
+    <form class="panel" id="jl-filter" style="margin-bottom:16px"><div class="grid g4">
+      <label class="f"><span>From</span><input type="date" name="from" value="${j.from}" required></label>
+      <label class="f"><span>To</span><input type="date" name="to" value="${j.to}" required></label>
+      <label class="f"><span>Entry type</span><select name="type">${opt("", "All types", j.type)}${Object.entries(ETYPE).map(([k, v]) => opt(k, v, j.type)).join("")}</select></label>
+      <label class="f"><span>Search</span><input name="search" value="${esc(j.search)}" placeholder="Entry number, description, reference"></label>
+    </div><div class="row" style="margin-top:10px"><button class="btn primary" type="submit">Show entries</button></div></form>
+    <div id="jl-result" class="loading">Loading…</div>`;
+  $("#jl-filter").addEventListener("submit", ev => {
+    ev.preventDefault(); const f = form(ev.target);
+    if (f.from.value > f.to.value) return toast("The start date must be on or before the end date", true);
+    Object.assign(j, { from: f.from.value, to: f.to.value, type: f.type.value, search: f.search.value.trim(), offset: 0 }); loadJournal();
+  });
+  await loadJournal();
+}
+async function loadJournal() {
+  const j = S.jl; const box = $("#jl-result");
+  const r = await rpc("acc_journal_list", { p_from: j.from, p_to: j.to, p_type: j.type || null, p_search: j.search || null, p_limit: 100, p_offset: j.offset });
+  box.className = "panel";
+  box.innerHTML = `<div class="scroll"><table><thead><tr><th>Entry</th><th>Date</th><th>Description</th><th>Type</th><th>Source</th><th class="num">Amount</th></tr></thead><tbody>
+    ${r.rows.map(x => `<tr class="click" data-entry="${x.id}"><td>${esc(x.entry_no)}${x.status === "reversed" ? `<span class="pill bad">Reversed</span>` : ""}</td><td>${fd(x.entry_date)}</td>
+      <td>${esc(x.description)}${x.reference ? `<div class="muted">Ref ${esc(x.reference)}</div>` : ""}</td><td>${esc(ETYPE[x.entry_type] || x.entry_type)}</td>
+      <td>${esc(SOURCE[x.source_type] || x.source_type)}</td><td class="num">${money(x.amount)}</td></tr>`).join("")
+      || `<tr><td colspan="6" class="empty">No journal entries in this range.</td></tr>`}</tbody></table></div>
+    <div class="row" style="justify-content:space-between;margin-top:10px"><span class="muted">${r.total_count} entr${r.total_count === 1 ? "y" : "ies"}</span>
+      <span class="row"><button class="btn small" id="jl-prev" ${j.offset === 0 ? "disabled" : ""}>Previous</button>
+      <button class="btn small" id="jl-next" ${j.offset + 100 >= r.total_count ? "disabled" : ""}>Next</button></span></div>`;
+  bindEntryLinks(box);
+  $("#jl-prev").addEventListener("click", () => { j.offset = Math.max(0, j.offset - 100); loadJournal(); });
+  $("#jl-next").addEventListener("click", () => { j.offset += 100; loadJournal(); });
+}
+
+/* line editor shared by manual journals and opening balances */
+function lineRow(filter) {
+  return `<tr>
+    <td><select data-f="account" aria-label="Account">${accountOptions(filter, "")}</select>
+      <select data-f="patient" class="hidden" aria-label="Patient" style="margin-top:4px">${patientOptions("")}</select>
+      <select data-f="supplier" class="hidden" aria-label="Supplier" style="margin-top:4px">${supplierOptions("", false)}</select></td>
+    <td><input data-f="description" maxlength="300" aria-label="Line description"></td>
+    <td><input data-f="debit" class="amt" inputmode="decimal" aria-label="Debit"></td>
+    <td><input data-f="credit" class="amt" inputmode="decimal" aria-label="Credit"></td>
+    <td><button type="button" class="btn small" data-remove aria-label="Remove line">Remove</button></td></tr>`;
+}
+function journalForm(mode) {
+  const opening = mode === "opening";
+  const filter = opening ? (a => postable(a) && ["asset", "liability", "equity"].includes(a.type) && a.subtype !== "opening_balance") : postable;
+  const body = openModal(opening ? "Opening balances" : "New journal entry", `
+    <form id="je-form" data-key="${newKey()}">
+      <div class="grid g3">
+        <label class="f"><span>Date</span><input type="date" name="date" value="${today()}" required></label>
+        <label class="f" style="grid-column:span 2"><span>Description</span><input name="description" required minlength="3" maxlength="500" value="${opening ? "Opening balances" : ""}"></label>
+        ${opening ? "" : `<label class="f"><span>Reference (optional)</span><input name="reference" maxlength="120"></label>`}
+      </div>
+      ${opening ? `<p class="muted">Enter balances for asset, liability and equity accounts. Any difference is posted to Opening balance equity automatically.</p>` : ""}
+      <div class="scroll" style="margin-top:12px"><table class="lines"><thead><tr><th>Account</th><th>Line description</th><th class="num">Debit</th><th class="num">Credit</th><th></th></tr></thead>
+        <tbody id="je-lines">${lineRow(filter)}${opening ? "" : lineRow(filter)}</tbody>
+        <tfoot><tr><td><button type="button" class="btn small" id="je-add">Add line</button></td><td class="num">Totals</td>
+          <td class="num" id="je-dr">0.00</td><td class="num" id="je-cr">0.00</td><td></td></tr></tfoot></table></div>
+      <p class="diff" id="je-diff"></p>
+      <div class="row"><button class="btn primary" type="submit" id="je-post">${opening ? "Post opening balances" : "Post entry"}</button></div>
+    </form>`);
+  const f = form($("#je-form", body)), tb = $("#je-lines", body);
+  const recalc = () => {
+    let dr = 0, cr = 0, bad = false;
+    $$("tr", tb).forEach(tr => {
+      const d = cents($("[data-f=debit]", tr).value), c = cents($("[data-f=credit]", tr).value);
+      if (Number.isNaN(d) || Number.isNaN(c)) bad = true; else { dr += d; cr += c; }
+      const a = acctById($("[data-f=account]", tr).value);
+      $("[data-f=patient]", tr).classList.toggle("hidden", !(a && a.subtype === "receivable_patient"));
+      $("[data-f=supplier]", tr).classList.toggle("hidden", !(a && a.subtype === "payable_supplier"));
+    });
+    $("#je-dr", body).textContent = (dr / 100).toFixed(2); $("#je-cr", body).textContent = (cr / 100).toFixed(2);
+    const diff = dr - cr, msg = $("#je-diff", body);
+    if (bad) { msg.textContent = "Amounts must be numbers with up to two decimals."; msg.className = "diff neg"; }
+    else if (opening) { msg.textContent = diff === 0 ? "Balanced." : `Difference of ${money(Math.abs(diff) / 100)} will go to Opening balance equity.`; msg.className = "diff muted"; }
+    else { msg.textContent = diff === 0 && dr > 0 ? "Balanced." : `Debits and credits differ by ${money(Math.abs(diff) / 100)}.`; msg.className = "diff " + (diff === 0 && dr > 0 ? "pos" : "neg"); }
+    if (!opening) $("#je-post", body).disabled = bad || diff !== 0 || dr === 0;
+  };
+  tb.addEventListener("input", recalc); tb.addEventListener("change", recalc);
+  tb.addEventListener("click", ev => { if (ev.target.matches("[data-remove]")) { if ($$("tr", tb).length > 1) ev.target.closest("tr").remove(); recalc(); } });
+  $("#je-add", body).addEventListener("click", () => { tb.insertAdjacentHTML("beforeend", lineRow(filter)); recalc(); });
+  recalc();
+  f.addEventListener("submit", ev => {
+    ev.preventDefault();
+    const lines = [];
+    for (const tr of $$("tr", tb)) {
+      const v = k => $(`[data-f=${k}]`, tr).value.trim();
+      const a = acctById(v("account")); const d = v("debit"), c = v("credit");
+      if (!a && !d && !c) continue;
+      if (!a) return toast("Choose an account on every line", true);
+      if ((d && c) || (!d && !c)) return toast(`Enter either a debit or a credit for ${a.code}`, true);
+      if (!AMOUNT_RE.test(d || c) || cents(d || c) === 0) return toast(`Enter an amount above zero with up to two decimals for ${a.code}`, true);
+      const line = { account_id: a.id, description: v("description") || null };
+      if (d) line.debit = d; else line.credit = c;
+      if (a.subtype === "receivable_patient") { if (!v("patient")) return toast(`Choose the patient for ${a.code}`, true); line.patient_id = v("patient"); }
+      if (a.subtype === "payable_supplier") { if (!v("supplier")) return toast(`Choose the supplier for ${a.code}`, true); line.supplier_id = v("supplier"); }
+      lines.push(line);
+    }
+    busy($("#je-post", body), async () => {
+      const r = opening
+        ? await rpc("acc_post_opening_balances", { p_date: f.date.value, p_lines: lines, p_idem: f.dataset.key, p_description: f.description.value.trim() })
+        : await rpc("acc_post_journal", { p_date: f.date.value, p_description: f.description.value.trim(), p_reference: f.reference.value.trim() || null, p_lines: lines, p_idem: f.dataset.key });
+      closeModal(); toast(`Posted ${r.entry_no}`); await loadLookups(); refreshAfterChange();
+    });
+  });
+}
+
+/* ---------- chart of accounts ---------- */
+async function renderAccounts() {
+  setTitle("Chart of accounts");
+  S.acc.asOf = S.acc.asOf || today();
+  $("#toolbar").innerHTML = `<label class="row"><span class="muted">Balances as at</span><input type="date" id="acc-asof" value="${S.acc.asOf}"></label>
+    ${isCtl() ? `<button class="btn primary" id="acc-new" type="button">New account</button>` : ""}`;
+  $("#acc-asof").addEventListener("change", e => { if (e.target.value) { S.acc.asOf = e.target.value; renderAccounts(); } });
+  if (isCtl()) $("#acc-new").addEventListener("click", () => accountForm(null));
+  loading();
+  const list = await rpc("acc_accounts_list", { p_as_of: S.acc.asOf });
+  S.accList = list;
+  $("#view").innerHTML = `<div class="panel"><div class="scroll"><table><thead><tr><th>Code</th><th>Account</th><th>Type</th><th class="num">Balance</th>${isCtl() ? "<th></th>" : ""}</tr></thead><tbody>
+    ${list.map(a => `<tr class="${a.is_header ? "header" : ""} ${a.is_active ? "" : "inactive"}">
+      <td>${esc(a.code)}</td>
+      <td style="padding-left:${8 + a.level * 18}px">${esc(a.name)}
+        ${a.is_system ? `<span class="pill">System</span>` : ""}${a.is_locked ? `<span class="pill mid">Finalized</span>` : ""}
+        ${a.is_active ? "" : `<span class="pill bad">Inactive</span>`}${a.payment_method ? `<span class="pill ok">${esc(METHOD[a.payment_method])}</span>` : ""}
+        ${a.is_header ? "" : `<div class="muted" style="font-size:.8rem">${esc(SUBLABEL[a.subtype] || a.subtype)}</div>`}</td>
+      <td>${esc(TYPES[a.type])}</td>
+      <td class="num ${Number(a.balance) < 0 ? "neg" : ""}">${a.postings ? money(a.balance) : `<span class="muted">${money(0)}</span>`}</td>
+      ${isCtl() ? `<td class="num"><span class="row" style="justify-content:flex-end">
+        <button class="btn small" data-act="edit" data-id="${a.id}" ${a.is_locked ? "disabled title=\"Unlock to edit\"" : ""}>Edit</button>
+        ${a.is_system ? "" : `<button class="btn small" data-act="${a.is_active ? "deactivate" : "activate"}" data-id="${a.id}" ${a.is_locked ? "disabled" : ""}>${a.is_active ? "Deactivate" : "Activate"}</button>`}
+        <button class="btn small" data-act="${a.is_locked ? "unlock" : "lock"}" data-id="${a.id}">${a.is_locked ? "Unlock" : "Finalize"}</button></span></td>` : ""}
+    </tr>`).join("")}</tbody></table></div></div>`;
+  $$("[data-act]").forEach(b => b.addEventListener("click", () => {
+    const a = list.find(x => x.id === b.dataset.id); const act = b.dataset.act;
+    if (act === "edit") return accountForm(a);
+    const msg = { deactivate: `Deactivate ${a.code} ${a.name}? It must have a zero balance.`, activate: `Activate ${a.code} ${a.name}?`,
+      lock: `Finalize ${a.code} ${a.name}? Its details cannot be edited until it is unlocked. Postings are still allowed.`, unlock: `Unlock ${a.code} ${a.name} for editing?` }[act];
+    if (!confirm(msg)) return;
+    busy(b, async () => {
+      if (act === "deactivate" || act === "activate") await rpc("acc_set_account_active", { p_id: a.id, p_active: act === "activate" });
+      else await rpc("acc_set_account_locked", { p_id: a.id, p_locked: act === "lock" });
+      toast("Account updated"); await loadLookups(); renderAccounts();
+    });
+  }));
+}
+function accountForm(a) {
+  const isNew = !a; a = a || { type: "expense", subtype: "operating_expense", is_header: false };
+  const headers = t => (S.accList || []).filter(x => x.is_header && x.type === t && x.id !== a.id && x.is_active);
+  const body = openModal(isNew ? "New account" : `Edit ${a.code}`, `
+    <form id="acc-form"><div class="grid g2">
+      <label class="f"><span>Code (3 to 10 digits)</span><input name="code" required pattern="[0-9]{3,10}" value="${esc(a.code || "")}" ${a.is_system ? "readonly" : ""}></label>
+      <label class="f"><span>Name</span><input name="name" required minlength="2" maxlength="120" value="${esc(a.name || "")}"></label>
+      <label class="f"><span>Type</span><select name="type" ${a.is_system || (!isNew && a.postings) ? "disabled" : ""}>${Object.entries(TYPES).map(([k, v]) => opt(k, v, a.type)).join("")}</select></label>
+      <label class="f"><span>Sub-type</span><select name="subtype" ${a.is_system ? "disabled" : ""}></select></label>
+      <label class="f"><span>Parent group</span><select name="parent"></select></label>
+      <label class="f"><span>Receives payments made by</span><select name="pm" ${a.is_system ? "disabled" : ""}>${opt("", "None", a.payment_method)}${Object.entries(METHOD).map(([k, v]) => opt(k, v, a.payment_method)).join("")}</select></label>
+      <label class="check" style="grid-column:1/-1"><input type="checkbox" name="header" ${a.is_header ? "checked" : ""} ${a.is_system ? "disabled" : ""}> Group account (holds sub-accounts, cannot receive postings)</label>
+      <label class="f" style="grid-column:1/-1"><span>Description (optional)</span><textarea name="description" maxlength="500">${esc(a.description || "")}</textarea></label>
+    </div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">${isNew ? "Create account" : "Save changes"}</button></div></form>`);
+  const f = form($("#acc-form", body));
+  const fill = () => {
+    const t = f.type.value;
+    f.subtype.innerHTML = SUBTYPES[t].map(s => opt(s, SUBLABEL[s], a.type === t ? a.subtype : "general")).join("");
+    f.parent.innerHTML = opt("", "None (top level)", "") + headers(t).map(h => opt(h.id, `${h.code} ${h.name}`, a.parent_id)).join("");
+    f.pm.closest("label").classList.toggle("hidden", t !== "asset");
+  };
+  fill(); f.type.addEventListener("change", fill);
+  f.addEventListener("submit", ev => {
+    ev.preventDefault();
+    busy($("button[type=submit]", f), async () => {
+      await rpc("acc_save_account", { p_id: isNew ? null : a.id, p_code: f.code.value.trim(), p_name: f.name.value.trim(), p_type: f.type.value,
+        p_subtype: f.subtype.value, p_parent_id: f.parent.value || null, p_is_header: f.header.checked, p_description: f.description.value.trim() || null,
+        p_payment_method: f.type.value === "asset" ? (f.pm.value || null) : null });
+      closeModal(); toast(isNew ? "Account created" : "Account saved"); await loadLookups(); renderAccounts();
+    });
+  });
+}
+
+/* ---------- periods ---------- */
+async function renderPeriods() {
+  setTitle("Accounting periods");
+  if (isCtl()) {
+    $("#toolbar").innerHTML = `<button class="btn" id="ob-btn" type="button">Opening balances</button>
+      <form class="row" id="fy-form"><input type="number" name="year" min="2000" max="2200" value="${Number(today().slice(0, 4)) + 1}" style="width:100px" aria-label="Financial year"><button class="btn primary" type="submit">Add financial year</button></form>`;
+    $("#ob-btn").addEventListener("click", () => journalForm("opening"));
+    $("#fy-form").addEventListener("submit", ev => {
+      ev.preventDefault(); const y = Number(form(ev.target).year.value);
+      busy($("button", ev.target), async () => { const n = await rpc("acc_create_fiscal_year", { p_year: y }); toast(n ? `${n} monthly period(s) added` : "Those periods already exist"); renderPeriods(); });
+    });
+  }
+  loading();
+  const list = await rpc("acc_periods_list");
+  const years = [...new Set(list.map(p => p.fiscal_year))].sort((a, b) => b - a);
+  $("#view").innerHTML = `<div class="stack">
+    <p class="muted" style="margin:0">Close months in order. A closed month accepts no postings; the controller can reopen it with a reason. Locking is permanent.
+      Closing the last month of a financial year moves that year's profit or loss to Retained earnings.</p>
+    ${years.map(y => `<div class="panel"><h2>Financial year ${y}</h2><div class="scroll"><table><thead><tr><th>Period</th><th>Dates</th><th>Status</th><th class="num">Entries</th><th class="num">Posted</th><th></th></tr></thead><tbody>
+      ${list.filter(p => p.fiscal_year === y).map(p => `<tr><td>${esc(p.name)}${p.is_year_end ? `<span class="pill">Year end</span>` : ""}</td>
+        <td>${fd(p.start_date)} to ${fd(p.end_date)}</td>
+        <td>${statusPill(p.status)}${p.closed_by ? `<div class="muted" style="font-size:.8rem">by ${esc(p.closed_by)}</div>` : ""}</td>
+        <td class="num">${p.entries}</td><td class="num">${money(p.debits)}</td>
+        <td class="num"><span class="row" style="justify-content:flex-end">
+          ${p.status !== "open" ? `<button class="btn small" data-pa="balances" data-id="${p.id}">Balances</button>` : ""}
+          ${isCtl() && p.status === "open" ? `<button class="btn small" data-pa="close" data-id="${p.id}">Close</button>` : ""}
+          ${isCtl() && p.status === "closed" ? `<button class="btn small" data-pa="reopen" data-id="${p.id}">Reopen</button><button class="btn small danger" data-pa="lock" data-id="${p.id}">Lock</button>` : ""}
+        </span></td></tr>`).join("")}</tbody></table></div></div>`).join("") || `<div class="panel empty">No periods yet.</div>`}</div>`;
+  $$("[data-pa]").forEach(b => b.addEventListener("click", () => {
+    const p = list.find(x => x.id === b.dataset.id), act = b.dataset.pa;
+    if (act === "balances") return periodBalances(p);
+    if (act === "close" && !confirm(`Close ${p.name}? No more postings will be accepted for it.${p.is_year_end ? " This is the year end: revenue and expenses will be closed to Retained earnings." : ""}`)) return;
+    if (act === "lock" && !confirm(`Lock ${p.name} permanently? It can never be reopened.`)) return;
+    let reason = null;
+    if (act === "reopen") { reason = prompt(`Why are you reopening ${p.name}?`); if (!reason) return; }
+    busy(b, async () => {
+      if (act === "close") { const r = await rpc("acc_close_period", { p_id: p.id }); toast(r.closing_entry ? `${p.name} closed. Closing entry ${r.closing_entry} posted.` : `${p.name} closed`); }
+      if (act === "reopen") { await rpc("acc_reopen_period", { p_id: p.id, p_reason: reason }); toast(`${p.name} reopened`); }
+      if (act === "lock") { await rpc("acc_lock_period", { p_id: p.id }); toast(`${p.name} locked`); }
+      renderPeriods();
+    });
+  }));
+}
+async function periodBalances(p) {
+  const rows = await rpc("acc_period_balances", { p_period: p.id }).catch(e => { toast(e.message, true); return null; });
+  if (!rows) return;
+  openModal(`Balances for ${p.name}`, `<p class="muted">Snapshot taken when the period was closed.</p><div class="scroll"><table><thead><tr><th>Account</th><th class="num">Opening</th><th class="num">Debits</th><th class="num">Credits</th><th class="num">Closing</th></tr></thead><tbody>
+    ${rows.map(r => `<tr><td>${esc(r.code)} ${esc(r.name)}</td><td class="num">${money(r.opening)}</td><td class="num">${amt(r.debit)}</td><td class="num">${amt(r.credit)}</td><td class="num">${money(r.closing)}</td></tr>`).join("")
+      || `<tr><td colspan="5" class="empty">No balances.</td></tr>`}</tbody></table></div>`);
+}
+
+/* ---------- transactions ---------- */
+const TX_TABS = [["receipt", "Receive payment"], ["refund", "Refund patient"], ["invoice", "Patient invoice"], ["bill", "Supplier bill"], ["paybill", "Pay a bill"], ["expense", "Expense"], ["suppliers", "Suppliers"]];
+async function renderTransactions() {
+  setTitle("Transactions");
+  if (!canPost()) { $("#view").innerHTML = `<div class="panel">Only accountants can record transactions.</div>`; return; }
+  await loadLookups();
+  $("#view").innerHTML = `<div class="tabs" role="tablist">${TX_TABS.map(([k, l]) => `<button role="tab" data-tx="${k}" aria-selected="${S.tx.tab === k}">${l}</button>`).join("")}</div><div id="tx-body"></div>`;
+  $$("[data-tx]").forEach(b => b.addEventListener("click", () => { S.tx.tab = b.dataset.tx; renderTransactions(); }));
+  ({ receipt: txReceipt, refund: txRefund, invoice: txInvoice, bill: txBill, paybill: txPayBill, expense: txExpense, suppliers: txSuppliers })[S.tx.tab]();
+}
+function txDone(msg) { toast(msg); renderTransactions(); }
+function moneyField(name, label = "Amount", value = "") { return `<label class="f"><span>${label}</span><input name="${name}" inputmode="decimal" required pattern="\\d{1,12}(\\.\\d{1,2})?" value="${esc(value)}" placeholder="0.00"></label>`; }
+
+function txReceipt() {
+  $("#tx-body").innerHTML = `<form class="panel" id="f" data-key="${newKey()}"><h2>Receive a patient payment</h2>
+    <p class="muted">Payments recorded on appointments, ward charges and ambulance requests in Maternity Help post automatically. Use this for other money received from patients.</p>
+    <div class="grid g3">
+      <label class="f"><span>Patient</span><select name="patient" required>${patientOptions("")}</select></label>
+      <label class="f"><span>Invoice (optional)</span><select name="invoice">${opt("", "Not linked to an invoice", "")}</select></label>
+      ${moneyField("amount")}
+      <label class="f"><span>Paid by</span><select name="method" required>${Object.entries(METHOD).map(([k, v]) => opt(k, v, "cash")).join("")}</select></label>
+      <label class="f"><span>Date received</span><input type="date" name="date" value="${today()}" required></label>
+      <label class="f"><span>Reference (optional)</span><input name="reference" maxlength="120" placeholder="e.g. EcoCash transaction ID"></label>
+    </div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Record payment</button></div></form>`;
+  const f = form($("#f"));
+  const fillInv = () => {
+    const inv = S.look.open_invoices.filter(i => i.patient_id === f.patient.value);
+    f.invoice.innerHTML = opt("", "Not linked to an invoice", "") + inv.map(i => opt(i.id, `${i.invoice_no}, ${money(i.outstanding)} due ${fd(i.due_date)}`, "")).join("");
+  };
+  f.patient.addEventListener("change", fillInv);
+  f.invoice.addEventListener("change", () => { const i = S.look.open_invoices.find(x => x.id === f.invoice.value); if (i) f.amount.value = Number(i.outstanding).toFixed(2); });
+  f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => {
+    const r = await rpc("acc_record_receipt", { p_patient: f.patient.value, p_amount: f.amount.value, p_method: f.method.value, p_received_on: f.date.value,
+      p_invoice_id: f.invoice.value || null, p_reference: f.reference.value.trim() || null, p_idem: f.dataset.key });
+    txDone(`Receipt ${r.receipt_no} recorded`); }); });
+}
+function txRefund() {
+  $("#tx-body").innerHTML = `<form class="panel" id="f" data-key="${newKey()}"><h2>Refund a patient</h2>
+    <p class="muted">You can refund up to the patient's credit, which arises when they paid more than they owe or a paid service was cancelled.</p>
+    <div class="grid g3">
+      <label class="f"><span>Patient</span><select name="patient" required>${patientOptions("")}</select></label>
+      ${moneyField("amount")}
+      <label class="f"><span>Paid out by</span><select name="method" required>${Object.entries(METHOD).filter(([k]) => k !== "insurance").map(([k, v]) => opt(k, v, "cash")).join("")}</select></label>
+      <label class="f"><span>Date</span><input type="date" name="date" value="${today()}" required></label>
+      <label class="f" style="grid-column:span 2"><span>Reason</span><input name="reason" required minlength="3" maxlength="300"></label>
+    </div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Record refund</button></div></form>`;
+  const f = form($("#f"));
+  f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => {
+    const r = await rpc("acc_record_refund", { p_patient: f.patient.value, p_amount: f.amount.value, p_method: f.method.value, p_refunded_on: f.date.value,
+      p_reason: f.reason.value.trim(), p_invoice_id: null, p_idem: f.dataset.key });
+    txDone(`Refund ${r.refund_no} recorded`); }); });
+}
+function txInvoice() {
+  const terms = Number(S.look.settings.payment_terms_days || 0);
+  const lineHtml = () => `<tr><td><input data-f="description" maxlength="300" aria-label="Description"></td>
+    <td><select data-f="account" aria-label="Revenue account">${accountOptions(a => postable(a) && a.type === "revenue", "")}</select></td>
+    <td><input data-f="amount" class="amt" inputmode="decimal" aria-label="Amount"></td><td><button type="button" class="btn small" data-remove>Remove</button></td></tr>`;
+  $("#tx-body").innerHTML = `<form class="panel" id="f" data-key="${newKey()}"><h2>Create a patient invoice</h2>
+    <p class="muted">Appointments, ward charges and ambulance services are invoiced automatically. Use this for other services.</p>
+    <div class="grid g3">
+      <label class="f"><span>Patient</span><select name="patient" required>${patientOptions("")}</select></label>
+      <label class="f"><span>Invoice date</span><input type="date" name="issue" value="${today()}" required></label>
+      <label class="f"><span>Due date</span><input type="date" name="due" value="${addDays(today(), terms)}" required></label>
+    </div>
+    <div class="scroll" style="margin-top:12px"><table class="lines"><thead><tr><th>Description</th><th>Revenue account</th><th class="num">Amount</th><th></th></tr></thead>
+      <tbody id="inv-lines">${lineHtml()}</tbody><tfoot><tr><td><button type="button" class="btn small" id="inv-add">Add line</button></td><td class="num">Total</td><td class="num" id="inv-total">0.00</td><td></td></tr></tfoot></table></div>
+    <label class="f" style="margin-top:10px"><span>Notes (optional)</span><input name="notes" maxlength="500"></label>
+    <div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Create invoice</button></div></form>`;
+  const f = form($("#f")), tb = $("#inv-lines");
+  const recalc = () => { let t = 0; $$("[data-f=amount]", tb).forEach(i => { const c = cents(i.value); if (!Number.isNaN(c)) t += c; }); $("#inv-total").textContent = (t / 100).toFixed(2); };
+  f.issue.addEventListener("change", () => { if (f.issue.value) f.due.value = addDays(f.issue.value, terms); });
+  tb.addEventListener("input", recalc);
+  tb.addEventListener("click", ev => { if (ev.target.matches("[data-remove]") && $$("tr", tb).length > 1) { ev.target.closest("tr").remove(); recalc(); } });
+  $("#inv-add").addEventListener("click", () => tb.insertAdjacentHTML("beforeend", lineHtml()));
+  f.addEventListener("submit", ev => {
+    ev.preventDefault();
+    const lines = [];
+    for (const tr of $$("tr", tb)) {
+      const d = $("[data-f=description]", tr).value.trim(), a = $("[data-f=account]", tr).value, m = $("[data-f=amount]", tr).value.trim();
+      if (!d && !a && !m) continue;
+      if (d.length < 2 || !a || !AMOUNT_RE.test(m) || cents(m) === 0) return toast("Each line needs a description, a revenue account and an amount", true);
+      lines.push({ description: d, revenue_account_id: a, amount: m });
+    }
+    if (!lines.length) return toast("Add at least one line", true);
+    if (f.due.value < f.issue.value) return toast("The due date must be on or after the invoice date", true);
+    busy($("button[type=submit]", f), async () => {
+      const r = await rpc("acc_create_invoice", { p_patient: f.patient.value, p_issue_date: f.issue.value, p_due_date: f.due.value, p_lines: lines,
+        p_notes: f.notes.value.trim() || null, p_idem: f.dataset.key });
+      txDone(`Invoice ${r.invoice_no} created`);
+    });
+  });
+}
+function txBill() {
+  $("#tx-body").innerHTML = `<form class="panel" id="f" data-key="${newKey()}"><h2>Record a supplier bill</h2>
+    ${S.look.suppliers.some(s => s.is_active) ? "" : `<p class="warn">Add a supplier first on the Suppliers tab.</p>`}
+    <div class="grid g3">
+      <label class="f"><span>Supplier</span><select name="supplier" required>${supplierOptions("")}</select></label>
+      <label class="f"><span>Supplier's invoice number</span><input name="sinv" maxlength="60"></label>
+      ${moneyField("amount")}
+      <label class="f"><span>Bill date</span><input type="date" name="date" value="${today()}" required></label>
+      <label class="f"><span>Due date</span><input type="date" name="due" value="${addDays(today(), 30)}" required></label>
+      <label class="f"><span>Charge to</span><select name="account" required>${accountOptions(costAcct, "")}</select></label>
+      <label class="f" style="grid-column:1/-1"><span>What is the bill for?</span><input name="description" required minlength="3" maxlength="300"></label>
+    </div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Record bill</button></div></form>`;
+  const f = form($("#f"));
+  f.addEventListener("submit", ev => { ev.preventDefault();
+    if (f.due.value < f.date.value) return toast("The due date must be on or after the bill date", true);
+    busy($("button[type=submit]", f), async () => {
+      const r = await rpc("acc_create_bill", { p_supplier: f.supplier.value, p_supplier_invoice_no: f.sinv.value.trim() || null, p_bill_date: f.date.value,
+        p_due_date: f.due.value, p_expense_account: f.account.value, p_amount: f.amount.value, p_description: f.description.value.trim(), p_idem: f.dataset.key });
+      txDone(`Bill ${r.bill_no} recorded`); }); });
+}
+function txPayBill() {
+  const bills = S.look.open_bills;
+  $("#tx-body").innerHTML = `<form class="panel" id="f" data-key="${newKey()}"><h2>Pay a supplier bill</h2>
+    ${bills.length ? "" : `<p class="muted">There are no unpaid bills.</p>`}
+    <div class="grid g3">
+      <label class="f" style="grid-column:span 2"><span>Bill</span><select name="bill" required>${opt("", "Choose a bill", "")}${bills.map(b => opt(b.id, `${b.bill_no}, ${b.supplier}: ${b.description} (${money(b.outstanding)} due ${fd(b.due_date)})`, "")).join("")}</select></label>
+      ${moneyField("amount")}
+      <label class="f"><span>Pay from</span><select name="from" required>${accountOptions(payFrom, "")}</select></label>
+      <label class="f"><span>Date paid</span><input type="date" name="date" value="${today()}" required></label>
+      <label class="f"><span>Reference (optional)</span><input name="reference" maxlength="120"></label>
+    </div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Record payment</button></div></form>`;
+  const f = form($("#f"));
+  f.bill.addEventListener("change", () => { const b = bills.find(x => x.id === f.bill.value); if (b) f.amount.value = Number(b.outstanding).toFixed(2); });
+  f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => {
+    const r = await rpc("acc_pay_bill", { p_bill: f.bill.value, p_amount: f.amount.value, p_paid_on: f.date.value, p_from_account: f.from.value,
+      p_reference: f.reference.value.trim() || null, p_idem: f.dataset.key });
+    txDone(`Payment ${r.payment_no} recorded`); }); });
+}
+function txExpense() {
+  $("#tx-body").innerHTML = `<form class="panel" id="f" data-key="${newKey()}"><h2>Record an expense paid immediately</h2>
+    <div class="grid g3">
+      <label class="f"><span>Date</span><input type="date" name="date" value="${today()}" required></label>
+      <label class="f"><span>Expense account</span><select name="account" required>${accountOptions(costAcct, "")}</select></label>
+      ${moneyField("amount")}
+      <label class="f"><span>Paid from</span><select name="from" required>${accountOptions(payFrom, "")}</select></label>
+      <label class="f"><span>Paid to (optional)</span><input name="payee" maxlength="120"></label>
+      <label class="f"><span>Reference (optional)</span><input name="reference" maxlength="120"></label>
+      <label class="f" style="grid-column:1/-1"><span>Description</span><input name="description" required minlength="3" maxlength="300"></label>
+    </div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Record expense</button></div></form>`;
+  const f = form($("#f"));
+  f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => {
+    const r = await rpc("acc_record_expense", { p_date: f.date.value, p_expense_account: f.account.value, p_from_account: f.from.value, p_amount: f.amount.value,
+      p_payee: f.payee.value.trim() || null, p_description: f.description.value.trim(), p_reference: f.reference.value.trim() || null, p_idem: f.dataset.key });
+    txDone(`Expense ${r.expense_no} recorded`); }); });
+}
+function txSuppliers() {
+  const list = S.look.suppliers;
+  $("#tx-body").innerHTML = `<div class="panel"><div class="panel-head"><h2>Suppliers</h2><button class="btn primary" id="sup-new" type="button">Add supplier</button></div>
+    <div class="scroll"><table><thead><tr><th>Name</th><th>Contact</th><th>Phone</th><th>Email</th><th></th></tr></thead><tbody>
+    ${list.map(s => `<tr class="${s.is_active ? "" : "inactive"}"><td>${esc(s.name)}${s.is_active ? "" : `<span class="pill bad">Inactive</span>`}</td><td>${esc(s.contact_person || "")}</td>
+      <td>${esc(s.phone || "")}</td><td>${esc(s.email || "")}</td><td class="num"><button class="btn small" data-sup="${s.id}">Edit</button></td></tr>`).join("")
+      || `<tr><td colspan="5" class="empty">No suppliers yet.</td></tr>`}</tbody></table></div></div>`;
+  $("#sup-new").addEventListener("click", () => supplierForm(null));
+  $$("[data-sup]").forEach(b => b.addEventListener("click", () => supplierForm(list.find(s => s.id === b.dataset.sup))));
+}
+function supplierForm(s) {
+  const isNew = !s; s = s || { is_active: true };
+  const body = openModal(isNew ? "Add supplier" : `Edit ${s.name}`, `<form id="sf"><div class="grid g2">
+    <label class="f"><span>Name</span><input name="name" required minlength="2" maxlength="120" value="${esc(s.name || "")}"></label>
+    <label class="f"><span>Contact person</span><input name="contact" maxlength="120" value="${esc(s.contact_person || "")}"></label>
+    <label class="f"><span>Phone</span><input name="phone" maxlength="40" value="${esc(s.phone || "")}"></label>
+    <label class="f"><span>Email</span><input type="email" name="email" maxlength="160" value="${esc(s.email || "")}"></label>
+    <label class="f"><span>Address</span><input name="address" maxlength="300" value="${esc(s.address || "")}"></label>
+    <label class="f"><span>Tax number</span><input name="tax" maxlength="60" value="${esc(s.tax_number || "")}"></label>
+    <label class="check"><input type="checkbox" name="active" ${s.is_active ? "checked" : ""}> Active</label>
+  </div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">${isNew ? "Add supplier" : "Save changes"}</button></div></form>`);
+  const f = form($("#sf", body));
+  f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => {
+    await rpc("acc_save_supplier", { p_id: isNew ? null : s.id, p_name: f.name.value.trim(), p_contact: f.contact.value.trim() || null, p_phone: f.phone.value.trim() || null,
+      p_email: f.email.value.trim() || null, p_address: f.address.value.trim() || null, p_tax_number: f.tax.value.trim() || null, p_active: f.active.checked });
+    closeModal(); txDone(isNew ? "Supplier added" : "Supplier saved"); }); });
+}
+
+/* ---------- settings ---------- */
+async function renderSettings() {
+  setTitle("Settings");
+  loading();
+  await loadLookups();
+  const st = S.look.settings, ctl = isCtl();
+  const users = isAdmin() ? await rpc("acc_user_directory") : [];
+  const revAcc = a => postable(a) && a.type === "revenue";
+  $("#view").innerHTML = `<div class="stack">
+    ${isAdmin() ? `<div class="panel"><h2>Who can use accounting</h2>
+      <p class="muted">Viewers can see reports. Accountants can also record transactions and journals. Financial controllers can also change the chart of accounts, close periods and change settings. The administrator is always a controller.</p>
+      <div class="scroll"><table><thead><tr><th>Person</th><th>Maternity Help role</th><th>Accounting access</th><th></th></tr></thead><tbody>
+      ${users.map(u => `<tr><td>${esc(u.name || u.email)}<div class="muted">${esc(u.email || "")}</div></td><td>${esc(u.app_role === "doctor" ? (u.title || "Staff") : "Patient")}</td>
+        <td><select data-user="${u.id}" aria-label="Accounting access for ${esc(u.name || u.email)}">${opt("", "No access", u.acc_role)}${["viewer", "accountant", "controller"].map(r => opt(r, roleLabel(r), u.acc_role)).join("")}</select></td>
+        <td class="num"><button class="btn small" data-save-user="${u.id}">Save</button></td></tr>`).join("")}</tbody></table></div></div>` : ""}
+
+    <form class="panel" id="set-form"><h2>General</h2><div class="grid g4">
+      <label class="f"><span>Currency</span><input value="${esc(st.currency)}" disabled></label>
+      <label class="f"><span>Days to pay automatic invoices</span><input type="number" name="terms" min="0" max="365" value="${st.payment_terms_days}" ${ctl ? "" : "disabled"} required></label>
+      <label class="f"><span>Low balance alert below</span><input name="low" inputmode="decimal" pattern="\\d{1,12}(\\.\\d{1,2})?" value="${Number(st.low_balance_threshold).toFixed(2)}" ${ctl ? "" : "disabled"} required></label>
+      <label class="f"><span>Flag transactions from</span><input name="unusual" inputmode="decimal" pattern="\\d{1,12}(\\.\\d{1,2})?" value="${Number(st.unusual_amount_threshold).toFixed(2)}" ${ctl ? "" : "disabled"} required></label>
+    </div>${ctl ? `<div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Save settings</button></div>` : ""}</form>
+
+    <div class="panel"><h2>Where automatic income is posted</h2>
+      <p class="muted">Appointment fees use the first matching fee item, then the appointment type. Ward charges use their category. Anything unmatched goes to 4198 Other patient services.</p>
+      <div class="scroll"><table><thead><tr><th>Source</th><th>Matches</th><th>Revenue account</th>${ctl ? "<th></th>" : ""}</tr></thead><tbody>
+      ${S.look.revenue_map.map((m, i) => `<tr><td>${esc(MAPKIND[m.source_kind])}</td><td>${esc(m.match_value)}</td>
+        <td>${ctl ? `<select data-map="${i}" aria-label="Account for ${esc(m.match_value)}">${accountOptions(revAcc, m.account_id)}</select>` : esc(m.account)}</td>
+        ${ctl ? `<td class="num"><span class="row" style="justify-content:flex-end"><button class="btn small" data-map-save="${i}">Save</button><button class="btn small danger" data-map-del="${i}">Remove</button></span></td>` : ""}</tr>`).join("")}</tbody></table></div>
+      ${ctl ? `<form class="row" id="map-add" style="margin-top:12px"><select name="kind" aria-label="Source">${Object.entries(MAPKIND).map(([k, v]) => opt(k, v, "fee_item")).join("")}</select>
+        <input name="value" required maxlength="80" placeholder="e.g. anc" aria-label="Value to match"><select name="account" required aria-label="Revenue account">${accountOptions(revAcc, "")}</select>
+        <button class="btn" type="submit">Add mapping</button></form>` : ""}</div>
+
+    <div class="panel"><div class="panel-head"><h2>Automatic posting status</h2>${ctl ? `<button class="btn" id="resync" type="button">Re-sync all records</button>` : ""}</div>
+      ${S.look.sync_errors.length ? `<div class="scroll"><table><thead><tr><th>Record</th><th>Problem</th><th>When</th></tr></thead><tbody>
+        ${S.look.sync_errors.map(e => `<tr><td>${esc(SOURCE[e.source_type] || e.source_type)}<div class="muted" style="font-size:.8rem">${esc(e.source_id)}</div></td><td>${esc(e.error)}</td><td>${fdt(e.occurred_at)}</td></tr>`).join("")}</tbody></table></div>`
+        : `<p class="empty">All Maternity Help records are posted.</p>`}
+      <p class="muted" style="font-size:.88rem">Rules: an appointment fee is income once the visit is done or admitted, or once it is paid. A ward charge is income when added and is reversed if voided.
+      An ambulance fee is income once dispatched, or once paid. Payments move the balance from the patient to the cash, bank, mobile money or medical aid account for the payment method.
+      Cancelling or changing a record posts a reversal; nothing is deleted.</p></div>
+  </div>`;
+  $$("[data-save-user]").forEach(b => b.addEventListener("click", () => busy(b, async () => {
+    const sel = $(`[data-user="${b.dataset.saveUser}"]`); await rpc("acc_set_user_role", { p_user: b.dataset.saveUser, p_role: sel.value || null }); toast("Access updated");
+  })));
+  const sf = form($("#set-form"));
+  if (ctl) sf.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", sf), async () => {
+    await rpc("acc_update_settings", { p_payment_terms_days: Number(sf.terms.value), p_low_balance: sf.low.value, p_unusual: sf.unusual.value });
+    toast("Settings saved"); await loadLookups(); }); });
+  else sf.addEventListener("submit", ev => ev.preventDefault());
+  $$("[data-map-save]").forEach(b => b.addEventListener("click", () => busy(b, async () => {
+    const m = S.look.revenue_map[b.dataset.mapSave]; const acc = $(`[data-map="${b.dataset.mapSave}"]`).value;
+    if (!acc) throw new Error("Choose a revenue account");
+    await rpc("acc_set_revenue_map", { p_kind: m.source_kind, p_value: m.match_value, p_account: acc }); toast("Mapping saved");
+  })));
+  $$("[data-map-del]").forEach(b => b.addEventListener("click", () => {
+    const m = S.look.revenue_map[b.dataset.mapDel]; if (!confirm(`Remove the mapping for "${m.match_value}"?`)) return;
+    busy(b, async () => { await rpc("acc_set_revenue_map", { p_kind: m.source_kind, p_value: m.match_value, p_account: null }); toast("Mapping removed"); renderSettings(); });
+  }));
+  const ma = form($("#map-add"));
+  if (ma) ma.addEventListener("submit", ev => { ev.preventDefault(); busy($("button", ma), async () => {
+    await rpc("acc_set_revenue_map", { p_kind: ma.kind.value, p_value: ma.value.value.trim().toLowerCase(), p_account: ma.account.value }); toast("Mapping added"); renderSettings(); }); });
+  const rs = $("#resync");
+  if (rs) rs.addEventListener("click", () => busy(rs, async () => {
+    const r = await rpc("acc_resync_all"); toast(r.failed ? `${r.failed} of ${r.processed} record(s) still failing` : `${r.processed} record(s) checked, all posted`, r.failed > 0); renderSettings();
+  }));
+}
+
+/* ---------- sign-in + boot ---------- */
+function renderLogin(msg) {
+  destroyCharts();
+  $("#root").innerHTML = `<form class="panel login" id="login"><h1 style="margin-bottom:6px">Maternity Help accounts</h1>
+    <p class="muted" style="margin-top:0">Sign in with your Maternity Help account.</p>
+    ${msg ? `<p class="neg">${esc(msg)}</p>` : ""}
+    <div class="grid"><label class="f"><span>Email</span><input type="email" name="email" autocomplete="username" required></label>
+    <label class="f"><span>Password</span><input type="password" name="password" autocomplete="current-password" required></label>
+    <button class="btn primary" type="submit">Sign in</button></div>
+    <p class="muted" style="font-size:.88rem;margin-bottom:0">Use Google to sign in? <a href="/">Open Maternity Help</a>, sign in there, then come back to this page.</p></form>`;
+  const f = form($("#login"));
+  f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button", f), async () => {
+    const { error } = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.password.value });
+    if (error) throw new Error(error.message);
+  }); });
+}
+async function boot(session) {
+  S.session = session;
+  if (!session) return renderLogin();
+  try {
+    S.access = await rpc("acc_my_access");
+    if (!S.access.role) {
+      $("#root").innerHTML = `<div class="panel login"><h1>No accounting access</h1><p class="muted">Your account cannot use accounting yet. Ask the administrator to give you access in Accounts, Settings.</p>
+        <div class="row"><a class="btn" href="/" style="text-decoration:none">Back to Maternity Help</a><button class="btn" id="so" type="button">Sign out</button></div></div>`;
+      $("#so").addEventListener("click", () => sb.auth.signOut()); return;
+    }
+    await loadLookups();
+    renderShell(); go(S.page);
+  } catch (e) { renderLogin(e.message); }
+}
+window.addEventListener("unhandledrejection", e => { toast((e.reason && e.reason.message) || "Something went wrong", true); });
+let lastUser = null;
+sb.auth.onAuthStateChange((event, session) => {
+  const uid = session ? session.user.id : null;
+  if (event === "TOKEN_REFRESHED" && uid === lastUser) return;
+  if (event === "INITIAL_SESSION" || uid !== lastUser) { lastUser = uid; setTimeout(() => boot(session), 0); }
+});
+</script>
+</body>
+</html>
