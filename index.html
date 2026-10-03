@@ -1346,7 +1346,7 @@ function ledger(){const L=[],OK=['scheduled','waiting','with_nurse','with_doctor
 function inPeriod(d){const t=today();if(acp==='all')return true;if(acp==='today')return d===t;if(acp==='week')return d>=addD(t,-6);if(acp==='month')return (d||'').slice(0,7)===t.slice(0,7);return d>=addD(t,-29)}
 const bars2=(items)=>{const m=Math.max(1,...items.map(i=>i[1]));return items.map(i=>`<div class="hb"><span>${esc(i[0])}</span><i style="width:${Math.max(2,Math.round(i[1]/m*100))}%;max-width:55%"></i><b>${money(i[1])}</b></div>`).join('')};
 function accountingView(){if(!isAdmin())return '<div class="card">Only the administrator can open Accounting.</div>';
- if(!ACC.ok){if(!ACC.asked){ACC.asked=true;setTimeout(()=>accGate(()=>drawDoc()),60)}return accLock()}
+ if(!ACC.ok)return accLock()
  const all=ledger(),L=all.filter(x=>inPeriod(x.date)),sum=a=>a.reduce((n,x)=>n+x.amt,0),billed=sum(L),coll=sum(L.filter(x=>x.paid)),outAll=all.filter(x=>!x.paid);
  const cats={};L.forEach(x=>cats[x.cat]=(cats[x.cat]||0)+x.amt);const cl=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
  const byP={};outAll.forEach(x=>{(byP[x.pid]=byP[x.pid]||{n:0,t:0});byP[x.pid].n++;byP[x.pid].t+=x.amt});const owing=Object.entries(byP).sort((a,b)=>b[1].t-a[1].t);
