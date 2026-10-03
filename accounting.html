@@ -6,18 +6,23 @@
 <title>Accounts | Maternity Help</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#0d1117">
+<link rel="icon" type="image/png" href="/icons/icon-64.png">
+<script>(function(){try{var m=localStorage.getItem("themeMode")||localStorage.getItem("theme")||"system";var t=m==="light"||m==="dark"?m:(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme="dark"}})()</script>
 <style>
 :root{
-  --bg:#F3F5F4; --surface:#FFFFFF; --sunk:#EAEFED; --ink:#16302B; --muted:#5B6F6A; --line:#D9E1DE;
-  --accent:#1F6E5E; --accent-ink:#FFFFFF; --pos:#23704A; --neg:#A8402B; --warn:#9A6210; --info:#3D5A8A; --plum:#7A5C99;
-  --sans:"IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --serif:"IBM Plex Serif", Georgia, "Times New Roman", serif;
-  --r:6px;
+  --bg:#0d1117; --surface:#161b22; --sunk:#0f141b; --ink:#e8ecf2; --muted:#8a94a6; --line:#262d38;
+  --accent:#4672d0; --accent-ink:#FFFFFF; --ah:#3a5fb8; --al:#8fb2f5; --glow:#14203a;
+  --pos:#3fbf8a; --neg:#f0628f; --warn:#e0a84a; --info:#8fb2f5; --plum:#b59ad4;
+  --sans:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --serif:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --r:10px; color-scheme:dark;
 }
-@media (prefers-color-scheme: dark){
-  :root{ --bg:#0F1A18; --surface:#16231F; --sunk:#1C2B27; --ink:#E4ECE9; --muted:#9BB0AA; --line:#2A3B36;
-         --accent:#4FB39B; --accent-ink:#0F1A18; --pos:#5CC08A; --neg:#E07A62; --warn:#E0A84A; --info:#8DA9D6; --plum:#B59AD4; }
+:root[data-theme="light"]{
+  --bg:#f5f6f8; --surface:#ffffff; --sunk:#f1f3f6; --ink:#111827; --muted:#6b7280; --line:#e2e6ec;
+  --accent:#26467f; --accent-ink:#FFFFFF; --ah:#1c3562; --al:#26467f; --glow:#e6ecf7;
+  --pos:#1f9d6b; --neg:#d93d6e; --warn:#9a6210; --info:#26467f; --plum:#7a5c99; color-scheme:light;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -25,8 +30,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);fo
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-h1,h2,h3{font-family:var(--serif);font-weight:600;margin:0;line-height:1.25}
-h1{font-size:1.6rem} h2{font-size:1.15rem} h3{font-size:1rem}
+h1,h2,h3{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:0;line-height:1.25}
+h1{font-size:1.3rem} h2{font-size:1rem} h3{font-size:.9rem}
 a{color:var(--accent)}
 .muted{color:var(--muted)} .pos{color:var(--pos)} .neg{color:var(--neg)} .warn{color:var(--warn)}
 .num{text-align:right;white-space:nowrap}
@@ -34,18 +39,17 @@ a{color:var(--accent)}
 
 /* shell */
 .app{display:grid;grid-template-columns:220px 1fr;min-height:100%}
-.nav{background:var(--ink);color:#DCE7E3;padding:20px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
-@media (prefers-color-scheme: dark){ .nav{background:#0A1311} }
-.brand{font-family:var(--serif);font-size:1.1rem;color:#fff;padding:0 8px 16px}
-.brand small{display:block;font-family:var(--sans);font-size:.8rem;color:#9DB5AE;font-weight:400}
-.nav button{all:unset;cursor:pointer;padding:8px 10px;border-radius:var(--r);color:#C9D8D3}
-.nav button:hover{background:rgba(255,255,255,.07);color:#fff}
-.nav button[aria-current="page"]{background:rgba(255,255,255,.12);color:#fff;font-weight:500}
-.nav button:focus-visible{outline:2px solid #8FD3C1}
-.who{margin-top:auto;font-size:.85rem;color:#9DB5AE;padding:8px 10px;border-top:1px solid rgba(255,255,255,.12)}
-.who b{color:#fff;font-weight:500;display:block}
-.nav a.back{color:#C9D8D3;padding:8px 10px;border-radius:var(--r);text-decoration:none;white-space:nowrap}
-.nav a.back:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav{background:var(--surface);border-right:1px solid var(--line);color:var(--muted);padding:20px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+.brand{font-family:var(--sans);font-weight:700;font-size:1.05rem;color:var(--ink);padding:0 8px 16px;display:flex;flex-direction:column;gap:2px}
+.brand small{display:block;font-family:var(--sans);font-size:.8rem;color:var(--muted);font-weight:400}
+.nav button{all:unset;cursor:pointer;padding:9px 12px;border-radius:var(--r);color:var(--muted);font-weight:500}
+.nav button:hover{background:var(--sunk);color:var(--ink)}
+.nav button[aria-current="page"]{background:var(--glow);color:var(--al);font-weight:600}
+.nav button:focus-visible{outline:2px solid var(--accent)}
+.who{margin-top:auto;font-size:.85rem;color:var(--muted);padding:10px 12px;border-top:1px solid var(--line)}
+.who b{color:var(--ink);font-weight:600;display:block}
+.nav a.back{color:var(--muted);padding:9px 12px;border-radius:var(--r);text-decoration:none;white-space:nowrap;font-weight:500}
+.nav a.back:hover{background:var(--sunk);color:var(--ink)}
 .linkbtn{background:none;border:0;padding:0;color:inherit;text-decoration:underline;cursor:pointer}
 main{min-width:0;padding:24px 28px 60px}
 .top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;justify-content:space-between;margin-bottom:20px}
@@ -149,13 +153,18 @@ tr.inactive td{color:var(--muted)}
 
 /* dialog + toast */
 dialog{border:1px solid var(--line);border-radius:var(--r);padding:0;width:min(860px,96vw);background:var(--surface);color:var(--ink)}
-dialog::backdrop{background:rgba(10,20,18,.45)}
+dialog::backdrop{background:rgba(5,8,14,.6)}
 .dlg-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
 .dlg-body{padding:16px 18px;max-height:76vh;overflow:auto}
 .toast{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));max-width:420px;padding:12px 14px;border-radius:var(--r);background:var(--ink);color:var(--bg);opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;pointer-events:none;z-index:50}
 .toast.show{opacity:1;transform:none}
 .toast.err{background:var(--neg);color:#fff}
-.login{max-width:380px;margin:12vh auto;padding:28px}
+.login{max-width:400px;margin:10vh auto;padding:28px}
+.gate{max-width:420px;width:calc(100% - 32px);margin:12vh auto;padding:32px 24px;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.gate img{width:72px;height:72px;border-radius:16px;object-fit:contain}
+.gate h1{margin:14px 0 6px}.gate p{margin:0 0 18px;color:var(--muted)}
+.gate .btn{width:100%;padding:12px 16px;font-weight:600}.gate .foot{margin:16px 0 0;font-size:.88rem}
+.logohead{display:flex;justify-content:center;margin-bottom:10px}.logohead img{width:56px;height:56px;border-radius:12px;object-fit:contain}
 .loading{color:var(--muted);padding:20px 0}
 @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
 </style>
@@ -308,7 +317,7 @@ function renderShell() {
       ${pages.map(([k, l]) => `<button type="button" data-nav="${k}">${l}</button>`).join("")}
       <a class="back" href="/">Back to Maternity Help</a>
       <div class="who"><b>${esc(S.access.name || "Signed in")}</b>${esc(roleLabel(role()))}<br>
-        <button type="button" id="signout" class="linkbtn">Sign out</button></div>
+        <button type="button" id="signout" class="linkbtn">Sign out</button> \u00b7 <button type="button" id="theme-tg" class="linkbtn">Theme</button></div>
     </nav>
     <main>
       <div class="top"><h1 id="page-title"></h1><div class="toolbar" id="toolbar"></div></div>
@@ -317,6 +326,7 @@ function renderShell() {
   </div>`;
   $$("[data-nav]").forEach(b => b.addEventListener("click", () => go(b.dataset.nav)));
   $("#signout").addEventListener("click", async () => { await sb.auth.signOut(); });
+  $("#theme-tg").addEventListener("click", () => { const t = document.documentElement.dataset.theme === "light" ? "dark" : "light"; document.documentElement.dataset.theme = t; try { localStorage.setItem("themeMode", t); } catch (e) {} const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = t === "light" ? "#f5f6f8" : "#0d1117"; });
 }
 function roleLabel(r) { return { viewer: "Viewer", accountant: "Accountant", controller: "Financial controller" }[r] || ""; }
 function go(page) {
@@ -1046,16 +1056,26 @@ async function renderSettings() {
 }
 
 /* ---------- sign-in + boot ---------- */
+function renderGate() {
+  destroyCharts();
+  $("#root").innerHTML = `<div class="gate"><img src="/logo.png" alt="Maternity Help"><h1>Accounting</h1>
+    <p>Invoices, payments, expenses, suppliers and the general ledger. Sign in to continue.</p>
+    <button class="btn primary" id="open-acc" type="button">Open accounting</button>
+    <p class="foot"><a href="/">Back to Maternity Help</a></p></div>`;
+  $("#open-acc").addEventListener("click", () => renderLogin());
+}
 function renderLogin(msg) {
   destroyCharts();
-  $("#root").innerHTML = `<form class="panel login" id="login"><h1 style="margin-bottom:6px">Maternity Help accounts</h1>
+  $("#root").innerHTML = `<form class="panel login" id="login"><div class="logohead"><img src="/logo.png" alt=""></div><h1 style="margin-bottom:6px;text-align:center">Accounting login</h1>
     <p class="muted" style="margin-top:0">Sign in with your Maternity Help account.</p>
     ${msg ? `<p class="neg">${esc(msg)}</p>` : ""}
     <div class="grid"><label class="f"><span>Email</span><input type="email" name="email" autocomplete="username" required></label>
     <label class="f"><span>Password</span><input type="password" name="password" autocomplete="current-password" required></label>
-    <button class="btn primary" type="submit">Sign in</button></div>
+    <button class="btn primary" type="submit">Sign in</button><button class="btn" type="button" id="login-back">Back</button></div>
     <p class="muted" style="font-size:.88rem;margin-bottom:0">Use Google to sign in? <a href="/">Open Maternity Help</a>, sign in there, then come back to this page.</p></form>`;
   const f = form($("#login"));
+  $("#login-back").addEventListener("click", () => renderGate());
+  setTimeout(() => { if (f.email) f.email.focus(); }, 30);
   f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button", f), async () => {
     const { error } = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.password.value });
     if (error) throw new Error(error.message);
@@ -1063,7 +1083,7 @@ function renderLogin(msg) {
 }
 async function boot(session) {
   S.session = session;
-  if (!session) return renderLogin();
+  if (!session) return renderGate();
   try {
     S.access = await rpc("acc_my_access");
     if (!S.access.role) {
