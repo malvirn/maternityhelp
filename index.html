@@ -599,7 +599,7 @@ function overview(){
  return {overview:H1,bookings:H2,patients:h,staff:staffView(),admin:adminDash(),assign:assignView(),audit:auditPanel(),chat:staffChat(),group:groupView(),queue:queueView(),ambulance:ambulanceView(),beds:bedsView(),medalerts:medAlertsView(),reports:reportsView()}[view]||H1}
 function filt(q){q=q.toLowerCase();document.querySelectorAll('.pr[data-q]').forEach(r=>r.style.display=r.dataset.q.includes(q)?'':'none')}
 async function loadPap(id){const {data}=await sb.from('appointments').select('*').eq('patient_id',id).order('appt_date',{ascending:false});if(sel===id){D.pap=data||[];drawDoc()}}
-async function openPt(id){sel=id;D.notes=[];D.plan=[];D.steps=[];D.pap=null;drawDoc();scrollTo(0,0);sb.rpc('log_view',{p_patient:id});loadPap(id);const [n,p,sl]=await Promise.all([sb.from('clinical_notes').select('*').eq('patient_id',id).order('created_at',{ascending:false}),sb.from('care_plan_items').select('*').eq('patient_id',id).order('done').order('due_date',{ascending:true,nullsFirst:false}),sb.from('step_logs').select('*').eq('patient_id',id).gte('log_date',new Date(Date.now()-13*864e5).toISOString().slice(0,10))]);D.notes=n.data||[];D.plan=p.data||[];D.steps=sl.data||[];if(sel===id)drawDoc()}
+async function openPt(id){sel=id;D.notes=[];D.plan=[];D.steps=[];D.pap=null;D.inv=null;D.rx=null;D.docs=null;drawDoc();scrollTo(0,0);loadClin(id);sb.rpc('log_view',{p_patient:id});loadPap(id);const [n,p,sl]=await Promise.all([sb.from('clinical_notes').select('*').eq('patient_id',id).order('created_at',{ascending:false}),sb.from('care_plan_items').select('*').eq('patient_id',id).order('done').order('due_date',{ascending:true,nullsFirst:false}),sb.from('step_logs').select('*').eq('patient_id',id).gte('log_date',new Date(Date.now()-13*864e5).toISOString().slice(0,10))]);D.notes=n.data||[];D.plan=p.data||[];D.steps=sl.data||[];if(sel===id)drawDoc()}
 function timeline(p){
  if(!p.lmp)return '<div class="mu">No pregnancy dates recorded.</div>';
  const cw=Math.min(wk(p),42),pos=w=>Math.max(0,Math.min(100,w/40*100));
@@ -621,6 +621,8 @@ function detail(p){
  <h2>Care plan</h2><div class="card">${D.plan.map(x=>`<div class="li" style="margin-bottom:6px"><div class="fl" style="color:${x.done?'var(--tx)':'var(--mu)'}">${ic(x.done?'check':'clock')}<div><b>${esc(x.title)}</b><div class="mu">${x.due_date?fd(x.due_date)+(x.due_time?' at '+String(x.due_time).slice(0,5):''):'No date'}${x.notes?' \u00b7 '+esc(x.notes):''}</div></div></div><div class="row"><button class="btn g" onclick="togglePlan('${x.id}',${!x.done})">${x.done?'Undo':'Mark done'}</button><button class="ib" onclick="delPlan('${x.id}')">${ic('x')}</button></div></div>`).join('')||'<div class="mu">No care plan items yet.</div>'}<button class="btn" style="margin-top:8px" onclick="addPlan('${p.id}')">${ic('plus')} Add care plan item</button></div>
  <h2>Daily steps</h2><div class="card">${stepsCard(p)}</div>
  ${visitsCard(p)}
+ ${invCard(p)}
+ ${rxCard(p)}
  <h2>Antenatal records</h2><div class="card tw">${vs.length?`<table><tr><th>Date</th><th>Weight</th><th>BP</th><th>Temp</th><th>Pulse</th><th>Fundal ht</th><th>FHR</th><th>Urine P / G</th><th>Next</th><th>Notes</th></tr>${vs.map(v=>`<tr><td>${fd(v.visit_date)}</td><td>${v.weight_kg??'-'}</td><td>${v.bp_sys?v.bp_sys+'/'+v.bp_dia:'-'}</td><td>${v.temp_c??'-'}</td><td>${v.pulse??'-'}</td><td>${v.fundal_height_cm??'-'}</td><td>${v.fetal_heart_rate??'-'}</td><td>${esc(v.urine_protein||'-')} / ${esc(v.urine_glucose||'-')}</td><td>${v.next_appointment?fd(v.next_appointment):'-'}</td><td class="n">${esc(v.clinical_note||'')}</td></tr>`).join('')}</table>`:'<div class="mu">No visits recorded yet.</div>'}</div>
  <h2>Clinical notes</h2>${D.notes.map(n=>`<div class="card">${esc(n.body)}<div class="mu">${n.author_id===me.id?esc(me.full_name):'Doctor'} \u00b7 ${new Date(n.created_at).toLocaleString()}</div></div>`).join('')||'<div class="mu">No notes yet.</div>'}
  <h2>Notify patient</h2><button class="btn" onclick="notify('${p.id}')">${ic('send')} Send notification</button>`;
@@ -1151,6 +1153,107 @@ function msAdd(pid){const pr=pregAct(pid);if(!pr)return alert('No active pregnan
  modal('Add milestone',fld('Title','title','text','','required maxlength="120"')+fld('Due date','due_date','date','','required')+'<label class="l">Note (optional)</label><textarea name="note" maxlength="500"></textarea>',async f=>{
   const ti=(f.title||'').trim();if(!ti)throw new Error('Enter a title.');
   const {error}=await sb.from('pregnancy_milestones').insert({pregnancy_id:pr.id,patient_id:pid,title:ti,due_date:f.due_date,note:nz((f.note||'').trim()),created_by:me.id,updated_by:me.id});if(error)throw error;await loadDoc();toast('Milestone added.')})}
+
+/* ---------- laboratory, ultrasound, documents and medication (Stage 3) ---------- */
+async function loadClin(id){
+ const [i,r,d]=await Promise.all([sb.from('investigations').select('*').eq('patient_id',id).order('requested_on',{ascending:false}).order('created_at',{ascending:false}),sb.from('prescriptions').select('*').eq('patient_id',id).order('start_date',{ascending:false}).order('created_at',{ascending:false}),sb.from('medical_documents').select('*').eq('patient_id',id).order('created_at',{ascending:false})]);
+ if(sel!==id)return;D.inv=i.data||[];D.rx=r.data||[];D.docs=d.data||[];D.clinErr=!!(i.error||r.error||d.error);drawDoc()}
+const staffName=id=>{const x=(D.staff||[]).find(y=>y.id===id);return x?(x.staff_title||'Doctor')+' '+x.full_name:'staff'};
+const INTP={normal:['Normal',''],abnormal:['Abnormal','hot'],critical:['Critical','hot']};
+function docLink(d){return `<button class="lnk" onclick="openDoc('${d.id}')">${ic('file')} ${esc(d.file_name)}</button>`}
+function invRow(p,v){
+ const docs=(D.docs||[]).filter(d=>d.investigation_id===v.id),res=v.status==='resulted',it=INTP[v.interpretation];
+ const fu=res&&v.needs_followup&&!v.followup_done_at,act=v.status!=='cancelled';
+ const btn=[];
+ if(v.status==='requested'){btn.push(`<button class="btn g" style="padding:3px 10px" onclick="recInv('${v.id}')">Record result</button>`,`<button class="btn g" style="padding:3px 10px" onclick="cancelInv('${v.id}')">Cancel</button>`)}
+ if(res){btn.push(`<button class="btn g" style="padding:3px 10px" onclick="recInv('${v.id}')">Correct result</button>`);if(fu)btn.push(`<button class="btn g" style="padding:3px 10px" onclick="followDone('${v.id}')">Follow-up done</button>`)}
+ if(act)btn.push(`<button class="btn g" style="padding:3px 10px" onclick="attachDoc('${p.id}','${v.id}')">Attach file</button>`);
+ return `<div class="ms" style="display:block"><div class="row" style="justify-content:space-between;gap:8px"><div><b>${esc(v.name)}</b> <span class="pill">${v.kind==='lab'?'Laboratory':'Ultrasound'}</span>${v.is_sensitive?' <span class="pill">Restricted</span>':''}</div>${res&&it?`<span class="pill ${it[1]}">${it[0]}</span>`:`<span class="pill">${v.status==='requested'?'Pending':'Cancelled'}</span>`}</div>
+ <div class="mu">Requested ${fd(v.requested_on)}${res?' \u00b7 Done '+fd(v.performed_on):''}</div>
+ ${res?`<div style="margin-top:4px">${v.result_value?'<b>'+esc(v.result_value)+(v.unit?' '+esc(v.unit):'')+'</b>':''}${v.ref_range?' <span class="mu">(reference '+esc(v.ref_range)+')</span>':''}</div>${v.findings?`<div>${esc(v.findings)}</div>`:''}<div class="mu">${v.shared_with_patient?'Shared with patient':'Not shared with patient'}${v.resulted_by?' \u00b7 Recorded by '+esc(staffName(v.resulted_by)):''}</div>`:''}
+ ${fu?`<div class="fl" style="margin-top:4px">${ic('alert')} Needs clinical follow-up</div>`:''}${res&&v.needs_followup&&v.followup_done_at?`<div class="mu">Follow-up completed ${new Date(v.followup_done_at).toLocaleDateString()}${v.followup_note?': '+esc(v.followup_note):''}</div>`:''}
+ ${docs.length?`<div style="margin-top:4px">${docs.map(docLink).join('')}</div>`:''}
+ ${btn.length?`<div class="row" style="margin-top:6px;flex-wrap:wrap">${btn.join('')}</div>`:''}</div>`}
+function invCard(p){
+ const head=`<div class="row" style="justify-content:space-between"><h3 style="margin:0">Laboratory and ultrasound</h3><div class="row"><button class="btn g" style="padding:3px 10px" onclick="reqInv('${p.id}')">${ic('plus')} Request</button><button class="btn g" style="padding:3px 10px" onclick="attachDoc('${p.id}',null)">${ic('plus')} File</button></div></div>`;
+ if(D.inv==null)return `<div class="card">${head}<div class="mu" style="margin-top:6px">Loading...</div></div>`;
+ if(D.clinErr)return `<div class="card">${head}<div class="mu" style="margin-top:6px">Some results could not be loaded. Reload the page and try again.</div></div>`;
+ const pend=D.inv.filter(v=>v.status==='requested'),done=D.inv.filter(v=>v.status==='resulted'),canc=D.inv.filter(v=>v.status==='cancelled'),fu=done.filter(v=>v.needs_followup&&!v.followup_done_at).length;
+ const loose=(D.docs||[]).filter(d=>!d.investigation_id);
+ return `<div class="card">${head}
+ ${fu?`<div class="fl" style="margin:8px 0">${ic('alert')} ${fu} result${fu>1?'s':''} need${fu>1?'':'s'} clinical follow-up</div>`:''}
+ <div style="margin-top:8px"><b>Pending (${pend.length})</b></div>${pend.map(v=>invRow(p,v)).join('')||'<div class="mu">Nothing pending.</div>'}
+ <div style="margin-top:12px"><b>Results (${done.length})</b></div>${done.map(v=>invRow(p,v)).join('')||'<div class="mu">No results recorded yet.</div>'}
+ ${loose.length?`<div style="margin-top:12px"><b>Other documents</b></div>${loose.map(d=>`<div class="ms">${docLink(d)}<span class="mu">${fd((d.created_at||'').slice(0,10))}</span></div>`).join('')}`:''}
+ ${canc.length?`<details style="margin-top:12px"><summary class="mu" style="cursor:pointer">Cancelled (${canc.length})</summary>${canc.map(v=>invRow(p,v)).join('')}</details>`:''}
+ <div class="mu" style="margin-top:8px">Restricted results are visible to doctors only. Files are stored privately and cannot be deleted.</div></div>`}
+function reqInv(pid){const pr=pregAct(pid)||pregOf(pid);if(!pr)return alert('This patient has no pregnancy record yet.');
+ modal('Request investigation','<label class="l">Type</label><select name="kind"><option value="lab">Laboratory test</option><option value="ultrasound">Ultrasound scan</option></select>'+fld('Test or scan name','name','text','','required maxlength="120" placeholder="e.g. Full blood count"')+(isMD()?'<label class="row" style="margin-top:10px"><input type="checkbox" name="is_sensitive" value="1" style="width:auto"> Restrict result to doctors only</label>':''),async f=>{
+  const n=(f.name||'').trim();if(!n)throw new Error('Enter the name of the test or scan.');
+  const {error}=await sb.from('investigations').insert({patient_id:pid,pregnancy_id:pr.id,kind:f.kind,name:n,requested_by:me.id,is_sensitive:!!f.is_sensitive});if(error)throw error;
+  await loadClin(pid);toast('Request saved.')},'Save request')}
+function recInv(id){const v=(D.inv||[]).find(x=>x.id===id);if(!v)return;const o=(k,l)=>`<option value="${k}"${v.interpretation===k?' selected':''}>${l}</option>`;
+ modal((v.status==='resulted'?'Correct result: ':'Record result: ')+esc(v.name),fld('Date performed','performed_on','date',v.performed_on||today(),'required max="'+today()+'"')+fld(v.kind==='lab'?'Result value':'Key measurement (optional)','result_value','text',v.result_value||'','maxlength="200"')+'<div class="two">'+fld('Unit','unit','text',v.unit||'','maxlength="30"')+fld('Reference range','ref_range','text',v.ref_range||'','maxlength="80"')+'</div><label class="l">Findings / report</label><textarea name="findings" maxlength="4000">'+esc(v.findings||'')+'</textarea><label class="l">Clinical interpretation</label><select name="interpretation" required><option value="">Select...</option>'+o('normal','Normal')+o('abnormal','Abnormal - needs follow-up')+o('critical','Critical - needs urgent follow-up')+'</select><div class="mu">You decide the interpretation. Abnormal and critical results are flagged for follow-up.</div><label class="row" style="margin-top:10px"><input type="checkbox" name="shared" value="1" style="width:auto"'+(v.shared_with_patient?' checked':'')+'> Share this result with the patient</label>',async f=>{
+  if(!f.performed_on||f.performed_on>today())throw new Error('The date performed cannot be in the future.');
+  const rv=(f.result_value||'').trim(),fi=(f.findings||'').trim();if(!rv&&!fi)throw new Error('Enter a result value or the findings.');
+  if(!f.interpretation)throw new Error('Choose the clinical interpretation.');
+  const {data,error}=await sb.from('investigations').update({status:'resulted',performed_on:f.performed_on,result_value:nz(rv),unit:nz((f.unit||'').trim()),ref_range:nz((f.ref_range||'').trim()),findings:nz(fi),interpretation:f.interpretation,shared_with_patient:!!f.shared}).eq('id',id).select();
+  if(error)throw error;if(!data||!data.length)throw new Error('You do not have permission to change this result.');
+  await loadClin(v.patient_id);toast(f.interpretation==='normal'?'Result saved.':'Result saved and flagged for follow-up.')},'Save result')}
+async function cancelInv(id){const v=(D.inv||[]).find(x=>x.id===id);if(!v||!confirm('Cancel this request?'))return;
+ const {data,error}=await sb.from('investigations').update({status:'cancelled'}).eq('id',id).eq('status','requested').select();if(error||!data||!data.length)return alert(error?friendly(error):'This request can no longer be cancelled.');await loadClin(v.patient_id)}
+function followDone(id){const v=(D.inv||[]).find(x=>x.id===id);if(!v)return;
+ modal('Follow-up completed','<div class="mu">'+esc(v.name)+'</div><label class="l">What was done?</label><textarea name="followup_note" required maxlength="500"></textarea>',async f=>{
+  const n=(f.followup_note||'').trim();if(!n)throw new Error('Describe the follow-up that was done.');
+  const {data,error}=await sb.from('investigations').update({followup_done_at:new Date().toISOString(),followup_note:n}).eq('id',id).select();if(error)throw error;if(!data||!data.length)throw new Error('You do not have permission to change this result.');
+  await loadClin(v.patient_id);toast('Follow-up recorded.')})}
+const DOCOK={'application/pdf':'pdf','image/jpeg':'jpg','image/png':'png'};
+async function sniff(file){const b=new Uint8Array(await file.slice(0,8).arrayBuffer());const h=Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join('');
+ if(h.startsWith('25504446'))return 'application/pdf';if(h.startsWith('ffd8ff'))return 'image/jpeg';if(h.startsWith('89504e47'))return 'image/png';return null}
+function attachDoc(pid,invId){const pr=pregAct(pid)||pregOf(pid);
+ modal(invId?'Attach file to result':'Upload document','<label class="l">File (PDF, JPG or PNG, up to 5 MB)</label><input type="file" name="file" accept="application/pdf,image/jpeg,image/png" required><div class="mu">Stored privately. Only staff can open it, and it cannot be deleted afterwards.</div>',async f=>{
+  const file=f.file;if(!file||!file.size)throw new Error('Choose a file.');
+  if(file.size>5*1024*1024)throw new Error('The file is larger than 5 MB.');
+  const mime=await sniff(file);if(!mime||!DOCOK[mime])throw new Error('Only PDF, JPG and PNG files are allowed.');
+  const name=(file.name||'document').replace(/[\\\/\u0000-\u001f<>:"|?*]/g,'_').slice(0,120),path=pid+'/'+crypto.randomUUID()+'.'+DOCOK[mime];
+  const up=await sb.storage.from('medical-docs').upload(path,file,{contentType:mime,upsert:false});if(up.error)throw up.error;
+  const {error}=await sb.from('medical_documents').insert({patient_id:pid,pregnancy_id:pr?pr.id:null,investigation_id:invId||null,storage_path:path,file_name:name,mime_type:mime,size_bytes:file.size,uploaded_by:me.id});
+  if(error)throw new Error('The file was uploaded but could not be recorded ('+friendly(error)+'). Please try again.');
+  await loadClin(pid);toast('File saved.')},'Upload')}
+async function openDoc(id){const d=(D.docs||[]).find(x=>x.id===id);if(!d)return;const w=window.open('about:blank','_blank');
+ const {data,error}=await sb.storage.from('medical-docs').createSignedUrl(d.storage_path,60);
+ if(error||!data){if(w)w.close();return alert('You do not have access to this file.')}
+ if(w)w.location.href=data.signedUrl;else location.href=data.signedUrl}
+const rxEnded=r=>r.status==='active'&&r.end_date&&r.end_date<today();
+function rxRow(r,hist){const fu=r.status==='active'&&r.followup_due,late=fu&&r.followup_due<today();
+ return `<div class="ms" style="display:block"><div class="row" style="justify-content:space-between;gap:8px"><div><b>${esc(r.drug_name)}</b> <span class="mu">${esc(r.dose)} \u00b7 ${esc(r.frequency)}</span></div>${r.status==='stopped'?'<span class="pill">Stopped</span>':rxEnded(r)?'<span class="pill">Course ended</span>':'<span class="pill ok">Active</span>'}</div>
+ ${r.instructions?`<div>${esc(r.instructions)}</div>`:''}<div class="mu">From ${fd(r.start_date)}${r.end_date?' to '+fd(r.end_date):' \u00b7 no end date set'} \u00b7 Prescribed by ${esc(staffName(r.prescribed_by))}</div>
+ ${r.status==='stopped'?`<div class="mu">Stopped ${fd(r.stopped_on)}${r.stop_reason?': '+esc(r.stop_reason):''}</div>`:''}
+ ${fu?`<div class="${late?'fl':'mu'}">${late?ic('alert')+' ':''}Review ${late?'was due':'due'} ${fd(r.followup_due)}</div>`:''}
+ ${!hist&&r.status==='active'&&isMD()?`<div class="row" style="margin-top:6px"><button class="btn g" style="padding:3px 10px" onclick="stopRx('${r.id}')">Stop</button></div>`:''}</div>`}
+function rxCard(p){
+ const al=(p.allergies||'').trim(),head=`<div class="row" style="justify-content:space-between"><h3 style="margin:0">Medication</h3>${isMD()?`<button class="btn g" style="padding:3px 10px" onclick="prescribe('${p.id}')">${ic('plus')} Prescribe</button>`:''}</div>`;
+ const alb=al?`<div class="fl" style="margin:8px 0">${ic('alert')} Allergies: ${esc(al)}</div>`:`<div class="mu" style="margin:8px 0">Allergies: not recorded. Ask the patient and update the profile.</div>`;
+ if(D.rx==null)return `<div class="card">${head}${alb}<div class="mu">Loading...</div></div>`;
+ const cur=D.rx.filter(r=>r.status==='active'&&!rxEnded(r)),old=D.rx.filter(r=>!(r.status==='active'&&!rxEnded(r)));
+ return `<div class="card">${head}${alb}<b>Current (${cur.length})</b>${cur.map(r=>rxRow(r)).join('')||'<div class="mu">No active prescriptions.</div>'}
+ ${old.length?`<details style="margin-top:12px"><summary style="cursor:pointer"><b>Prescription history (${old.length})</b></summary>${old.map(r=>rxRow(r,r.status==='stopped')).join('')}</details>`:''}
+ <div class="mu" style="margin-top:8px">${isMD()?'Prescriptions cannot be edited. Stop one and prescribe a new one so the history is kept.':'Only doctors can prescribe or stop medication.'} Allergy and duplicate checks are prompts for your judgement.</div></div>`}
+function prescribe(pid){if(!isMD())return alert('Only doctors can prescribe.');const p=P(pid),pr=pregAct(pid)||pregOf(pid);if(!pr)return alert('This patient has no pregnancy record yet.');
+ modal('Prescribe medication',fld('Medication','drug_name','text','','required maxlength="120"')+'<div class="two">'+fld('Dose','dose','text','','required maxlength="60" placeholder="e.g. 500 mg"')+fld('Frequency','frequency','text','','required maxlength="60" placeholder="e.g. twice daily"')+'</div><label class="l">Instructions (optional)</label><textarea name="instructions" maxlength="500"></textarea><div class="two">'+fld('Start date','start_date','date',today(),'required')+fld('End date (optional)','end_date','date')+'</div>'+fld('Review date (optional)','followup_due','date'),async f=>{
+  const dn=(f.drug_name||'').trim(),dose=(f.dose||'').trim(),fr=(f.frequency||'').trim();if(!dn||!dose||!fr)throw new Error('Enter the medication, dose and frequency.');
+  if(f.end_date&&f.end_date<f.start_date)throw new Error('The end date cannot be before the start date.');
+  if(f.followup_due&&f.followup_due<f.start_date)throw new Error('The review date cannot be before the start date.');
+  const al=((p&&p.allergies)||'').toLowerCase(),hit=dn.toLowerCase().split(/[^a-z0-9]+/).filter(w=>w.length>=4&&al.includes(w));
+  if(hit.length&&!confirm('The allergy record mentions "'+hit[0]+'": '+p.allergies+'\n\nPrescribe anyway?'))throw new Error('Not prescribed.');
+  if((D.rx||[]).some(r=>r.status==='active'&&!rxEnded(r)&&r.drug_name.trim().toLowerCase()===dn.toLowerCase())&&!confirm(dn+' is already prescribed and active. Prescribe it again?'))throw new Error('Not prescribed.');
+  const {error}=await sb.from('prescriptions').insert({patient_id:pid,pregnancy_id:pr.id,drug_name:dn,dose,frequency:fr,instructions:nz((f.instructions||'').trim()),start_date:f.start_date,end_date:nz(f.end_date),followup_due:nz(f.followup_due),prescribed_by:me.id});if(error)throw error;
+  await loadClin(pid);toast('Prescription saved.')},'Prescribe')}
+function stopRx(id){const r=(D.rx||[]).find(x=>x.id===id);if(!r||!isMD())return;
+ modal('Stop '+esc(r.drug_name),fld('Stopped on','stopped_on','date',today(),'required max="'+today()+'" min="'+r.start_date+'"')+'<label class="l">Reason (optional)</label><textarea name="stop_reason" maxlength="300"></textarea>',async f=>{
+  if(!f.stopped_on||f.stopped_on>today()||f.stopped_on<r.start_date)throw new Error('Choose a date between the start date and today.');
+  const {data,error}=await sb.from('prescriptions').update({status:'stopped',stopped_on:f.stopped_on,stop_reason:nz((f.stop_reason||'').trim())}).eq('id',id).select();if(error)throw error;if(!data||!data.length)throw new Error('Only a doctor can stop a prescription.');
+  await loadClin(r.patient_id);toast('Prescription stopped.')},'Stop medication')}
 let maf='all';
 function remindCheckup(pid){const p=P(pid);if(!p||!confirm('Send '+p.full_name+' a checkup reminder?'))return;
  sb.from('notifications').insert({patient_id:pid,kind:'follow_up',priority:'important',title:p.status==='delivered'?'Postnatal check due':'Antenatal checkup due',body:'Your checkup is due. Please book an appointment or visit the clinic soon.'}).then(({error})=>error?alert(friendly(error)):toast('Reminder sent.'))}
