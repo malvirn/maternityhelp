@@ -78,9 +78,12 @@ main{min-width:0;padding:24px 28px 60px}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 input,select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:7px 9px;min-width:0}
 input[type=date]{padding:6px 8px}
-textarea{resize:vertical;min-height:60px}
+textarea{resize:vertical;min-height:60px;width:100%}
+.linkbtn{color:var(--al)}
+.lines input[list]{min-width:150px}
+@media print{.nav,.toolbar,dialog{display:none!important}}
 label.f{display:flex;flex-direction:column;gap:4px;font-size:.9rem}
-label.f > span{color:var(--muted)}
+label.f > span{color:var(--muted);white-space:nowrap}
 .grid{display:grid;gap:12px}
 .g2{grid-template-columns:repeat(2,minmax(0,1fr))} .g3{grid-template-columns:repeat(3,minmax(0,1fr))} .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media (max-width:700px){ .g2,.g3,.g4{grid-template-columns:1fr} }
@@ -180,6 +183,7 @@ dialog::backdrop{background:rgba(5,8,14,.6)}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 "use strict";
 /* ---------- configuration ---------- */
@@ -306,8 +310,9 @@ async function loadLookups() { S.look = await rpc("acc_lookups"); }
 
 /* ---------- shell ---------- */
 const NAV = [
-  ["dashboard", "Dashboard"], ["ledger", "General ledger"], ["journal", "Journal entries"], ["accounts", "Chart of accounts"],
-  ["periods", "Periods"], ["transactions", "Transactions"], ["settings", "Settings"]
+  ["dashboard", "Dashboard"], ["invoices", "Invoices"], ["payments", "Payments"], ["expenses", "Expenses"], ["suppliers", "Suppliers"],
+  ["ledger", "General ledger"], ["journal", "Journal entries"], ["accounts", "Chart of accounts"],
+  ["periods", "Periods"], ["transactions", "Quick entry"], ["settings", "Settings"]
 ];
 function renderShell() {
   const pages = NAV.filter(([k]) => k !== "transactions" || canPost());
@@ -334,7 +339,7 @@ function go(page) {
   S.page = page; destroyCharts();
   $$("[data-nav]").forEach(b => { if (b.dataset.nav === page) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
   $("#toolbar").innerHTML = "";
-  const r = { dashboard: renderDashboard, ledger: renderLedger, journal: renderJournal, accounts: renderAccounts,
+  const r = { dashboard: renderDashboard, invoices: renderInvoices, payments: renderPayments, expenses: renderExpenses, suppliers: renderSuppliers, ledger: renderLedger, journal: renderJournal, accounts: renderAccounts,
               periods: renderPeriods, transactions: renderTransactions, settings: renderSettings }[page];
   r().catch(e => { $("#view").innerHTML = `<div class="panel"><b>Could not load this page.</b><p class="muted">${esc(e.message)}</p></div>`; });
 }
@@ -987,6 +992,640 @@ function supplierForm(s) {
     await rpc("acc_save_supplier", { p_id: isNew ? null : s.id, p_name: f.name.value.trim(), p_contact: f.contact.value.trim() || null, p_phone: f.phone.value.trim() || null,
       p_email: f.email.value.trim() || null, p_address: f.address.value.trim() || null, p_tax_number: f.tax.value.trim() || null, p_active: f.active.checked });
     closeModal(); txDone(isNew ? "Supplier added" : "Supplier saved"); }); });
+}
+
+/* ================= Invoices, Payments, Expenses, Suppliers ================= */
+Object.assign(S, {
+  inv: { search: "", status: "", from: "", to: "", offset: 0 },
+  pay: { search: "", kind: "", status: "", method: "", from: "", to: "", offset: 0 },
+  exp: { tab: "list", search: "", status: "", account: "", from: "", to: "", offset: 0 },
+  sup: { tab: "suppliers" },
+  bil: { search: "", status: "", supplier: "", from: "", to: "", offset: 0 }
+});
+const LIM = 50;
+METHOD.card = METHOD.card || "Card";
+const mlabel = k => METHOD[k] || (k ? k[0].toUpperCase() + k.slice(1) : "");
+function methodKeys(skip = []) {
+  const k = new Set(); (S.look ? S.look.accounts : []).forEach(a => { if (a.payment_method && a.is_active) k.add(a.payment_method); });
+  return (k.size ? [...k] : Object.keys(METHOD)).filter(x => !skip.includes(x));
+}
+function pill(status) {
+  const c = { paid: "ok", posted: "ok", approved: "ok", partial: "mid", pending: "mid", refunded: "mid", overdue: "bad", void: "bad", reversed: "bad", rejected: "bad", cancelled: "bad" }[status] || "";
+  const label = { posted: "Successful", partial: "Part paid" }[status] || (status ? status[0].toUpperCase() + status.slice(1) : "");
+  return `<span class="pill ${c}">${esc(label)}</span>`;
+}
+const figs = items => `<div class="figures">${items.map(([k, v, s]) => `<div><div class="k">${esc(k)}</div><div class="v">${v}</div>${s ? `<div class="s">${esc(s)}</div>` : ""}</div>`).join("")}</div>`;
+function pagerHtml(total, offset, id) {
+  const a = total ? offset + 1 : 0, b = Math.min(offset + LIM, total);
+  return `<div class="row" style="justify-content:space-between;margin-top:10px"><span class="muted">${a}\u2013${b} of ${total}</span><span class="row"><button class="btn small" data-pg="${id}-prev" ${offset === 0 ? "disabled" : ""}>Previous</button><button class="btn small" data-pg="${id}-next" ${offset + LIM >= total ? "disabled" : ""}>Next</button></span></div>`;
+}
+function bindPager(id, st, total, load) {
+  $$(`[data-pg^="${id}-"]`).forEach(b => b.addEventListener("click", () => { st.offset = Math.max(0, st.offset + (b.dataset.pg.endsWith("next") ? LIM : -LIM)); load(); }));
+}
+function filterBar(id, st, fields) {
+  return `<form class="row" id="${id}-f" style="margin-bottom:12px;align-items:flex-end">${fields.map(x => {
+    if (x.t === "select") return `<label class="f"><span>${esc(x.l)}</span><select name="${x.n}">${x.o.map(([v, l]) => opt(v, l, st[x.n])).join("")}</select></label>`;
+    if (x.t === "date") return `<label class="f"><span>${esc(x.l)}</span><input type="date" name="${x.n}" value="${esc(st[x.n] || "")}"></label>`;
+    return `<label class="f" style="min-width:210px;flex:1"><span>${esc(x.l)}</span><input type="search" name="${x.n}" value="${esc(st[x.n] || "")}" maxlength="80"></label>`;
+  }).join("")}<button class="btn primary" type="submit">Filter</button><button class="btn" type="button" data-clear>Clear</button></form>`;
+}
+function bindFilter(id, st, fields, load) {
+  const f = form($(`#${id}-f`));
+  f.addEventListener("submit", ev => { ev.preventDefault(); fields.forEach(x => { st[x.n] = f[x.n].value; }); st.offset = 0; load(); });
+  $("[data-clear]", f).addEventListener("click", () => { fields.forEach(x => { st[x.n] = ""; f[x.n].value = ""; }); st.offset = 0; load(); });
+}
+function refreshPage() { go(S.page); }
+function reasonForm(title, intro, btn, run, back, required = true) {
+  const body = openModal(title, `<form id="rf"><p class="muted" style="margin-top:0">${esc(intro)}</p><label class="f"><span>${required ? "Reason" : "Note (optional)"}</span><textarea name="reason" rows="3" maxlength="300" ${required ? 'required minlength="3"' : ""}></textarea></label>
+    <div class="row" style="margin-top:12px"><button class="btn primary" type="submit">${esc(btn)}</button>${back ? `<button class="btn" type="button" id="rf-back">Back</button>` : ""}</div></form>`);
+  const f = form($("#rf", body)); if (back) $("#rf-back", body).addEventListener("click", back);
+  f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => { await run(f.reason.value.trim()); }); });
+}
+
+/* ---------- PDF documents (jsPDF) ---------- */
+function pdfBuild(o) {
+  const J = window.jspdf && window.jspdf.jsPDF;
+  if (!J) throw new Error("The PDF tool could not load. Check your connection and try again.");
+  const doc = new J({ unit: "pt", format: "a4" }), W = 595.28, H = 841.89, M = 40, CW = W - 2 * M;
+  const ink = [17, 24, 39], mu = [107, 114, 128], ac = [38, 70, 127];
+  let y = 0;
+  const T = (t, x, yy, op) => doc.text(t, x, yy, op);
+  const fit = (t, w) => doc.splitTextToSize(String(t == null || t === "" ? "-" : t), w);
+  function head() {
+    doc.setFillColor(...ac); doc.rect(0, 0, W, 8, "F");
+    doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.setTextColor(...ink); T("Maternity Help", M, 44);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(...mu); T("Hospital accounts", M, 58);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(20); doc.setTextColor(...ac); T(o.title.toUpperCase(), W - M, 44, { align: "right" });
+    if (o.number) { doc.setFontSize(11); doc.setTextColor(...ink); T(o.number, W - M, 60, { align: "right" }); }
+    doc.setDrawColor(226, 230, 236); doc.line(M, 72, W - M, 72); y = 92;
+  }
+  const need = h => { if (y + h > H - 60) { doc.addPage(); head(); } };
+  head();
+  const half = CW / 2, meta = o.meta || [];
+  for (let i = 0; i < meta.length; i += 2) {
+    const pair = [meta[i], meta[i + 1]].filter(Boolean);
+    const rowH = Math.max(...pair.map(m => 14 + fit(m[1], half - 20).length * 13));
+    need(rowH + 8);
+    pair.forEach((m, j) => {
+      const x = M + j * half;
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(...mu); T(m[0], x, y);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(...ink); T(fit(m[1], half - 20), x, y + 14);
+    });
+    y += rowH + 6;
+  }
+  y += 8;
+  (o.tables || []).forEach(tb => {
+    if (tb.title) { need(44); doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(...ink); T(tb.title, M, y); y += 16; }
+    const tot = tb.widths.reduce((a, b) => a + b, 0), w = tb.widths.map(x => x / tot * CW), xs = []; let acx = M;
+    w.forEach((cw, i) => { xs[i] = acx; acx += cw; });
+    const drawHead = () => {
+      need(30); doc.setFillColor(241, 243, 246); doc.rect(M, y - 12, CW, 22, "F"); doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(...mu);
+      tb.head.forEach((h, i) => { const r = tb.align[i] === "r"; T(h, r ? xs[i] + w[i] - 5 : xs[i] + 5, y + 2, r ? { align: "right" } : undefined); }); y += 22;
+    };
+    drawHead();
+    if (!tb.rows.length) { doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...mu); T(tb.empty || "Nothing to show.", M + 5, y + 2); y += 22; }
+    tb.rows.forEach(r => {
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9.5);
+      const cells = r.map((c, i) => fit(c, w[i] - 10)), h = Math.max(...cells.map(c => c.length)) * 12 + 10;
+      if (y + h > H - 60) { doc.addPage(); head(); drawHead(); doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); }
+      doc.setTextColor(...ink);
+      cells.forEach((c, i) => { const rr = tb.align[i] === "r"; T(c, rr ? xs[i] + w[i] - 5 : xs[i] + 5, y + 2, rr ? { align: "right" } : undefined); });
+      doc.setDrawColor(235, 238, 242); doc.line(M, y + h - 7, W - M, y + h - 7); y += h;
+    });
+    y += 12;
+  });
+  if (o.totals && o.totals.length) {
+    need(o.totals.length * 20 + 12); const bx = W - M - 250;
+    o.totals.forEach(([k, v, strong]) => {
+      doc.setFont("helvetica", strong ? "bold" : "normal"); doc.setFontSize(strong ? 12 : 10.5); doc.setTextColor(...(strong ? ink : mu)); T(k, bx, y);
+      doc.setTextColor(...ink); T(v, W - M, y, { align: "right" }); y += strong ? 22 : 17;
+    });
+    y += 8;
+  }
+  (o.notes || []).filter(Boolean).forEach(n => { const l = fit(n, CW); need(l.length * 13 + 8); doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...mu); T(l, M, y); y += l.length * 13 + 6; });
+  const n = doc.getNumberOfPages();
+  for (let i = 1; i <= n; i++) {
+    doc.setPage(i); doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(...mu);
+    T(`Generated ${new Date().toLocaleString("en-GB")} by ${(S.access && S.access.name) || "Maternity Help accounts"}`, M, H - 28); T(`Page ${i} of ${n}`, W - M, H - 28, { align: "right" });
+  }
+  return doc;
+}
+function pdfPrint(doc) { doc.autoPrint(); const w = window.open(doc.output("bloburl"), "_blank"); if (!w) toast("Allow pop-ups to print, or use Download PDF.", true); }
+function pdfButtons(id) { return `<button class="btn" type="button" data-pdf="${id}">Download PDF</button><button class="btn" type="button" data-print="${id}">Print</button>`; }
+function bindPdf(root, id, make, name) {
+  $(`[data-pdf="${id}"]`, root).addEventListener("click", () => { try { make().save(name); } catch (e) { toast(e.message, true); } });
+  $(`[data-print="${id}"]`, root).addEventListener("click", () => { try { pdfPrint(make()); } catch (e) { toast(e.message, true); } });
+}
+function invoicePdf(d) {
+  const i = d.invoice, p = d.patient || {};
+  const receipts = (d.receipts || []).filter(r => r.status === "posted");
+  return pdfBuild({
+    title: "Invoice", number: i.invoice_no,
+    meta: [["Bill to", p.name || "Patient"], ["Status", i.status.toUpperCase()], ["Patient ID", p.code || "-"], ["Invoice date", fd(i.issue_date)], ["Phone", p.phone || "-"], ["Due date", fd(i.due_date)]],
+    tables: [
+      { head: ["Description", "Qty", "Unit price", "Discount", "Amount"], widths: [5, 1.2, 2, 2, 2.2], align: ["l", "r", "r", "r", "r"],
+        rows: (d.lines || []).map(l => [l.description, l.qty != null ? String(Number(l.qty)) : "1", l.unit_price != null ? money(l.unit_price) : money(l.amount), Number(l.discount || 0) ? "-" + money(l.discount) : "", money(l.amount)]) },
+      ...(receipts.length ? [{ title: "Payments received", head: ["Receipt", "Date", "Method", "Reference", "Amount"], widths: [2, 2, 2, 3, 2], align: ["l", "l", "l", "l", "r"],
+        rows: receipts.map(r => [r.receipt_no, fd(r.date), mlabel(r.method), r.reference || "", money(r.amount)]) }] : [])
+    ],
+    totals: [["Total", money(i.total)], ["Paid", money(i.paid)], ...(Number(i.refunded) ? [["Refunded", money(i.refunded)]] : []), ["Balance due", money(i.balance), true]],
+    notes: [i.notes ? "Notes: " + i.notes : "", `Amounts are in ${cur()}. Thank you.`]
+  });
+}
+function receiptPdf(d) {
+  const r = d.receipt, p = d.patient || {}, inv = d.invoice;
+  return pdfBuild({
+    title: "Receipt", number: r.receipt_no,
+    meta: [["Received from", p.name || "Patient"], ["Date", fd(r.date)], ["Patient ID", p.code || "-"], ["Payment method", mlabel(r.method)], ["Reference", r.reference || "-"], ["Received by", d.received_by || "-"], ["Invoice", inv ? inv.invoice_no : "Advance payment (patient credit)"], ["Status", r.status === "posted" ? "SUCCESSFUL" : r.status.toUpperCase()]],
+    tables: [{ head: ["Description", "Amount"], widths: [4, 1.4], align: ["l", "r"], rows: [[inv ? `Payment towards invoice ${inv.invoice_no}` : "Advance payment held as patient credit", money(r.amount)]] }],
+    totals: [["Amount received", money(r.amount), true], ...(inv ? [["Invoice balance now", money(inv.balance)]] : [])],
+    notes: [r.status === "reversed" ? `This receipt was reversed${r.reversed_on ? " on " + fd(r.reversed_on) : ""}${r.reversal_reason ? ": " + r.reversal_reason : ""}.` : "", `Amounts are in ${cur()}. Thank you for your payment.`]
+  });
+}
+function statementPdf(s) {
+  const sp = s.supplier;
+  return pdfBuild({
+    title: "Supplier statement", number: sp.name,
+    meta: [["Supplier", sp.name], ["Period", `${s.from ? fd(s.from) : "Start"} to ${fd(s.to)}`], ["Contact", [sp.contact_person, sp.phone].filter(Boolean).join(", ") || "-"], ["Tax number", sp.tax_number || "-"]],
+    tables: [
+      { title: "Transactions", head: ["Date", "Type", "Reference", "Description", "Billed", "Paid", "Balance"], widths: [1.7, 1.7, 1.8, 4, 1.8, 1.8, 1.9], align: ["l", "l", "l", "l", "r", "r", "r"],
+        rows: [["", "Opening balance", "", "", "", "", money(s.opening)], ...(s.lines || []).map(l => [fd(l.date), l.type, l.ref, l.description, Number(l.billed) ? money(l.billed) : "", Number(l.paid) ? money(l.paid) : "", money(l.balance)])] },
+      { title: "Unpaid bills", head: ["Bill", "Supplier invoice", "Due date", "Days overdue", "Outstanding"], widths: [2, 2.4, 2, 1.6, 2], align: ["l", "l", "l", "r", "r"],
+        rows: (s.open_bills || []).map(b => [b.bill_no, b.supplier_invoice_no || "", fd(b.due_date), String(b.days_overdue), money(b.outstanding)]), empty: "No unpaid bills." }
+    ],
+    totals: [["Opening balance", money(s.opening)], ["Billed", money(s.billed)], ["Paid", money(s.paid)], ["Closing balance owed", money(s.closing), true]],
+    notes: [`Amounts are in ${cur()}.`]
+  });
+}
+
+/* ---------- attachments (receipts and supporting invoices) ---------- */
+const FILE_OK = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
+async function uploadFiles(docType, docId, files) {
+  let n = 0;
+  for (const f of files) {
+    if (!FILE_OK.includes(f.type)) throw new Error(`${f.name}: upload a PDF or an image (PNG, JPG or WebP)`);
+    if (f.size > 8 * 1024 * 1024) throw new Error(`${f.name} is larger than 8 MB`);
+    const path = `${docType}/${docId}/${Date.now()}-${f.name.replace(/[^\w.\-]+/g, "_").slice(-80)}`;
+    const { error } = await sb.storage.from("acc-docs").upload(path, f, { contentType: f.type, upsert: false });
+    if (error) throw new Error(error.message);
+    await rpc("acc_add_attachment", { p_doc_type: docType, p_doc_id: docId, p_path: path, p_name: f.name, p_mime: f.type, p_size: f.size });
+    n++;
+  }
+  return n;
+}
+async function openAttachment(path) {
+  const { data, error } = await sb.storage.from("acc-docs").createSignedUrl(path, 120);
+  if (error) throw new Error(error.message);
+  window.open(data.signedUrl, "_blank");
+}
+const fileField = (label = "Receipt or supporting invoice (PDF or image, optional)") => `<label class="f" style="grid-column:1/-1"><span>${esc(label)}</span><input type="file" name="files" accept="application/pdf,image/png,image/jpeg,image/webp" multiple></label>`;
+async function attachmentsModal(docType, docId, title, back) {
+  const list = await rpc("acc_attachments_list", { p_doc_type: docType, p_doc_id: docId });
+  const body = openModal(title, `<div class="stack"><div class="scroll"><table><thead><tr><th>File</th><th>Uploaded</th><th>By</th><th></th></tr></thead><tbody>${list.map(a => `<tr><td>${esc(a.file_name)}<div class="muted">${Math.max(1, Math.round(a.size_bytes / 1024))} KB</div></td><td>${fdt(a.uploaded_at)}</td><td>${esc(a.uploaded_by || "")}</td><td class="num"><button class="btn small" data-open="${esc(a.file_path)}">Open</button></td></tr>`).join("") || `<tr><td colspan="4" class="empty">No files attached.</td></tr>`}</tbody></table></div>
+    ${canPost() ? `<form id="af" class="row"><input type="file" name="files" accept="application/pdf,image/png,image/jpeg,image/webp" multiple required><button class="btn primary" type="submit">Upload</button></form>` : ""}
+    ${back ? `<div class="row"><button class="btn" id="att-back" type="button">Back</button></div>` : ""}</div>`);
+  $$("[data-open]", body).forEach(b => b.addEventListener("click", () => openAttachment(b.dataset.open).catch(e => toast(e.message, true))));
+  if (back) $("#att-back", body).addEventListener("click", back);
+  const af = $("#af", body);
+  if (af) af.addEventListener("submit", ev => { ev.preventDefault(); busy($("button", af), async () => { const n = await uploadFiles(docType, docId, [...af.files.files]); toast(`${n} file(s) uploaded`); attachmentsModal(docType, docId, title, back); }); });
+}
+
+/* ================= 1. Invoices ================= */
+const FEE_LIST = [["Booking fee", 56], ["Delivery fee", 150], ["ANC", 1], ["Suture", 20], ["Bedding fee", 10], ["Unbooked", 225], ["Gyno consultation", 20]];
+async function loadServices() {
+  if (S.svc) return;
+  try { const { data } = await sb.from("charge_items").select("name,unit_price,active").eq("active", true); S.svc = (data || []).map(c => [c.name, Number(c.unit_price)]); } catch (e) { S.svc = []; }
+}
+const serviceList = () => { const seen = new Set(); return [...FEE_LIST, ...(S.svc || [])].filter(([n]) => { const k = n.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; }); };
+const INV_FIELDS = [{ n: "search", t: "search", l: "Search" },
+  { n: "status", t: "select", l: "Status", o: [["", "All statuses"], ["issued", "Issued"], ["partial", "Part paid"], ["paid", "Paid"], ["overdue", "Overdue"], ["refunded", "Refunded"], ["void", "Void"]] },
+  { n: "from", t: "date", l: "From" }, { n: "to", t: "date", l: "To" }];
+async function renderInvoices() {
+  setTitle("Invoices");
+  $("#toolbar").innerHTML = canPost() ? `<button class="btn primary" id="inv-new" type="button">New invoice</button>` : "";
+  if (canPost()) $("#inv-new").addEventListener("click", () => invoiceForm());
+  await loadLookups();
+  $("#view").innerHTML = filterBar("inv", S.inv, INV_FIELDS) + `<div id="inv-body"><div class="loading">Loading\u2026</div></div>`;
+  bindFilter("inv", S.inv, INV_FIELDS, loadInvoices);
+  await loadInvoices();
+}
+async function loadInvoices() {
+  const st = S.inv, el = $("#inv-body"); if (!el) return;
+  const r = await rpc("acc_invoices_list", { p_search: st.search || null, p_status: st.status || null, p_from: st.from || null, p_to: st.to || null, p_limit: LIM, p_offset: st.offset });
+  el.innerHTML = figs([["Billed", money(r.billed)], ["Collected", money(r.paid)], ["Outstanding", money(r.outstanding)], ["Overdue", `<span class="${Number(r.overdue) > 0 ? "neg" : ""}">${money(r.overdue)}</span>`]]) +
+    `<div class="panel" style="margin-top:14px"><div class="scroll"><table><thead><tr><th>Invoice</th><th>Patient</th><th>Date</th><th>Due</th><th class="num">Total</th><th class="num">Paid</th><th class="num">Balance</th><th>Status</th></tr></thead><tbody>
+    ${r.rows.map(x => `<tr class="click" data-inv="${x.id}"><td>${esc(x.invoice_no)}</td><td>${esc(x.patient || "")}</td><td>${fd(x.issue_date)}</td><td>${fd(x.due_date)}</td><td class="num">${money(x.total)}</td><td class="num">${money(Number(x.paid) - Number(x.refunded))}</td><td class="num">${money(x.balance)}</td><td>${pill(x.status)}</td></tr>`).join("") || `<tr><td colspan="8" class="empty">No invoices match.</td></tr>`}
+    </tbody></table></div>${pagerHtml(r.total_count, st.offset, "inv")}</div>`;
+  $$("[data-inv]", el).forEach(tr => tr.addEventListener("click", () => showInvoice(tr.dataset.inv).catch(e => toast(e.message, true))));
+  bindPager("inv", st, r.total_count, loadInvoices);
+}
+async function invoiceForm(prefill = {}) {
+  await loadLookups(); await loadServices();
+  const terms = Number(S.look.settings.payment_terms_days || 0), revOpts = accountOptions(a => postable(a) && a.type === "revenue", "", "Revenue account");
+  const svc = serviceList();
+  const row = acct => `<tr><td><input data-f="description" list="svc-list" maxlength="300" aria-label="Service" placeholder="Service"></td>
+    <td><select data-f="account" aria-label="Revenue account">${acct ? revOpts.replace(`value="${acct}"`, `value="${acct}" selected`) : revOpts}</select></td>
+    <td><input data-f="qty" inputmode="decimal" value="1" aria-label="Quantity" style="width:62px"></td>
+    <td><input data-f="price" class="amt" inputmode="decimal" aria-label="Unit price" placeholder="0.00"></td>
+    <td><input data-f="disc" class="amt" inputmode="decimal" aria-label="Discount" placeholder="0.00"></td>
+    <td class="num" data-f="total">0.00</td><td><button type="button" class="btn small" data-remove aria-label="Remove line">\u00d7</button></td></tr>`;
+  const body = openModal("New invoice", `<form id="if" data-key="${newKey()}"><datalist id="svc-list">${svc.map(([n]) => `<option value="${esc(n)}">`).join("")}</datalist>
+    <div class="grid g3">
+      <label class="f"><span>Patient</span><select name="patient" required>${patientOptions(prefill.patient || "")}</select></label>
+      <label class="f"><span>Invoice date</span><input type="date" name="issue" value="${today()}" required></label>
+      <label class="f"><span>Due date</span><input type="date" name="due" value="${addDays(today(), terms)}" required></label></div>
+    <div class="scroll" style="margin-top:12px"><table class="lines"><thead><tr><th>Service</th><th>Account</th><th>Qty</th><th class="num">Unit price</th><th class="num">Discount</th><th class="num">Line total</th><th></th></tr></thead><tbody id="il">${row()}</tbody></table></div>
+    <div class="row" style="justify-content:space-between;margin-top:8px;align-items:flex-start"><button type="button" class="btn small" id="il-add">Add service</button>
+      <div style="text-align:right"><div class="muted">Subtotal <span id="t-sub">0.00</span></div><div class="muted">Discounts <span id="t-dis">0.00</span></div><div><b>Total <span id="t-tot">0.00</span></b></div></div></div>
+    <p class="muted" style="margin:6px 0 0">Choose a service to fill its standard price, or type your own. A discount is an amount taken off that line.</p>
+    <label class="f" style="margin-top:10px"><span>Notes (optional)</span><input name="notes" maxlength="500"></label>
+    <div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Create invoice</button></div></form>`);
+  const f = form($("#if", body)), tb = $("#il", body), QTY = /^\d{1,6}(\.\d{1,3})?$/;
+  const calc = tr => { const q = $("[data-f=qty]", tr).value.trim(), p = $("[data-f=price]", tr).value.trim(), d = $("[data-f=disc]", tr).value.trim();
+    const qn = QTY.test(q) ? parseFloat(q) : NaN, pc = AMOUNT_RE.test(p) ? cents(p) : NaN, dc = d === "" ? 0 : (AMOUNT_RE.test(d) ? cents(d) : NaN);
+    if ([qn, pc, dc].some(Number.isNaN)) return null; const gross = Math.round(qn * pc), net = gross - dc; return { gross, dc, net }; };
+  const recalc = () => { let sub = 0, dis = 0, tot = 0; $$("tr", tb).forEach(tr => { const c = calc(tr); $("[data-f=total]", tr).textContent = c ? (c.net / 100).toFixed(2) : "0.00"; if (c) { sub += c.gross; dis += c.dc; tot += c.net; } });
+    $("#t-sub", body).textContent = (sub / 100).toFixed(2); $("#t-dis", body).textContent = (dis / 100).toFixed(2); $("#t-tot", body).textContent = (tot / 100).toFixed(2); };
+  f.issue.addEventListener("change", () => { if (f.issue.value) f.due.value = addDays(f.issue.value, terms); });
+  tb.addEventListener("input", ev => { if (ev.target.matches("[data-f=description]")) { const m = svc.find(([n]) => n.toLowerCase() === ev.target.value.trim().toLowerCase()); const pr = $("[data-f=price]", ev.target.closest("tr")); if (m && !pr.value) pr.value = Number(m[1]).toFixed(2); } recalc(); });
+  tb.addEventListener("click", ev => { if (ev.target.matches("[data-remove]") && $$("tr", tb).length > 1) { ev.target.closest("tr").remove(); recalc(); } });
+  $("#il-add", body).addEventListener("click", () => { const last = $$("tr", tb).pop(); tb.insertAdjacentHTML("beforeend", row($("[data-f=account]", last).value)); });
+  f.addEventListener("submit", ev => { ev.preventDefault();
+    const lines = [];
+    for (const tr of $$("tr", tb)) {
+      const d = $("[data-f=description]", tr).value.trim(), a = $("[data-f=account]", tr).value, p = $("[data-f=price]", tr).value.trim();
+      if (!d && !a && !p) continue;
+      const c = calc(tr);
+      if (d.length < 2 || !a || !c || cents(p) === 0) return toast("Each line needs a service, a revenue account, a quantity and a unit price", true);
+      if (c.net <= 0) return toast("A discount cannot be as large as the line total", true);
+      lines.push({ description: d, revenue_account_id: a, qty: $("[data-f=qty]", tr).value.trim(), unit_price: p, discount: $("[data-f=disc]", tr).value.trim() || "0" });
+    }
+    if (!lines.length) return toast("Add at least one service", true);
+    if (f.due.value < f.issue.value) return toast("The due date must be on or after the invoice date", true);
+    busy($("button[type=submit]", f), async () => {
+      const r = await rpc("acc_create_invoice", { p_patient: f.patient.value, p_issue_date: f.issue.value, p_due_date: f.due.value, p_lines: lines, p_notes: f.notes.value.trim() || null, p_idem: f.dataset.key });
+      toast(`Invoice ${r.invoice_no} created`); if (S.page === "invoices") loadInvoices(); await showInvoice(r.id);
+    });
+  });
+}
+async function showInvoice(id) {
+  const d = await rpc("acc_invoice_detail", { p_id: id }), i = d.invoice, p = d.patient || {};
+  const canPay = canPost() && !["void", "paid", "refunded"].includes(i.status) && Number(i.balance) > 0;
+  const body = openModal(`Invoice ${i.invoice_no}`, `<div class="stack">
+    <div class="grid g3"><div><div class="muted">Patient</div><b>${esc(p.name || "")}</b><div class="muted">${esc(p.code || "")}</div></div>
+      <div><div class="muted">Invoice date</div><b>${fd(i.issue_date)}</b><div class="muted">Due ${fd(i.due_date)}</div></div>
+      <div><div class="muted">Status</div>${pill(i.status)}<div class="muted">${i.source_type === "manual" ? "Created manually" : "Created automatically"}</div></div></div>
+    <div class="scroll"><table><thead><tr><th>Service</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Discount</th><th class="num">Amount</th></tr></thead><tbody>
+      ${(d.lines || []).map(l => `<tr><td>${esc(l.description)}<div class="muted">${esc(l.account)}</div></td><td class="num">${l.qty != null ? Number(l.qty) : 1}</td><td class="num">${money(l.unit_price != null ? l.unit_price : l.amount)}</td><td class="num">${Number(l.discount || 0) ? "-" + money(l.discount) : ""}</td><td class="num">${money(l.amount)}</td></tr>`).join("")}
+      </tbody><tfoot><tr><td colspan="4" class="num">Total</td><td class="num">${money(i.total)}</td></tr></tfoot></table></div>
+    <div class="row" style="justify-content:flex-end;gap:22px"><span>Paid <b>${money(i.paid)}</b></span>${Number(i.refunded) ? `<span>Refunded <b>${money(i.refunded)}</b></span>` : ""}<span>Balance due <b class="${Number(i.balance) > 0 ? "neg" : "pos"}">${money(i.balance)}</b></span></div>
+    ${i.notes ? `<p class="muted">Notes: ${esc(i.notes)}</p>` : ""}
+    <div><h3 style="margin-bottom:6px">History</h3><div class="scroll"><table><tbody>
+      <tr><td>${fdt(i.created_at)}</td><td>Invoice created${i.created_by ? " by " + esc(i.created_by) : ""}</td><td class="num">${money(i.total)}</td><td></td></tr>
+      ${(d.receipts || []).map(r => `<tr><td>${fd(r.date)}</td><td>Payment ${esc(r.receipt_no)} (${esc(mlabel(r.method))}) ${pill(r.status)}</td><td class="num">${money(r.amount)}</td><td class="num"><button class="btn small" data-rct="${r.id}">Receipt</button></td></tr>`).join("")}
+      ${(d.refunds || []).map(r => `<tr><td>${fd(r.date)}</td><td>Refund ${esc(r.refund_no)} (${esc(mlabel(r.method))}) ${pill(r.status)}</td><td class="num">-${money(r.amount)}</td><td></td></tr>`).join("")}
+      ${i.status === "void" ? `<tr><td></td><td>Invoice voided</td><td></td><td></td></tr>` : ""}</tbody></table></div></div>
+    <div class="row">${pdfButtons("inv")}${canPay ? `<button class="btn primary" id="inv-pay" type="button">Record payment</button>` : ""}${canPost() && i.source_type === "manual" && i.status !== "void" ? `<button class="btn danger" id="inv-void" type="button">Void invoice</button>` : ""}</div></div>`);
+  bindPdf(body, "inv", () => invoicePdf(d), `${i.invoice_no}.pdf`);
+  $$("[data-rct]", body).forEach(b => b.addEventListener("click", () => showReceipt(b.dataset.rct, "receipt", null, () => showInvoice(id)).catch(e => toast(e.message, true))));
+  const pay = $("#inv-pay", body); if (pay) pay.addEventListener("click", () => paymentForm({ patient: p.id, invoice: id, amount: i.balance }));
+  const vd = $("#inv-void", body);
+  if (vd) vd.addEventListener("click", () => reasonForm(`Void ${i.invoice_no}`, "Voiding cancels the invoice. The accounting entry is reversed, not deleted. It cannot be undone.", "Void invoice",
+    async reason => { await rpc("acc_void_invoice", { p_id: id, p_reason: reason }); toast("Invoice voided"); closeModal(); refreshPage(); }, () => showInvoice(id)));
+}
+
+/* ================= 2. Payments ================= */
+const PAY_FIELDS = () => [{ n: "search", t: "search", l: "Search" },
+  { n: "kind", t: "select", l: "Type", o: [["", "Payments and refunds"], ["receipt", "Payments"], ["refund", "Refunds"]] },
+  { n: "status", t: "select", l: "Status", o: [["", "Any status"], ["posted", "Successful"], ["reversed", "Reversed"]] },
+  { n: "method", t: "select", l: "Method", o: [["", "Any method"], ...methodKeys().map(k => [k, mlabel(k)])] },
+  { n: "from", t: "date", l: "From" }, { n: "to", t: "date", l: "To" }];
+async function renderPayments() {
+  setTitle("Payments");
+  $("#toolbar").innerHTML = canPost() ? `<button class="btn primary" id="pay-new" type="button">Receive payment</button><button class="btn" id="ref-new" type="button">Refund patient</button>` : "";
+  if (canPost()) { $("#pay-new").addEventListener("click", () => paymentForm()); $("#ref-new").addEventListener("click", () => refundForm()); }
+  await loadLookups();
+  const fields = PAY_FIELDS();
+  $("#view").innerHTML = filterBar("pay", S.pay, fields) + `<div id="pay-body"><div class="loading">Loading\u2026</div></div>`;
+  bindFilter("pay", S.pay, fields, loadPayments);
+  await loadPayments();
+}
+async function loadPayments() {
+  const st = S.pay, el = $("#pay-body"); if (!el) return;
+  const r = await rpc("acc_payments_list", { p_search: st.search || null, p_kind: st.kind || null, p_status: st.status || null, p_method: st.method || null, p_from: st.from || null, p_to: st.to || null, p_limit: LIM, p_offset: st.offset });
+  S.payRows = r.rows;
+  el.innerHTML = figs([["Received", money(r.received)], ["Refunded", money(r.refunded)], ["Net", money(Number(r.received) - Number(r.refunded))], ["Records", String(r.total_count)]]) +
+    `<div class="panel" style="margin-top:14px"><div class="scroll"><table><thead><tr><th>Date</th><th>Number</th><th>Patient</th><th>Invoice</th><th>Method</th><th>Reference</th><th>Received by</th><th class="num">Amount</th><th>Status</th></tr></thead><tbody>
+    ${r.rows.map((x, n) => `<tr class="click" data-pr="${n}"><td>${fd(x.date)}</td><td>${esc(x.no)}${x.kind === "refund" ? `<span class="pill">Refund</span>` : ""}${x.automatic ? `<span class="pill">Auto</span>` : ""}</td><td>${esc(x.patient || "")}</td><td>${esc(x.invoice_no || "")}</td><td>${esc(mlabel(x.method))}</td><td>${esc(x.reference || "")}</td><td>${esc(x.received_by || "")}</td><td class="num">${x.kind === "refund" ? "-" : ""}${money(x.amount)}</td><td>${pill(x.status)}</td></tr>`).join("") || `<tr><td colspan="9" class="empty">No payments match.</td></tr>`}
+    </tbody></table></div>${pagerHtml(r.total_count, st.offset, "pay")}</div>`;
+  $$("[data-pr]", el).forEach(tr => tr.addEventListener("click", () => { const x = S.payRows[Number(tr.dataset.pr)]; showReceipt(x.id, x.kind, x).catch(e => toast(e.message, true)); }));
+  bindPager("pay", st, r.total_count, loadPayments);
+}
+function paymentForm(pre = {}) {
+  const body = openModal("Receive a payment", `<form id="pf" data-key="${newKey()}"><p class="muted" style="margin-top:0">Pay an invoice in full or in part. Leave the invoice blank to hold the money as the patient's credit (an advance or overpayment).</p>
+    <div class="grid g3">
+      <label class="f"><span>Patient</span><select name="patient" required>${patientOptions(pre.patient || "")}</select></label>
+      <label class="f"><span>Invoice</span><select name="invoice"><option value="">Not linked (patient credit)</option></select></label>
+      ${moneyField("amount", "Amount", pre.amount != null ? Number(pre.amount).toFixed(2) : "")}
+      <label class="f"><span>Paid by</span><select name="method" required>${methodKeys().map(k => opt(k, mlabel(k), "cash")).join("")}</select></label>
+      <label class="f"><span>Date received</span><input type="date" name="date" value="${today()}" required></label>
+      <label class="f"><span>Reference (optional)</span><input name="reference" maxlength="120" placeholder="e.g. EcoCash transaction ID"></label>
+    </div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Record payment</button></div></form>`);
+  const f = form($("#pf", body));
+  const fill = () => { const inv = (S.look.open_invoices || []).filter(i => i.patient_id === f.patient.value);
+    f.invoice.innerHTML = `<option value="">Not linked (patient credit)</option>` + inv.map(i => opt(i.id, `${i.invoice_no}: ${money(i.outstanding)} due ${fd(i.due_date)}`, pre.invoice || "")).join(""); };
+  fill(); f.patient.addEventListener("change", () => { fill(); });
+  f.invoice.addEventListener("change", () => { const i = (S.look.open_invoices || []).find(x => x.id === f.invoice.value); if (i) f.amount.value = Number(i.outstanding).toFixed(2); });
+  f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => {
+    const r = await rpc("acc_record_receipt", { p_patient: f.patient.value, p_amount: f.amount.value, p_method: f.method.value, p_received_on: f.date.value,
+      p_invoice_id: f.invoice.value || null, p_reference: f.reference.value.trim() || null, p_idem: f.dataset.key });
+    toast(`Receipt ${r.receipt_no} recorded`); await loadLookups(); if (["payments", "invoices"].includes(S.page)) go(S.page); await showReceipt(r.id, "receipt");
+  }); });
+}
+function refundForm() {
+  const body = openModal("Refund a patient", `<form id="rfm" data-key="${newKey()}"><p class="muted" style="margin-top:0">You can refund up to the patient's credit, which arises when they paid more than they owe or a paid service was cancelled.</p>
+    <div class="grid g3">
+      <label class="f"><span>Patient</span><select name="patient" required>${patientOptions("")}</select></label>
+      ${moneyField("amount")}
+      <label class="f"><span>Paid out by</span><select name="method" required>${methodKeys(["insurance"]).map(k => opt(k, mlabel(k), "cash")).join("")}</select></label>
+      <label class="f"><span>Date</span><input type="date" name="date" value="${today()}" required></label>
+      <label class="f" style="grid-column:span 2"><span>Reason</span><input name="reason" required minlength="3" maxlength="300"></label>
+    </div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Record refund</button></div></form>`);
+  const f = form($("#rfm", body));
+  f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => {
+    const r = await rpc("acc_record_refund", { p_patient: f.patient.value, p_amount: f.amount.value, p_method: f.method.value, p_refunded_on: f.date.value, p_reason: f.reason.value.trim(), p_invoice_id: null, p_idem: f.dataset.key });
+    toast(`Refund ${r.refund_no} recorded`); closeModal(); if (S.page === "payments") loadPayments();
+  }); });
+}
+async function showReceipt(id, kind = "receipt", row = null, back = null) {
+  if (kind === "refund") {
+    const x = row || {};
+    const body = openModal(`Refund ${x.no || ""}`, `<div class="stack"><div class="grid g3"><div><div class="muted">Patient</div><b>${esc(x.patient || "")}</b></div><div><div class="muted">Date</div><b>${fd(x.date)}</b></div><div><div class="muted">Status</div>${pill(x.status)}</div>
+      <div><div class="muted">Amount</div><b>${money(x.amount)}</b></div><div><div class="muted">Paid out by</div><b>${esc(mlabel(x.method))}</b></div><div><div class="muted">Reason</div><b>${esc(x.reason || "")}</b></div></div>
+      <div class="row">${isCtl() && x.status === "posted" ? `<button class="btn danger" id="rv" type="button">Reverse refund</button>` : ""}${back ? `<button class="btn" id="bk" type="button">Back</button>` : ""}</div></div>`);
+    const rv = $("#rv", body); if (rv) rv.addEventListener("click", () => reasonForm(`Reverse ${x.no}`, "The refund entry is reversed with a new entry. Nothing is deleted.", "Reverse refund",
+      async reason => { await rpc("acc_reverse_payment", { p_kind: "refund", p_id: id, p_reason: reason }); toast("Refund reversed"); closeModal(); refreshPage(); }, () => showReceipt(id, kind, row, back)));
+    if (back) $("#bk", body).addEventListener("click", back); return;
+  }
+  const d = await rpc("acc_receipt_detail", { p_id: id }), r = d.receipt, p = d.patient || {}, inv = d.invoice;
+  const body = openModal(`Receipt ${r.receipt_no}`, `<div class="stack">
+    <div class="grid g3"><div><div class="muted">Received from</div><b>${esc(p.name || "")}</b><div class="muted">${esc(p.code || "")}</div></div>
+      <div><div class="muted">Date</div><b>${fd(r.date)}</b><div class="muted">${esc(mlabel(r.method))}${r.reference ? " \u00b7 " + esc(r.reference) : ""}</div></div>
+      <div><div class="muted">Status</div>${pill(r.status)}<div class="muted">${r.automatic ? "Recorded automatically" : "Recorded manually"}</div></div>
+      <div><div class="muted">Amount</div><b style="font-size:1.2rem">${money(r.amount)}</b></div>
+      <div><div class="muted">Invoice</div><b>${inv ? esc(inv.invoice_no) : "Patient credit"}</b>${inv ? `<div class="muted">Balance now ${money(inv.balance)}</div>` : ""}</div>
+      <div><div class="muted">Received by</div><b>${esc(d.received_by || "")}</b></div></div>
+    ${r.status === "reversed" ? `<p class="neg">Reversed${r.reversed_on ? " on " + fd(r.reversed_on) : ""}${r.reversal_reason ? ": " + esc(r.reversal_reason) : ""}</p>` : ""}
+    <div class="row">${pdfButtons("rct")}${isCtl() && r.status === "posted" && !r.automatic ? `<button class="btn danger" id="rv" type="button">Reverse payment</button>` : ""}${back ? `<button class="btn" id="bk" type="button">Back</button>` : ""}</div>
+    ${r.automatic && r.status === "posted" ? `<p class="muted">This payment came from a Maternity Help record, so change it there instead.</p>` : ""}</div>`);
+  bindPdf(body, "rct", () => receiptPdf(d), `${r.receipt_no}.pdf`);
+  const rv = $("#rv", body); if (rv) rv.addEventListener("click", () => reasonForm(`Reverse ${r.receipt_no}`, "The payment is reversed with a new accounting entry and the invoice balance goes back up. Nothing is deleted.", "Reverse payment",
+    async reason => { await rpc("acc_reverse_payment", { p_kind: "receipt", p_id: id, p_reason: reason }); toast("Payment reversed"); closeModal(); refreshPage(); }, () => showReceipt(id, kind, row, back)));
+  if (back) $("#bk", body).addEventListener("click", back);
+}
+
+/* ================= 3. Expenses ================= */
+const EXP_FIELDS = () => [{ n: "search", t: "search", l: "Search" },
+  { n: "status", t: "select", l: "Status", o: [["", "Any status"], ["pending", "Awaiting approval"], ["paid", "Paid"], ["rejected", "Rejected"], ["cancelled", "Cancelled"], ["reversed", "Reversed"]] },
+  { n: "account", t: "select", l: "Category", o: [["", "All categories"], ...(S.look.accounts || []).filter(costAcct).map(a => [a.id, `${a.code} ${a.name}`])] },
+  { n: "from", t: "date", l: "From" }, { n: "to", t: "date", l: "To" }];
+async function renderExpenses() {
+  setTitle("Expenses");
+  await loadLookups();
+  $("#toolbar").innerHTML = canPost() ? `<button class="btn primary" id="exp-new" type="button">New expense</button>${S.exp.tab === "recurring" ? `<button class="btn" id="rec-new" type="button">New recurring expense</button>` : ""}` : "";
+  if (canPost()) { $("#exp-new").addEventListener("click", () => expenseForm()); const rn = $("#rec-new"); if (rn) rn.addEventListener("click", () => recurringForm()); }
+  $("#view").innerHTML = `<div class="tabs" role="tablist"><button role="tab" data-et="list" aria-selected="${S.exp.tab === "list"}">Expenses</button><button role="tab" data-et="recurring" aria-selected="${S.exp.tab === "recurring"}">Recurring</button></div><div id="exp-wrap"></div>`;
+  $$("[data-et]").forEach(b => b.addEventListener("click", () => { S.exp.tab = b.dataset.et; renderExpenses(); }));
+  if (S.exp.tab === "recurring") return renderRecurring();
+  const fields = EXP_FIELDS();
+  $("#exp-wrap").innerHTML = filterBar("exp", S.exp, fields) + `<div id="exp-body"><div class="loading">Loading\u2026</div></div>`;
+  bindFilter("exp", S.exp, fields, loadExpenses);
+  await loadExpenses();
+}
+async function loadExpenses() {
+  const st = S.exp, el = $("#exp-body"); if (!el) return;
+  const r = await rpc("acc_expenses_list", { p_search: st.search || null, p_status: st.status || null, p_account: st.account || null, p_from: st.from || null, p_to: st.to || null, p_limit: LIM, p_offset: st.offset });
+  S.expRows = r.rows; const me = (S.access && S.access.name) || "";
+  el.innerHTML = (Number(r.pending_count) && S.exp.status !== "pending" ? `<div class="alert warning" style="margin-bottom:12px"><b>${r.pending_count} expense(s) awaiting approval</b>${money(r.pending_total)} in total. ${isCtl() ? `<button class="linkbtn" id="exp-review" type="button">Review them</button>` : "Only the financial controller can approve them."}</div>` : "") +
+    figs([["Paid (this view)", money(r.paid_total)], ["Awaiting approval", money(r.pending_total), `${r.pending_count} request(s)`], ["Approval limit", money(r.limit || 0), "Above this needs approval"], ["Records", String(r.total_count)]]) +
+    `<div class="cols" style="margin-top:14px"><div class="c8"><div class="panel"><div class="scroll"><table><thead><tr><th>Date</th><th>Number</th><th>Category</th><th>Payee / description</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead><tbody>
+    ${r.rows.map((x, n) => `<tr><td>${fd(x.date)}${x.due_date && x.status === "pending" ? `<div class="muted">due ${fd(x.due_date)}</div>` : ""}</td><td>${esc(x.expense_no || x.no)}${x.recurring ? `<span class="pill">Recurring</span>` : ""}</td><td>${esc(x.category || "")}</td>
+      <td>${esc(x.payee || "")}<div class="muted">${esc(x.description || "")}${x.requested_by ? ` \u00b7 ${esc(x.requested_by)}` : ""}</div>${x.note ? `<div class="muted">Note: ${esc(x.note)}</div>` : ""}</td><td class="num">${money(x.amount)}</td><td>${pill(x.status)}</td>
+      <td class="num"><span class="row" style="justify-content:flex-end">
+        <button class="btn small" data-files="${n}">Files${Number(x.attachments) ? ` (${x.attachments})` : ""}</button>
+        ${x.status === "pending" && isCtl() && x.requested_by !== me ? `<button class="btn small primary" data-ap="${n}">Approve</button><button class="btn small danger" data-rj="${n}">Reject</button>` : ""}
+        ${(x.status === "pending" && canPost()) || (x.status === "paid" && isCtl()) ? `<button class="btn small" data-cx="${n}">Cancel</button>` : ""}</span></td></tr>`).join("") || `<tr><td colspan="7" class="empty">No expenses match.</td></tr>`}
+    </tbody></table></div>${pagerHtml(r.total_count, st.offset, "exp")}</div></div>
+    <div class="c4"><div class="panel"><h3>Paid by category</h3>${(r.by_category || []).map(c => `<div class="row" style="justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line)"><span>${esc(c.account)}</span><b>${money(c.total)}</b></div>`).join("") || `<p class="muted">Nothing paid in this view.</p>`}
+      ${isCtl() ? `<form id="lim-f" class="row" style="margin-top:14px;align-items:flex-end"><label class="f" style="flex:1"><span>Approval limit</span><input name="limit" inputmode="decimal" value="${esc(Number(r.limit || 0).toFixed(2))}"></label><button class="btn" type="submit">Save</button></form><p class="muted" style="margin-bottom:0">Expenses above this amount wait for the financial controller to approve them.</p>` : ""}</div></div></div>`;
+  const row = k => S.expRows[Number(k)];
+  $$("[data-files]", el).forEach(b => b.addEventListener("click", () => { const x = row(b.dataset.files); attachmentsModal(x.att_type, x.att_id, `Files for ${x.expense_no || x.no}`).then(() => { const d = $("#modal"); d.addEventListener("close", () => loadExpenses(), { once: true }); }).catch(e => toast(e.message, true)); }));
+  $$("[data-ap]", el).forEach(b => b.addEventListener("click", () => { const x = row(b.dataset.ap); reasonForm(`Approve ${x.no}`, `Approving pays ${money(x.amount)} to ${x.payee || "the payee"} and posts it to the books.`, "Approve and pay", async note => { const r2 = await rpc("acc_decide_expense", { p_id: x.id, p_approve: true, p_note: note || null }); toast(`Approved as ${r2.expense_no}`); closeModal(); loadExpenses(); }, null, false); }));
+  $$("[data-rj]", el).forEach(b => b.addEventListener("click", () => { const x = row(b.dataset.rj); reasonForm(`Reject ${x.no}`, "The person who submitted it will see your reason.", "Reject expense", async note => { await rpc("acc_decide_expense", { p_id: x.id, p_approve: false, p_note: note }); toast("Expense rejected"); closeModal(); loadExpenses(); }); }));
+  $$("[data-cx]", el).forEach(b => b.addEventListener("click", () => { const x = row(b.dataset.cx); reasonForm(`Cancel ${x.expense_no || x.no}`, x.status === "paid" ? "The payment entry is reversed with a new entry. Nothing is deleted." : "The request is cancelled and nothing is posted.", "Cancel expense", async reason => { await rpc("acc_cancel_expense", { p_id: x.id, p_reason: reason }); toast("Expense cancelled"); closeModal(); loadExpenses(); }); }));
+  const rv = $("#exp-review"); if (rv) rv.addEventListener("click", () => { S.exp.status = "pending"; S.exp.offset = 0; renderExpenses(); });
+  const lf = $("#lim-f"); if (lf) form(lf).addEventListener("submit", ev => { ev.preventDefault(); busy($("button", lf), async () => { await rpc("acc_set_expense_limit", { p_limit: form(lf).limit.value }); toast("Approval limit saved"); await loadLookups(); loadExpenses(); }); });
+  bindPager("exp", st, r.total_count, loadExpenses);
+}
+function expenseForm() {
+  const lim = Number(S.look.settings.expense_approval_limit || 0);
+  const body = openModal("New expense", `<form id="xf" data-key="${newKey()}"><datalist id="payee-list">${(S.look.suppliers || []).map(s => `<option value="${esc(s.name)}">`).join("")}</datalist>
+    <div class="grid g3">
+      <label class="f"><span>Date</span><input type="date" name="date" value="${today()}" required></label>
+      <label class="f"><span>Category</span><select name="account" required>${accountOptions(costAcct, "", "Choose a category")}</select></label>
+      ${moneyField("amount")}
+      <label class="f"><span>Paid from</span><select name="from" required>${accountOptions(payFrom, "", "Cash, bank or mobile money")}</select></label>
+      <label class="f"><span>Paid to (optional)</span><input name="payee" list="payee-list" maxlength="120"></label>
+      <label class="f"><span>Reference (optional)</span><input name="reference" maxlength="120"></label>
+      <label class="f"><span>Payment due date (optional)</span><input type="date" name="due"></label>
+      <label class="f" style="grid-column:span 2"><span>Description</span><input name="description" required minlength="3" maxlength="300"></label>
+      ${fileField("Receipt or supporting invoice (PDF or image, optional)")}
+    </div><p class="muted" style="margin:8px 0 0">${isCtl() ? "As financial controller, your expenses are approved automatically." : `Expenses above ${money(lim)} are sent to the financial controller for approval before they are paid.`} Categories come from the chart of accounts.</p>
+    <div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Submit expense</button></div></form>`);
+  const f = form($("#xf", body));
+  f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => {
+    const files = [...f.files.files];
+    const r = await rpc("acc_submit_expense", { p_date: f.date.value, p_account: f.account.value, p_from: f.from.value, p_amount: f.amount.value, p_payee: f.payee.value.trim() || null,
+      p_description: f.description.value.trim(), p_reference: f.reference.value.trim() || null, p_due: f.due.value || null, p_idem: f.dataset.key, p_recurring: null });
+    let msg = r.status === "pending" ? `${r.request_no} sent for approval` : `Expense ${r.expense_no || r.request_no} recorded`;
+    if (files.length) { try { await uploadFiles("expense_request", r.id, files); msg += ` with ${files.length} file(s)`; } catch (e) { msg += `. The expense is saved, but the file could not be attached: ${e.message}`; } }
+    toast(msg); closeModal(); if (S.page === "expenses") loadExpenses();
+  }); });
+}
+async function renderRecurring() {
+  const list = await rpc("acc_recurring_list"), wrap = $("#exp-wrap"), td = today();
+  const due = list.filter(x => x.is_active && x.next_date <= td).length;
+  if (due && canPost()) { try { const r = await rpc("acc_run_recurring"); if (r.created) toast(`${r.created} recurring expense(s) created${r.awaiting_approval ? `, ${r.awaiting_approval} awaiting approval` : ""}`); if (r.failed) toast(`${r.failed} recurring expense(s) could not be created`, true); return renderRecurring2(await rpc("acc_recurring_list")); } catch (e) { toast(e.message, true); } }
+  renderRecurring2(list);
+}
+function renderRecurring2(list) {
+  const wrap = $("#exp-wrap"); if (!wrap) return; const td = today(); S.recRows = list; const FREQ = { weekly: "Weekly", monthly: "Monthly", quarterly: "Quarterly", yearly: "Yearly" };
+  wrap.innerHTML = `<div class="panel"><div class="panel-head"><h2>Recurring expenses</h2>${canPost() ? `<button class="btn" id="rec-run" type="button">Create due expenses now</button>` : ""}</div>
+    <p class="muted" style="margin-top:0">Rent, salaries, internet and other regular costs. Each one creates an expense on its due date and follows the same approval rule as any other expense.</p>
+    <div class="scroll"><table><thead><tr><th>Name</th><th>Category</th><th>Payee</th><th class="num">Amount</th><th>Repeats</th><th>Next due</th><th>Status</th><th></th></tr></thead><tbody>
+    ${list.map((x, n) => `<tr class="${x.is_active ? "" : "inactive"}"><td>${esc(x.name)}<div class="muted">${esc(x.description || "")}</div></td><td>${esc(x.category)}</td><td>${esc(x.payee || "")}</td><td class="num">${money(x.amount)}</td><td>${FREQ[x.frequency] || ""}</td>
+      <td>${fd(x.next_date)}${x.is_active && x.next_date <= td ? `<span class="pill mid">Due</span>` : ""}${x.end_date ? `<div class="muted">ends ${fd(x.end_date)}</div>` : ""}</td><td>${x.is_active ? pill("approved").replace("Approved", "Active") : `<span class="pill">Paused</span>`}</td>
+      <td class="num">${canPost() ? `<span class="row" style="justify-content:flex-end"><button class="btn small" data-re="${n}">Edit</button><button class="btn small" data-rp="${n}">${x.is_active ? "Pause" : "Resume"}</button></span>` : ""}</td></tr>`).join("") || `<tr><td colspan="8" class="empty">No recurring expenses yet.</td></tr>`}
+    </tbody></table></div></div>`;
+  const rr = $("#rec-run"); if (rr) rr.addEventListener("click", () => busy(rr, async () => { const r = await rpc("acc_run_recurring"); toast(r.created ? `${r.created} expense(s) created${r.awaiting_approval ? `, ${r.awaiting_approval} awaiting approval` : ""}` : "Nothing is due"); renderRecurring2(await rpc("acc_recurring_list")); }));
+  $$("[data-re]", wrap).forEach(b => b.addEventListener("click", () => recurringForm(S.recRows[Number(b.dataset.re)])));
+  $$("[data-rp]", wrap).forEach(b => b.addEventListener("click", () => busy(b, async () => { const x = S.recRows[Number(b.dataset.rp)]; await rpc("acc_set_recurring_active", { p_id: x.id, p_active: !x.is_active }); renderRecurring2(await rpc("acc_recurring_list")); })));
+}
+function recurringForm(x) {
+  const isNew = !x; x = x || { frequency: "monthly", next_date: addDays(today(), 30) };
+  const body = openModal(isNew ? "New recurring expense" : `Edit ${x.name}`, `<form id="rf2"><div class="grid g3">
+      <label class="f"><span>Name</span><input name="name" required minlength="2" maxlength="80" value="${esc(x.name || "")}" placeholder="e.g. Office rent"></label>
+      <label class="f"><span>Category</span><select name="account" required>${accountOptions(costAcct, x.account_id || "", "Choose a category")}</select></label>
+      ${moneyField("amount", "Amount", x.amount != null ? Number(x.amount).toFixed(2) : "")}
+      <label class="f"><span>Paid from</span><select name="from" required>${accountOptions(payFrom, x.from_id || "", "Cash, bank or mobile money")}</select></label>
+      <label class="f"><span>Paid to (optional)</span><input name="payee" maxlength="120" value="${esc(x.payee || "")}"></label>
+      <label class="f"><span>Repeats</span><select name="freq">${[["weekly", "Weekly"], ["monthly", "Monthly"], ["quarterly", "Quarterly"], ["yearly", "Yearly"]].map(([k, l]) => opt(k, l, x.frequency)).join("")}</select></label>
+      <label class="f"><span>Next due date</span><input type="date" name="next" required value="${esc(x.next_date || "")}"></label>
+      <label class="f"><span>Stop after (optional)</span><input type="date" name="end" value="${esc(x.end_date || "")}"></label>
+      <label class="f"><span>Description</span><input name="description" required minlength="3" maxlength="300" value="${esc(x.description || "")}"></label></div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" type="submit">${isNew ? "Create" : "Save changes"}</button></div></form>`);
+  const f = form($("#rf2", body));
+  f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => {
+    await rpc("acc_save_recurring", { p_id: isNew ? null : x.id, p_name: f.name.value.trim(), p_account: f.account.value, p_from: f.from.value, p_amount: f.amount.value, p_payee: f.payee.value.trim() || null,
+      p_description: f.description.value.trim(), p_frequency: f.freq.value, p_next: f.next.value, p_end: f.end.value || null });
+    toast("Recurring expense saved"); closeModal(); renderExpenses();
+  }); });
+}
+
+/* ================= 4. Suppliers and accounts payable ================= */
+async function renderSuppliers() {
+  setTitle("Suppliers");
+  await loadLookups();
+  $("#toolbar").innerHTML = canPost() ? `<button class="btn primary" id="bill-new" type="button">New supplier bill</button><button class="btn" id="sup-new" type="button">Add supplier</button>` : "";
+  if (canPost()) { $("#bill-new").addEventListener("click", () => billForm()); $("#sup-new").addEventListener("click", () => supplierForm2(null)); }
+  $("#view").innerHTML = `<div class="tabs" role="tablist"><button role="tab" data-st="suppliers" aria-selected="${S.sup.tab === "suppliers"}">Suppliers</button><button role="tab" data-st="bills" aria-selected="${S.sup.tab === "bills"}">Bills</button></div><div id="sup-wrap"></div>`;
+  $$("[data-st]").forEach(b => b.addEventListener("click", () => { S.sup.tab = b.dataset.st; renderSuppliers(); }));
+  if (S.sup.tab === "bills") return renderBills();
+  await loadSuppliers();
+}
+async function loadSuppliers() {
+  const r = await rpc("acc_suppliers_list"), td = today(), soon = addDays(td, 7);
+  S.supRows = r.rows;
+  const dueSoon = r.rows.filter(s => Number(s.outstanding) > 0 && s.next_due && s.next_due >= td && s.next_due <= soon).length, overdue = r.rows.filter(s => Number(s.overdue) > 0).length;
+  $("#sup-wrap").innerHTML = (overdue || dueSoon ? `<div class="alert ${overdue ? "critical" : "warning"}" style="margin-bottom:12px"><b>${overdue ? `${overdue} supplier(s) have overdue bills` : ""}${overdue && dueSoon ? " and " : ""}${dueSoon ? `${dueSoon} have payments due within 7 days` : ""}</b>${money(r.overdue)} is overdue. <button class="linkbtn" id="to-bills" type="button">See the bills</button></div>` : "") +
+    figs([["Owed to suppliers", money(r.outstanding)], ["Overdue", `<span class="${Number(r.overdue) > 0 ? "neg" : ""}">${money(r.overdue)}</span>`], ["Suppliers", String(r.rows.length)], ["With a balance", String(r.rows.filter(s => Number(s.outstanding) > 0).length)]]) +
+    `<div class="panel" style="margin-top:14px"><div class="scroll"><table><thead><tr><th>Supplier</th><th>Contact</th><th class="num">Billed</th><th class="num">Paid</th><th class="num">Owed</th><th class="num">Overdue</th><th>Next due</th><th></th></tr></thead><tbody>
+    ${r.rows.map((s, n) => `<tr class="${s.is_active ? "" : "inactive"}"><td>${esc(s.name)}${s.is_active ? "" : `<span class="pill bad">Inactive</span>`}<div class="muted">${esc(s.tax_number ? "Tax no. " + s.tax_number : "")}</div></td><td>${esc(s.contact_person || "")}<div class="muted">${esc([s.phone, s.email].filter(Boolean).join(" \u00b7 "))}</div></td>
+      <td class="num">${money(s.billed)}</td><td class="num">${money(s.paid)}</td><td class="num"><b>${money(s.outstanding)}</b></td><td class="num ${Number(s.overdue) > 0 ? "neg" : ""}">${amt(s.overdue)}</td><td>${s.next_due ? fd(s.next_due) : ""}</td>
+      <td class="num"><span class="row" style="justify-content:flex-end"><button class="btn small" data-stm="${n}">Statement</button><button class="btn small" data-sb="${n}">Bills</button>${canPost() ? `<button class="btn small" data-se="${n}">Edit</button>` : ""}</span></td></tr>`).join("") || `<tr><td colspan="8" class="empty">No suppliers yet. Add one to start recording bills.</td></tr>`}
+    </tbody></table></div></div>`;
+  const tb = $("#to-bills"); if (tb) tb.addEventListener("click", () => { S.sup.tab = "bills"; S.bil.status = "overdue"; S.bil.supplier = ""; renderSuppliers(); });
+  $$("[data-stm]").forEach(b => b.addEventListener("click", () => statementModal(S.supRows[Number(b.dataset.stm)])));
+  $$("[data-sb]").forEach(b => b.addEventListener("click", () => { S.sup.tab = "bills"; S.bil.supplier = S.supRows[Number(b.dataset.sb)].id; S.bil.status = ""; renderSuppliers(); }));
+  $$("[data-se]").forEach(b => b.addEventListener("click", () => supplierForm2(S.supRows[Number(b.dataset.se)])));
+}
+function supplierForm2(s) {
+  const isNew = !s; s = s || { is_active: true };
+  const body = openModal(isNew ? "Add supplier" : `Edit ${s.name}`, `<form id="sf2"><div class="grid g2">
+    <label class="f"><span>Name</span><input name="name" required minlength="2" maxlength="120" value="${esc(s.name || "")}"></label>
+    <label class="f"><span>Contact person</span><input name="contact" maxlength="120" value="${esc(s.contact_person || "")}"></label>
+    <label class="f"><span>Phone</span><input name="phone" maxlength="40" value="${esc(s.phone || "")}"></label>
+    <label class="f"><span>Email</span><input type="email" name="email" maxlength="160" value="${esc(s.email || "")}"></label>
+    <label class="f"><span>Address</span><input name="address" maxlength="300" value="${esc(s.address || "")}"></label>
+    <label class="f"><span>Tax number</span><input name="tax" maxlength="60" value="${esc(s.tax_number || "")}"></label>
+    <label class="check"><input type="checkbox" name="active" ${s.is_active ? "checked" : ""}> Active</label></div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" type="submit">${isNew ? "Add supplier" : "Save changes"}</button></div></form>`);
+  const f = form($("#sf2", body));
+  f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => {
+    await rpc("acc_save_supplier", { p_id: isNew ? null : s.id, p_name: f.name.value.trim(), p_contact: f.contact.value.trim() || null, p_phone: f.phone.value.trim() || null, p_email: f.email.value.trim() || null, p_address: f.address.value.trim() || null, p_tax_number: f.tax.value.trim() || null, p_active: f.active.checked });
+    toast(isNew ? "Supplier added" : "Supplier saved"); closeModal(); renderSuppliers();
+  }); });
+}
+async function statementModal(s, from, to) {
+  from = from || (today().slice(0, 4) + "-01-01"); to = to || today();
+  const r = await rpc("acc_supplier_statement", { p_supplier: s.id, p_from: from, p_to: to });
+  const body = openModal(`Statement: ${s.name}`, `<div class="stack"><form id="stf" class="row" style="align-items:flex-end"><label class="f"><span>From</span><input type="date" name="from" value="${esc(from)}" required></label><label class="f"><span>To</span><input type="date" name="to" value="${esc(to)}" required></label><button class="btn" type="submit">Show</button></form>
+    ${figs([["Opening balance", money(r.opening)], ["Billed", money(r.billed)], ["Paid", money(r.paid)], ["Closing balance owed", money(r.closing)]])}
+    <div class="scroll"><table><thead><tr><th>Date</th><th>Type</th><th>Reference</th><th>Description</th><th class="num">Billed</th><th class="num">Paid</th><th class="num">Balance</th></tr></thead><tbody>
+    <tr><td colspan="6">Opening balance</td><td class="num">${money(r.opening)}</td></tr>
+    ${(r.lines || []).map(l => `<tr><td>${fd(l.date)}</td><td>${esc(l.type)}</td><td>${esc(l.ref)}</td><td>${esc(l.description)}</td><td class="num">${amt(l.billed)}</td><td class="num">${amt(l.paid)}</td><td class="num">${money(l.balance)}</td></tr>`).join("") || `<tr><td colspan="7" class="empty">No transactions in this period.</td></tr>`}
+    </tbody></table></div>
+    ${(r.open_bills || []).length ? `<div><h3 style="margin-bottom:6px">Unpaid bills</h3><div class="scroll"><table><thead><tr><th>Bill</th><th>Supplier invoice</th><th>Due</th><th class="num">Days overdue</th><th class="num">Owed</th></tr></thead><tbody>${r.open_bills.map(b => `<tr><td>${esc(b.bill_no)}</td><td>${esc(b.supplier_invoice_no || "")}</td><td>${fd(b.due_date)}</td><td class="num ${b.days_overdue > 0 ? "neg" : ""}">${b.days_overdue || ""}</td><td class="num">${money(b.outstanding)}</td></tr>`).join("")}</tbody></table></div></div>` : ""}
+    <div class="row">${pdfButtons("stm")}</div></div>`);
+  bindPdf(body, "stm", () => statementPdf(r), `Statement-${s.name.replace(/[^\w]+/g, "_")}-${to}.pdf`);
+  const f = form($("#stf", body)); f.addEventListener("submit", ev => { ev.preventDefault(); if (f.to.value < f.from.value) return toast("The end date cannot be before the start date", true); statementModal(s, f.from.value, f.to.value).catch(e => toast(e.message, true)); });
+}
+const BIL_FIELDS = () => [{ n: "search", t: "search", l: "Search" },
+  { n: "status", t: "select", l: "Status", o: [["", "Any status"], ["unpaid", "Unpaid"], ["partial", "Part paid"], ["overdue", "Overdue"], ["paid", "Paid"], ["void", "Void"]] },
+  { n: "supplier", t: "select", l: "Supplier", o: [["", "All suppliers"], ...(S.look.suppliers || []).map(s => [s.id, s.name])] }, { n: "from", t: "date", l: "From" }, { n: "to", t: "date", l: "To" }];
+async function renderBills() {
+  const fields = BIL_FIELDS();
+  $("#sup-wrap").innerHTML = filterBar("bil", S.bil, fields) + `<div id="bil-body"><div class="loading">Loading\u2026</div></div>`;
+  bindFilter("bil", S.bil, fields, loadBills); await loadBills();
+}
+async function loadBills() {
+  const st = S.bil, el = $("#bil-body"); if (!el) return;
+  const r = await rpc("acc_bills_list", { p_search: st.search || null, p_status: st.status || null, p_supplier: st.supplier || null, p_from: st.from || null, p_to: st.to || null, p_limit: LIM, p_offset: st.offset });
+  S.bilRows = r.rows;
+  el.innerHTML = figs([["Owed (this view)", money(r.outstanding)], ["Overdue", `<span class="${Number(r.overdue) > 0 ? "neg" : ""}">${money(r.overdue)}</span>`], ["Bills", String(r.total_count)], ["Paid so far", money(sum(r.rows, "paid")), "on this page"]]) +
+    `<div class="panel" style="margin-top:14px"><div class="scroll"><table><thead><tr><th>Bill</th><th>Supplier</th><th>Invoice no.</th><th>Due</th><th class="num">Amount</th><th class="num">Paid</th><th class="num">Balance</th><th>Status</th><th></th></tr></thead><tbody>
+    ${r.rows.map((b, n) => `<tr class="click" data-bl="${n}"><td>${esc(b.bill_no)}<div class="muted">${esc(b.description || "")}</div></td><td>${esc(b.supplier)}</td><td>${esc(b.supplier_invoice_no || "")}</td><td>${fd(b.due_date)}</td><td class="num">${money(b.amount)}</td><td class="num">${money(b.paid)}</td><td class="num"><b>${money(b.balance)}</b></td><td>${pill(b.status)}</td>
+      <td class="num">${canPost() && ["unpaid", "partial", "overdue"].includes(b.status) ? `<button class="btn small" data-bp="${n}">Pay</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="9" class="empty">No bills match.</td></tr>`}
+    </tbody></table></div>${pagerHtml(r.total_count, st.offset, "bil")}</div>`;
+  $$("[data-bl]", el).forEach(tr => tr.addEventListener("click", ev => { if (ev.target.closest("[data-bp]")) return; showBill(S.bilRows[Number(tr.dataset.bl)].id).catch(e => toast(e.message, true)); }));
+  $$("[data-bp]", el).forEach(b => b.addEventListener("click", () => payBillForm(S.bilRows[Number(b.dataset.bp)])));
+  bindPager("bil", st, r.total_count, loadBills);
+}
+function billForm() {
+  const body = openModal("New supplier bill", `<form id="bf" data-key="${newKey()}">${S.look.suppliers.some(s => s.is_active) ? "" : `<p class="warn">Add a supplier first.</p>`}
+    <div class="grid g3">
+      <label class="f"><span>Supplier</span><select name="supplier" required>${supplierOptions(S.bil.supplier || "")}</select></label>
+      <label class="f"><span>Supplier's invoice number</span><input name="sinv" maxlength="60"></label>
+      <label class="f"><span>Purchase order (optional)</span><input name="po" maxlength="40" placeholder="PO reference"></label>
+      ${moneyField("amount")}
+      <label class="f"><span>Bill date</span><input type="date" name="date" value="${today()}" required></label>
+      <label class="f"><span>Due date</span><input type="date" name="due" value="${addDays(today(), Number(S.look.settings.payment_terms_days || 30))}" required></label>
+      <label class="f"><span>Charge to</span><select name="account" required>${accountOptions(costAcct, "", "Choose a category")}</select></label>
+      <label class="f" style="grid-column:span 2"><span>What is the bill for?</span><input name="description" required minlength="3" maxlength="260"></label>
+      ${fileField("Supplier invoice (PDF or image, optional)")}
+    </div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Record bill</button></div></form>`);
+  const f = form($("#bf", body));
+  f.addEventListener("submit", ev => { ev.preventDefault();
+    if (f.due.value < f.date.value) return toast("The due date must be on or after the bill date", true);
+    busy($("button[type=submit]", f), async () => {
+      const files = [...f.files.files], po = f.po.value.trim();
+      const r = await rpc("acc_create_bill", { p_supplier: f.supplier.value, p_supplier_invoice_no: f.sinv.value.trim() || null, p_bill_date: f.date.value, p_due_date: f.due.value, p_expense_account: f.account.value, p_amount: f.amount.value, p_description: (po ? `[PO ${po}] ` : "") + f.description.value.trim(), p_idem: f.dataset.key });
+      let msg = `Bill ${r.bill_no} recorded`;
+      if (files.length) { try { await uploadFiles("bill", r.id, files); msg += ` with ${files.length} file(s)`; } catch (e) { msg += `. Saved, but the file could not be attached: ${e.message}`; } }
+      toast(msg); closeModal(); await loadLookups(); if (S.page === "suppliers") renderSuppliers();
+    }); });
+}
+function payBillForm(b, back) {
+  const body = openModal(`Pay ${b.bill_no}`, `<form id="pbf" data-key="${newKey()}"><p class="muted" style="margin-top:0">${esc(b.supplier)}: ${esc(b.description || "")}. Balance ${money(b.balance)}, due ${fd(b.due_date)}. You can pay part of it now.</p>
+    <div class="grid g3">${moneyField("amount", "Amount", Number(b.balance).toFixed(2))}
+      <label class="f"><span>Pay from</span><select name="from" required>${accountOptions(payFrom, "", "Cash, bank or mobile money")}</select></label>
+      <label class="f"><span>Date paid</span><input type="date" name="date" value="${today()}" required></label>
+      <label class="f" style="grid-column:1/-1"><span>Reference (optional)</span><input name="reference" maxlength="120"></label></div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Record payment</button>${back ? `<button class="btn" type="button" id="pb-back">Back</button>` : ""}</div></form>`);
+  if (back) $("#pb-back", body).addEventListener("click", back);
+  const f = form($("#pbf", body));
+  f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => {
+    const r = await rpc("acc_pay_bill", { p_bill: b.id, p_amount: f.amount.value, p_paid_on: f.date.value, p_from_account: f.from.value, p_reference: f.reference.value.trim() || null, p_idem: f.dataset.key });
+    toast(`Payment ${r.payment_no} recorded`); closeModal(); await loadLookups(); refreshPage();
+  }); });
+}
+async function showBill(id) {
+  const d = await rpc("acc_bill_detail", { p_id: id }), b = d.bill, s = d.supplier || {}, files = await rpc("acc_attachments_list", { p_doc_type: "bill", p_doc_id: id });
+  const status = b.status === "void" ? "void" : Number(b.balance) <= 0 ? "paid" : b.due_date < today() ? "overdue" : Number(b.paid) > 0 ? "partial" : "unpaid";
+  const row = { id, bill_no: b.bill_no, supplier: s.name, description: b.description, balance: b.balance, due_date: b.due_date };
+  const body = openModal(`Bill ${b.bill_no}`, `<div class="stack"><div class="grid g3"><div><div class="muted">Supplier</div><b>${esc(s.name || "")}</b><div class="muted">${esc([s.phone, s.email].filter(Boolean).join(" \u00b7 "))}</div></div>
+      <div><div class="muted">Supplier invoice</div><b>${esc(b.supplier_invoice_no || "-")}</b><div class="muted">Billed ${fd(b.bill_date)}, due ${fd(b.due_date)}</div></div><div><div class="muted">Status</div>${pill(status)}<div class="muted">${esc(b.category || "")}</div></div></div>
+    <p style="margin:0">${esc(b.description || "")}</p>
+    <div class="row" style="justify-content:flex-end;gap:22px"><span>Amount <b>${money(b.amount)}</b></span><span>Paid <b>${money(b.paid)}</b></span><span>Balance <b class="${Number(b.balance) > 0 ? "neg" : "pos"}">${money(b.balance)}</b></span></div>
+    <div><h3 style="margin-bottom:6px">Payment history</h3><div class="scroll"><table><thead><tr><th>Date</th><th>Number</th><th>Paid from</th><th>Reference</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead><tbody>
+      ${(d.payments || []).map(p => `<tr><td>${fd(p.date)}</td><td>${esc(p.payment_no)}</td><td>${esc(p.account || "")}</td><td>${esc(p.reference || "")}</td><td class="num">${money(p.amount)}</td><td>${pill(p.status)}</td><td class="num">${isCtl() && p.status === "posted" ? `<button class="btn small danger" data-rv="${p.id}" data-no="${esc(p.payment_no)}">Reverse</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="7" class="empty">No payments yet.</td></tr>`}</tbody></table></div></div>
+    <div><h3 style="margin-bottom:6px">Supporting files</h3>${files.map(a => `<div class="row" style="justify-content:space-between;padding:3px 0"><span>${esc(a.file_name)}</span><button class="btn small" data-open="${esc(a.file_path)}">Open</button></div>`).join("") || `<p class="muted" style="margin:0">None attached.</p>`}</div>
+    <div class="row">${canPost() && ["unpaid", "partial", "overdue"].includes(status) ? `<button class="btn primary" id="b-pay" type="button">Pay this bill</button>` : ""}${canPost() ? `<button class="btn" id="b-files" type="button">Attach files</button>` : ""}${canPost() && b.status !== "void" && Number(b.paid) === 0 ? `<button class="btn danger" id="b-void" type="button">Void bill</button>` : ""}</div></div>`);
+  $$("[data-open]", body).forEach(x => x.addEventListener("click", () => openAttachment(x.dataset.open).catch(e => toast(e.message, true))));
+  const pay = $("#b-pay", body); if (pay) pay.addEventListener("click", () => payBillForm(row, () => showBill(id)));
+  const fl = $("#b-files", body); if (fl) fl.addEventListener("click", () => attachmentsModal("bill", id, `Files for ${b.bill_no}`, () => showBill(id)));
+  const vd = $("#b-void", body); if (vd) vd.addEventListener("click", () => reasonForm(`Void ${b.bill_no}`, "The bill is cancelled with a reversing entry. Nothing is deleted.", "Void bill", async reason => { await rpc("acc_void_bill", { p_id: id, p_reason: reason }); toast("Bill voided"); closeModal(); await loadLookups(); refreshPage(); }, () => showBill(id)));
+  $$("[data-rv]", body).forEach(x => x.addEventListener("click", () => reasonForm(`Reverse ${x.dataset.no}`, "The payment is reversed with a new entry and the bill balance goes back up.", "Reverse payment", async reason => { await rpc("acc_reverse_payment", { p_kind: "bill_payment", p_id: x.dataset.rv, p_reason: reason }); toast("Payment reversed"); await loadLookups(); showBill(id); }, () => showBill(id))));
 }
 
 /* ---------- settings ---------- */
