@@ -310,12 +310,12 @@ async function loadLookups() { S.look = await rpc("acc_lookups"); }
 
 /* ---------- shell ---------- */
 const NAV = [
-  ["dashboard", "Dashboard"], ["invoices", "Invoices"], ["payments", "Payments"], ["expenses", "Expenses"], ["suppliers", "Suppliers"],
+  ["dashboard", "Dashboard"], ["invoices", "Invoices"], ["payments", "Payments"], ["expenses", "Expenses"], ["suppliers", "Suppliers"], ["cashbanks", "Cash and banks"], ["insurance", "Insurance"], ["payroll", "Payroll"], ["refunds", "Refunds and adjustments"],
   ["ledger", "General ledger"], ["journal", "Journal entries"], ["accounts", "Chart of accounts"],
   ["periods", "Periods"], ["transactions", "Quick entry"], ["settings", "Settings"]
 ];
 function renderShell() {
-  const pages = NAV.filter(([k]) => k !== "transactions" || canPost());
+  const pages = NAV.filter(([k]) => (k !== "transactions" || canPost()) && (k !== "payroll" || isCtl()));
   $("#root").innerHTML = `
   <div class="app">
     <nav class="nav" aria-label="Accounting">
@@ -339,7 +339,7 @@ function go(page) {
   S.page = page; destroyCharts();
   $$("[data-nav]").forEach(b => { if (b.dataset.nav === page) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
   $("#toolbar").innerHTML = "";
-  const r = { dashboard: renderDashboard, invoices: renderInvoices, payments: renderPayments, expenses: renderExpenses, suppliers: renderSuppliers, ledger: renderLedger, journal: renderJournal, accounts: renderAccounts,
+  const r = { dashboard: renderDashboard, invoices: renderInvoices, payments: renderPayments, expenses: renderExpenses, suppliers: renderSuppliers, cashbanks: renderCash, insurance: renderInsurance, payroll: renderPayroll, refunds: renderRefunds, ledger: renderLedger, journal: renderJournal, accounts: renderAccounts,
               periods: renderPeriods, transactions: renderTransactions, settings: renderSettings }[page];
   r().catch(e => { $("#view").innerHTML = `<div class="panel"><b>Could not load this page.</b><p class="muted">${esc(e.message)}</p></div>`; });
 }
@@ -1128,7 +1128,7 @@ function invoicePdf(d) {
       ...(receipts.length ? [{ title: "Payments received", head: ["Receipt", "Date", "Method", "Reference", "Amount"], widths: [2, 2, 2, 3, 2], align: ["l", "l", "l", "l", "r"],
         rows: receipts.map(r => [r.receipt_no, fd(r.date), mlabel(r.method), r.reference || "", money(r.amount)]) }] : [])
     ],
-    totals: [["Total", money(i.total)], ["Paid", money(i.paid)], ...(Number(i.refunded) ? [["Refunded", money(i.refunded)]] : []), ["Balance due", money(i.balance), true]],
+    totals: [["Total", money(i.total)], ...(Number(i.credited) ? [["Credit notes", "-" + money(i.credited)]] : []), ["Paid", money(i.paid)], ...(Number(i.refunded) ? [["Refunded", money(i.refunded)]] : []), ["Balance due", money(i.balance), true]],
     notes: [i.notes ? "Notes: " + i.notes : "", `Amounts are in ${cur()}. Thank you.`]
   });
 }
@@ -1198,7 +1198,7 @@ async function loadServices() {
 }
 const serviceList = () => { const seen = new Set(); return [...FEE_LIST, ...(S.svc || [])].filter(([n]) => { const k = n.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; }); };
 const INV_FIELDS = [{ n: "search", t: "search", l: "Search" },
-  { n: "status", t: "select", l: "Status", o: [["", "All statuses"], ["issued", "Issued"], ["partial", "Part paid"], ["paid", "Paid"], ["overdue", "Overdue"], ["refunded", "Refunded"], ["void", "Void"]] },
+  { n: "status", t: "select", l: "Status", o: [["", "All statuses"], ["issued", "Issued"], ["partial", "Part paid"], ["paid", "Paid"], ["overdue", "Overdue"], ["refunded", "Refunded"], ["credited", "Credited"], ["void", "Void"]] },
   { n: "from", t: "date", l: "From" }, { n: "to", t: "date", l: "To" }];
 async function renderInvoices() {
   setTitle("Invoices");
@@ -1283,12 +1283,15 @@ async function showInvoice(id) {
     <div><h3 style="margin-bottom:6px">History</h3><div class="scroll"><table><tbody>
       <tr><td>${fdt(i.created_at)}</td><td>Invoice created${i.created_by ? " by " + esc(i.created_by) : ""}</td><td class="num">${money(i.total)}</td><td></td></tr>
       ${(d.receipts || []).map(r => `<tr><td>${fd(r.date)}</td><td>Payment ${esc(r.receipt_no)} (${esc(mlabel(r.method))}) ${pill(r.status)}</td><td class="num">${money(r.amount)}</td><td class="num"><button class="btn small" data-rct="${r.id}">Receipt</button></td></tr>`).join("")}
+      ${(d.credit_notes || []).filter(n => n.status === "posted").map(n => `<tr><td>${fd(n.date)}</td><td>${n.kind === "write_off" ? "Write-off" : "Credit note"} ${esc(n.cn_no)}: ${esc(n.reason)}</td><td class="num">-${money(n.amount)}</td><td></td></tr>`).join("")}
+      ${(d.applications || []).filter(n => n.status === "posted").map(n => `<tr><td>${fd(n.date)}</td><td>Patient credit applied ${esc(n.app_no)}</td><td class="num">${money(n.amount)}</td><td></td></tr>`).join("")}
       ${(d.refunds || []).map(r => `<tr><td>${fd(r.date)}</td><td>Refund ${esc(r.refund_no)} (${esc(mlabel(r.method))}) ${pill(r.status)}</td><td class="num">-${money(r.amount)}</td><td></td></tr>`).join("")}
       ${i.status === "void" ? `<tr><td></td><td>Invoice voided</td><td></td><td></td></tr>` : ""}</tbody></table></div></div>
-    <div class="row">${pdfButtons("inv")}${canPay ? `<button class="btn primary" id="inv-pay" type="button">Record payment</button>` : ""}${canPost() && i.source_type === "manual" && i.status !== "void" ? `<button class="btn danger" id="inv-void" type="button">Void invoice</button>` : ""}</div></div>`);
+    <div class="row">${pdfButtons("inv")}${canPay ? `<button class="btn primary" id="inv-pay" type="button">Record payment</button>` : ""}${canPost() && i.status !== "void" ? `<button class="btn" id="inv-cn" type="button">Credit note</button>` : ""}${canPost() && i.source_type === "manual" && i.status !== "void" ? `<button class="btn danger" id="inv-void" type="button">Void invoice</button>` : ""}</div></div>`);
   bindPdf(body, "inv", () => invoicePdf(d), `${i.invoice_no}.pdf`);
   $$("[data-rct]", body).forEach(b => b.addEventListener("click", () => showReceipt(b.dataset.rct, "receipt", null, () => showInvoice(id)).catch(e => toast(e.message, true))));
   const pay = $("#inv-pay", body); if (pay) pay.addEventListener("click", () => paymentForm({ patient: p.id, invoice: id, amount: i.balance }));
+  const cnb = $("#inv-cn", body); if (cnb) cnb.addEventListener("click", () => creditNoteForm("credit_note", { patient: p.id, invoice: id }));
   const vd = $("#inv-void", body);
   if (vd) vd.addEventListener("click", () => reasonForm(`Void ${i.invoice_no}`, "Voiding cancels the invoice. The accounting entry is reversed, not deleted. It cannot be undone.", "Void invoice",
     async reason => { await rpc("acc_void_invoice", { p_id: id, p_reason: reason }); toast("Invoice voided"); closeModal(); refreshPage(); }, () => showInvoice(id)));
@@ -1353,8 +1356,8 @@ function refundForm() {
     </div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Record refund</button></div></form>`);
   const f = form($("#rfm", body));
   f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => {
-    const r = await rpc("acc_record_refund", { p_patient: f.patient.value, p_amount: f.amount.value, p_method: f.method.value, p_refunded_on: f.date.value, p_reason: f.reason.value.trim(), p_invoice_id: null, p_idem: f.dataset.key });
-    toast(`Refund ${r.refund_no} recorded`); closeModal(); if (S.page === "payments") loadPayments();
+    const r = await rpc("acc_submit_refund", { p_patient: f.patient.value, p_amount: f.amount.value, p_method: f.method.value, p_date: f.date.value, p_reason: f.reason.value.trim(), p_invoice: null, p_idem: f.dataset.key });
+    toast(r.status === "approved" ? `Refund ${r.refund_no} recorded` : `${r.request_no} sent to the financial controller for approval`); closeModal(); if (S.page === "payments") loadPayments();
   }); });
 }
 async function showReceipt(id, kind = "receipt", row = null, back = null) {
@@ -1626,6 +1629,448 @@ async function showBill(id) {
   const fl = $("#b-files", body); if (fl) fl.addEventListener("click", () => attachmentsModal("bill", id, `Files for ${b.bill_no}`, () => showBill(id)));
   const vd = $("#b-void", body); if (vd) vd.addEventListener("click", () => reasonForm(`Void ${b.bill_no}`, "The bill is cancelled with a reversing entry. Nothing is deleted.", "Void bill", async reason => { await rpc("acc_void_bill", { p_id: id, p_reason: reason }); toast("Bill voided"); closeModal(); await loadLookups(); refreshPage(); }, () => showBill(id)));
   $$("[data-rv]", body).forEach(x => x.addEventListener("click", () => reasonForm(`Reverse ${x.dataset.no}`, "The payment is reversed with a new entry and the bill balance goes back up.", "Reverse payment", async reason => { await rpc("acc_reverse_payment", { p_kind: "bill_payment", p_id: x.dataset.rv, p_reason: reason }); toast("Payment reversed"); await loadLookups(); showBill(id); }, () => showBill(id))));
+}
+
+
+/* ================= Group 3 ================= */
+Object.assign(S, {
+  csh: { tab: "accounts", search: "", kind: "", account: "", status: "", from: "", to: "", offset: 0, rec: { account: "", date: "", balance: "" }, cf: { from: "", to: "" } },
+  ins: { tab: "claims", search: "", status: "", insurer: "", from: "", to: "", offset: 0 },
+  prl: { tab: "runs" },
+  rfd: { tab: "refunds", search: "", status: "", offset: 0, cn: { search: "", kind: "", status: "", from: "", to: "", offset: 0 }, ad: { search: "", status: "", from: "", to: "", offset: 0 }, cr: { search: "" } }
+});
+const tabsHtml = (items, cur, attr) => `<div class="tabs" role="tablist">${items.map(([k, l]) => `<button role="tab" data-${attr}="${k}" aria-selected="${cur === k}">${esc(l)}</button>`).join("")}</div>`;
+const cashAcct = a => payFrom(a);
+const counterAcct = a => postable(a) && !["cash", "bank", "mobile_money", "receivable_patient", "payable_supplier", "receivable_insurance"].includes(a.subtype);
+const SRC = { receipt: "Patient payments", refund: "Patient refunds", expense: "Expenses", bill_payment: "Supplier payments", cash_txn: "Deposits, withdrawals and transfers", insurer_payment: "Insurer payments",
+  payroll_payment: "Salary payments", manual: "Manual journal entries", opening: "Opening balances", reversal: "Reversals", appointment: "Appointment payments", ambulance: "Ambulance payments", bed_charge: "Hospital stay payments", credit_note: "Credit notes", adjustment: "Adjustments" };
+const srcLabel = s => SRC[s] || (s ? s[0].toUpperCase() + s.slice(1).replace(/_/g, " ") : "Other");
+(function () { const p = pill; window.pill = function (status) {
+  const c = { paid: "ok", posted: "ok", approved: "ok", completed: "ok", partial: "mid", part_paid: "mid", pending: "mid", submitted: "mid", draft: "mid", refunded: "mid", credited: "mid", overdue: "bad", void: "bad", reversed: "bad", rejected: "bad", cancelled: "bad", undone: "bad" }[status] || "";
+  const label = { posted: "Successful", partial: "Part paid", part_paid: "Part paid", submitted: "Awaiting decision", pending: "Awaiting approval", credited: "Credited" }[status] || (status ? status[0].toUpperCase() + status.slice(1) : "");
+  return `<span class="pill ${c}">${esc(label)}</span>`; }; })();
+
+/* ---------- 1. Cash and banks ---------- */
+async function renderCash() {
+  setTitle("Cash and banks"); await loadLookups();
+  $("#toolbar").innerHTML = canPost() ? `<button class="btn primary" id="c-dep" type="button">Deposit</button><button class="btn" id="c-wd" type="button">Withdrawal</button><button class="btn" id="c-tr" type="button">Transfer</button>` : "";
+  if (canPost()) { $("#c-dep").addEventListener("click", () => cashTxnForm("deposit")); $("#c-wd").addEventListener("click", () => cashTxnForm("withdrawal")); $("#c-tr").addEventListener("click", () => cashTxnForm("transfer")); }
+  $("#view").innerHTML = tabsHtml([["accounts", "Accounts"], ["txns", "Transactions"], ["reconcile", "Reconcile"], ["cashflow", "Cash flow"]], S.csh.tab, "ct") + `<div id="c-wrap"><div class="loading">Loading\u2026</div></div>`;
+  $$("[data-ct]").forEach(b => b.addEventListener("click", () => { S.csh.tab = b.dataset.ct; renderCash(); }));
+  ({ accounts: cashAccounts, txns: cashTxns, reconcile: cashReconcile, cashflow: cashFlow })[S.csh.tab]().catch(e => { $("#c-wrap").innerHTML = `<div class="panel"><b>Could not load this tab.</b><p class="muted">${esc(e.message)}</p></div>`; });
+}
+async function cashAccounts() {
+  const r = await rpc("acc_cash_accounts", {});
+  $("#c-wrap").innerHTML = figs([["Total cash and bank", money(r.total)], ["Accounts", String(r.rows.filter(a => a.is_active).length)], ["Not yet reconciled", String(r.rows.reduce((a, x) => a + Number(x.unreconciled || 0), 0)), "journal lines"]]) +
+    `<div class="panel" style="margin-top:14px"><div class="scroll"><table><thead><tr><th>Account</th><th>Type</th><th class="num">Balance</th><th class="num">Reconciled</th><th>Last reconciled</th><th class="num">To reconcile</th><th></th></tr></thead><tbody>
+    ${r.rows.map((a, n) => `<tr class="${a.is_active ? "" : "inactive"}"><td>${esc(a.code)} ${esc(a.name)}${a.is_active ? "" : `<span class="pill bad">Inactive</span>`}</td><td>${esc({ cash: "Cash", bank: "Bank", mobile_money: "Mobile money" }[a.subtype] || a.subtype)}</td>
+      <td class="num"><b>${money(a.balance)}</b></td><td class="num">${money(a.reconciled)}</td><td>${a.last_rec ? fd(a.last_rec) : `<span class="muted">Never</span>`}</td><td class="num">${a.unreconciled}</td>
+      <td class="num">${canPost() && a.is_active ? `<span class="row" style="justify-content:flex-end"><button class="btn small" data-rc="${n}">Reconcile</button></span>` : ""}</td></tr>`).join("") || `<tr><td colspan="7" class="empty">No cash or bank accounts.</td></tr>`}
+    </tbody></table></div>${isCtl() ? `<p class="muted" style="margin-bottom:0">To add a bank or mobile money account, create it in the <button class="linkbtn" id="to-coa" type="button">chart of accounts</button> as an asset with the type Cash, Bank or Mobile money.</p>` : ""}</div>`;
+  S.cashRows = r.rows;
+  $$("[data-rc]").forEach(b => b.addEventListener("click", () => { S.csh.tab = "reconcile"; S.csh.rec.account = S.cashRows[Number(b.dataset.rc)].id; renderCash(); }));
+  const c = $("#to-coa"); if (c) c.addEventListener("click", () => go("accounts"));
+}
+function cashTxnForm(kind, pre = {}) {
+  const T = { deposit: ["Deposit money", "Money paid into", "Money came from", counterAcct, "Choose where the money came from"], withdrawal: ["Withdraw money", "Money taken from", "Money went to", counterAcct, "Choose where the money went"],
+    transfer: ["Transfer between accounts", "Transfer from", "Transfer to", cashAcct, "Choose the account to transfer to"] }[kind];
+  const body = openModal(T[0], `<form id="ctf" data-key="${newKey()}"><p class="muted" style="margin-top:0">${kind === "deposit" ? "Use this for money that is not a patient payment, such as owner capital, a donation or a loan." : kind === "withdrawal" ? "Use this for money taken out for something that is not an expense or bill, such as bank charges, owner drawings or paying PAYE and NSSA over." : "Use this to move money between your own cash, bank and mobile money accounts, for example banking cash."}</p>
+    <div class="grid g3">
+      <label class="f"><span>${T[1]}</span><select name="account" required>${accountOptions(cashAcct, pre.account || "", "Choose an account")}</select></label>
+      <label class="f"><span>${T[2]}</span><select name="counter" required>${accountOptions(T[3], "", T[4])}</select></label>
+      ${moneyField("amount")}
+      <label class="f"><span>Date</span><input type="date" name="date" value="${today()}" required></label>
+      <label class="f" style="grid-column:span 2"><span>Description</span><input name="description" required minlength="3" maxlength="300"></label>
+      <label class="f" style="grid-column:1/-1"><span>Reference (optional)</span><input name="reference" maxlength="120"></label></div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Record ${kind}</button></div></form>`);
+  const f = form($("#ctf", body));
+  f.addEventListener("submit", ev => { ev.preventDefault(); if (f.account.value === f.counter.value) return toast("Choose two different accounts", true); busy($("button[type=submit]", f), async () => {
+    const r = await rpc("acc_cash_txn", { p_kind: kind, p_date: f.date.value, p_account: f.account.value, p_counter: f.counter.value, p_amount: f.amount.value, p_description: f.description.value.trim(), p_reference: f.reference.value.trim() || null, p_idem: f.dataset.key });
+    toast(`${r.txn_no} recorded`); closeModal(); await loadLookups(); if (S.page === "cashbanks") renderCash();
+  }); });
+}
+const CT_FIELDS = () => [{ n: "search", t: "search", l: "Search" }, { n: "kind", t: "select", l: "Type", o: [["", "All types"], ["deposit", "Deposits"], ["withdrawal", "Withdrawals"], ["transfer", "Transfers"]] },
+  { n: "account", t: "select", l: "Account", o: [["", "All accounts"], ...S.look.accounts.filter(cashAcct).map(a => [a.id, `${a.code} ${a.name}`])] }, { n: "status", t: "select", l: "Status", o: [["", "Any status"], ["posted", "Successful"], ["reversed", "Reversed"]] },
+  { n: "from", t: "date", l: "From" }, { n: "to", t: "date", l: "To" }];
+async function cashTxns() {
+  const fields = CT_FIELDS(); $("#c-wrap").innerHTML = filterBar("ct", S.csh, fields) + `<div id="ct-body"><div class="loading">Loading\u2026</div></div>`; bindFilter("ct", S.csh, fields, loadCashTxns); await loadCashTxns();
+}
+async function loadCashTxns() {
+  const st = S.csh, el = $("#ct-body"); if (!el) return;
+  const r = await rpc("acc_cash_txns_list", { p_search: st.search || null, p_kind: st.kind || null, p_account: st.account || null, p_status: st.status || null, p_from: st.from || null, p_to: st.to || null, p_limit: LIM, p_offset: st.offset }); S.cashTx = r.rows;
+  el.innerHTML = figs([["Deposits", money(r.deposits)], ["Withdrawals", money(r.withdrawals)], ["Transfers", money(r.transfers)], ["Records", String(r.total_count)]]) +
+    `<div class="panel" style="margin-top:14px"><div class="scroll"><table><thead><tr><th>Date</th><th>Number</th><th>Type</th><th>Account</th><th>Other account</th><th>Description</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead><tbody>
+    ${r.rows.map((x, n) => `<tr><td>${fd(x.date)}</td><td>${esc(x.txn_no)}</td><td>${esc(x.kind[0].toUpperCase() + x.kind.slice(1))}</td><td>${esc(x.account)}</td><td>${esc(x.counter)}</td><td>${esc(x.description)}<div class="muted">${esc(x.reference || "")}${x.by ? " \u00b7 " + esc(x.by) : ""}</div></td><td class="num">${money(x.amount)}</td><td>${pill(x.status)}</td>
+      <td class="num">${isCtl() && x.status === "posted" ? `<button class="btn small danger" data-rvc="${n}">Reverse</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="9" class="empty">No transactions match.</td></tr>`}
+    </tbody></table></div>${pagerHtml(r.total_count, st.offset, "ctp")}</div>`;
+  $$("[data-rvc]", el).forEach(b => b.addEventListener("click", () => { const x = S.cashTx[Number(b.dataset.rvc)]; reasonForm(`Reverse ${x.txn_no}`, "The entry is reversed with a new accounting entry. Nothing is deleted.", "Reverse", async reason => { await rpc("acc_reverse_cash_txn", { p_id: x.id, p_reason: reason }); toast("Reversed"); closeModal(); loadCashTxns(); }); }));
+  bindPager("ctp", st, r.total_count, loadCashTxns);
+}
+async function cashReconcile() {
+  const rc = S.csh.rec; if (!rc.date) rc.date = today();
+  const accts = S.look.accounts.filter(cashAcct), recs = await rpc("acc_recs_list", { p_account: null });
+  const latest = {}; recs.filter(r => r.status === "completed").forEach(r => { if (!latest[r.account_id]) latest[r.account_id] = r.id; });
+  $("#c-wrap").innerHTML = `<div class="panel"><h2>Reconcile with a bank or mobile money statement</h2>
+    <form id="rcf" class="row" style="align-items:flex-end"><label class="f"><span>Account</span><select name="account" required>${accountOptions(cashAcct, rc.account, "Choose an account")}</select></label>
+      <label class="f"><span>Statement date</span><input type="date" name="date" value="${esc(rc.date)}" required></label>
+      <label class="f"><span>Statement closing balance</span><input name="balance" inputmode="decimal" value="${esc(rc.balance)}" required placeholder="0.00"></label><button class="btn primary" type="submit">Load transactions</button></form>
+    <div id="rc-body" style="margin-top:12px"></div></div>
+    <div class="panel" style="margin-top:14px"><h2>Reconciliation history</h2><div class="scroll"><table><thead><tr><th>Number</th><th>Account</th><th>Statement date</th><th class="num">Statement balance</th><th class="num">Lines</th><th>Status</th><th>By</th><th></th></tr></thead><tbody>
+    ${recs.map((r, n) => `<tr><td>${esc(r.rec_no)}</td><td>${esc(r.account)}</td><td>${fd(r.statement_date)}</td><td class="num">${money(r.statement_balance)}</td><td class="num">${r.lines}</td><td>${pill(r.status)}</td><td>${esc(r.by || "")}</td>
+      <td class="num"><span class="row" style="justify-content:flex-end"><button class="btn small" data-rd="${n}">View</button>${isCtl() && latest[r.account_id] === r.id ? `<button class="btn small danger" data-ru="${n}">Undo</button>` : ""}</span></td></tr>`).join("") || `<tr><td colspan="8" class="empty">No reconciliations yet.</td></tr>`}
+    </tbody></table></div></div>`;
+  S.recRows = recs; const f = form($("#rcf"));
+  f.addEventListener("submit", ev => { ev.preventDefault(); rc.account = f.account.value; rc.date = f.date.value; rc.balance = f.balance.value.trim(); if (!/^-?\d{1,12}(\.\d{1,2})?$/.test(rc.balance)) return toast("Enter the statement balance, for example 1250.00", true); loadRecCandidates(); });
+  $$("[data-rd]").forEach(b => b.addEventListener("click", async () => { const r = S.recRows[Number(b.dataset.rd)]; try { const d = await rpc("acc_rec_detail", { p_id: r.id });
+    openModal(`${r.rec_no}: ${r.account}`, `<div class="stack"><p class="muted" style="margin:0">Statement ${fd(r.statement_date)}. Balance ${money(r.statement_balance)}. ${r.note ? esc(r.note) : ""}</p><div class="scroll"><table><thead><tr><th>Date</th><th>Entry</th><th>Description</th><th class="num">In</th><th class="num">Out</th></tr></thead><tbody>${d.rows.map(x => `<tr><td>${fd(x.date)}</td><td>${esc(x.entry_no)}</td><td>${esc(x.description || "")}</td><td class="num">${amt(x.debit)}</td><td class="num">${amt(x.credit)}</td></tr>`).join("")}</tbody></table></div></div>`); } catch (e) { toast(e.message, true); } }));
+  $$("[data-ru]").forEach(b => b.addEventListener("click", () => { const r = S.recRows[Number(b.dataset.ru)]; reasonForm(`Undo ${r.rec_no}`, "The transactions go back to unreconciled so you can redo it.", "Undo reconciliation", async () => { await rpc("acc_undo_reconciliation", { p_id: r.id }); toast("Reconciliation undone"); closeModal(); renderCash(); }, null, false); }));
+  if (rc.account && rc.balance !== "") loadRecCandidates();
+}
+async function loadRecCandidates() {
+  const rc = S.csh.rec, el = $("#rc-body"); if (!el) return; el.innerHTML = `<div class="loading">Loading\u2026</div>`;
+  const c = await rpc("acc_rec_candidates", { p_account: rc.account, p_to: rc.date }), sb2 = Math.round(parseFloat(rc.balance) * 100), open = Math.round(Number(c.opening) * 100);
+  el.innerHTML = `<p class="muted" style="margin:0 0 8px">Tick every transaction that appears on the statement. The difference must be zero before you can finish.${c.last_date ? ` Last reconciled to ${fd(c.last_date)}.` : ""}</p>
+    <div class="scroll"><table><thead><tr><th><input type="checkbox" id="rc-all" aria-label="Tick all"></th><th>Date</th><th>Entry</th><th>Description</th><th class="num">In</th><th class="num">Out</th></tr></thead><tbody>
+    ${c.rows.map(x => `<tr><td><input type="checkbox" data-l="${x.id}" data-n="${Math.round((Number(x.debit) - Number(x.credit)) * 100)}"></td><td>${fd(x.date)}</td><td>${esc(x.entry_no)}</td><td>${esc(x.description || "")}<div class="muted">${esc(x.reference || "")}</div></td><td class="num">${amt(x.debit)}</td><td class="num">${amt(x.credit)}</td></tr>`).join("") || `<tr><td colspan="6" class="empty">Nothing is waiting to be reconciled up to this date.</td></tr>`}</tbody></table></div>
+    ${figs([["Reconciled before", money(open / 100)], ["Ticked now", `<span id="rc-t">0.00</span>`], ["Statement balance", money(sb2 / 100)], ["Difference", `<span id="rc-d">${money((sb2 - open) / 100)}</span>`]])}
+    <div class="row" style="margin-top:12px"><button class="btn primary" id="rc-fin" type="button" disabled>Finish reconciliation</button><input id="rc-note" maxlength="300" placeholder="Note (optional)" style="flex:1"></div>`;
+  const key = newKey(), calc = () => { let t = 0; $$("[data-l]", el).forEach(i => { if (i.checked) t += Number(i.dataset.n); }); const d = sb2 - open - t; $("#rc-t", el).textContent = money(t / 100); $("#rc-d", el).innerHTML = `<span class="${d === 0 ? "pos" : "neg"}">${money(d / 100)}</span>`; $("#rc-fin", el).disabled = d !== 0 || !$$("[data-l]:checked", el).length; };
+  el.addEventListener("change", ev => { if (ev.target.id === "rc-all") $$("[data-l]", el).forEach(i => { i.checked = ev.target.checked; }); calc(); });
+  $("#rc-fin", el).addEventListener("click", () => busy($("#rc-fin", el), async () => { const ids = $$("[data-l]:checked", el).map(i => Number(i.dataset.l));
+    const r = await rpc("acc_reconcile", { p_account: rc.account, p_statement_date: rc.date, p_statement_balance: rc.balance, p_line_ids: ids, p_note: $("#rc-note", el).value.trim() || null, p_idem: key }); toast(`${r.rec_no} completed`); rc.balance = ""; renderCash(); }));
+}
+async function cashFlow() {
+  const cf = S.csh.cf; if (!cf.from) { cf.from = today().slice(0, 8) + "01"; cf.to = today(); }
+  $("#c-wrap").innerHTML = `<form id="cff" class="row" style="margin-bottom:12px;align-items:flex-end"><label class="f"><span>From</span><input type="date" name="from" value="${esc(cf.from)}" required></label><label class="f"><span>To</span><input type="date" name="to" value="${esc(cf.to)}" required></label><button class="btn primary" type="submit">Show</button></form><div id="cf-body"><div class="loading">Loading\u2026</div></div>`;
+  const f = form($("#cff")); f.addEventListener("submit", ev => { ev.preventDefault(); if (f.to.value < f.from.value) return toast("The end date cannot be before the start date", true); cf.from = f.from.value; cf.to = f.to.value; cashFlow(); });
+  const r = await rpc("acc_cashflow", { p_from: cf.from, p_to: cf.to }), mx = Math.max(1, ...r.by_month.map(m => Math.max(Number(m.inflow), Number(m.outflow))));
+  $("#cf-body").innerHTML = figs([["Opening balance", money(r.opening)], ["Money in", `<span class="pos">${money(r.inflow)}</span>`], ["Money out", `<span class="neg">${money(r.outflow)}</span>`], ["Net change", money(Number(r.inflow) - Number(r.outflow))], ["Closing balance", money(r.closing)], ["Moved between accounts", money(r.transfers)]]) +
+    `<div class="cols" style="margin-top:14px"><div class="c6"><div class="panel"><h3>Where the money came from and went</h3><div class="scroll"><table><thead><tr><th>Source</th><th class="num">In</th><th class="num">Out</th></tr></thead><tbody>${r.by_source.map(s => `<tr><td>${esc(srcLabel(s.source))}</td><td class="num">${amt(s.inflow)}</td><td class="num">${amt(s.outflow)}</td></tr>`).join("") || `<tr><td colspan="3" class="empty">No cash movement in this period.</td></tr>`}</tbody></table></div></div></div>
+    <div class="c6"><div class="panel"><h3>By account</h3><div class="scroll"><table><thead><tr><th>Account</th><th class="num">Opening</th><th class="num">In</th><th class="num">Out</th><th class="num">Closing</th></tr></thead><tbody>${r.accounts.map(a => `<tr><td>${esc(a.code)} ${esc(a.name)}</td><td class="num">${money(a.opening)}</td><td class="num">${amt(a.inflow)}</td><td class="num">${amt(a.outflow)}</td><td class="num"><b>${money(a.closing)}</b></td></tr>`).join("")}</tbody></table></div></div></div></div>
+    ${r.by_month.length ? `<div class="panel" style="margin-top:14px"><h3>By month</h3>${r.by_month.map(m => `<div style="display:grid;grid-template-columns:70px 1fr;gap:10px;align-items:center;margin:6px 0"><span class="muted">${esc(m.month)}</span><div><div style="height:10px;border-radius:5px;background:var(--pos);width:${Math.max(1, Number(m.inflow) / mx * 100)}%"></div><div style="height:10px;border-radius:5px;background:var(--neg);margin-top:3px;width:${Math.max(1, Number(m.outflow) / mx * 100)}%"></div><span class="muted" style="font-size:.8rem">In ${money(m.inflow)} \u00b7 Out ${money(m.outflow)}</span></div></div>`).join("")}</div>` : ""}`;
+}
+
+/* ---------- 2. Insurance ---------- */
+async function renderInsurance() {
+  setTitle("Insurance"); await loadLookups();
+  $("#toolbar").innerHTML = canPost() ? `<button class="btn primary" id="i-claim" type="button">New claim</button><button class="btn" id="i-ins" type="button">Add insurer</button><button class="btn" id="i-cov" type="button">Add cover</button>` : "";
+  if (canPost()) { $("#i-claim").addEventListener("click", () => claimForm()); $("#i-ins").addEventListener("click", () => insurerForm(null)); $("#i-cov").addEventListener("click", () => coverageForm(null)); }
+  $("#view").innerHTML = tabsHtml([["claims", "Claims"], ["insurers", "Medical aids"], ["cover", "Patient cover"]], S.ins.tab, "it") + `<div id="i-wrap"><div class="loading">Loading\u2026</div></div>`;
+  $$("[data-it]").forEach(b => b.addEventListener("click", () => { S.ins.tab = b.dataset.it; renderInsurance(); }));
+  ({ claims: insClaims, insurers: insInsurers, cover: insCover })[S.ins.tab]().catch(e => { $("#i-wrap").innerHTML = `<div class="panel"><b>Could not load this tab.</b><p class="muted">${esc(e.message)}</p></div>`; });
+}
+async function insClaims() {
+  const list = await rpc("acc_insurers_list"); S.insList = list.rows;
+  const fields = [{ n: "search", t: "search", l: "Search" }, { n: "status", t: "select", l: "Status", o: [["", "Any status"], ["submitted", "Awaiting decision"], ["approved", "Approved"], ["part_paid", "Part paid"], ["paid", "Paid"], ["overdue", "Overdue"], ["rejected", "Rejected"], ["cancelled", "Cancelled"]] },
+    { n: "insurer", t: "select", l: "Medical aid", o: [["", "All"], ...list.rows.map(i => [i.id, i.name])] }, { n: "from", t: "date", l: "From" }, { n: "to", t: "date", l: "To" }];
+  $("#i-wrap").innerHTML = filterBar("ic", S.ins, fields) + `<div id="ic-body"><div class="loading">Loading\u2026</div></div>`; bindFilter("ic", S.ins, fields, loadClaims); await loadClaims();
+}
+async function loadClaims() {
+  const st = S.ins, el = $("#ic-body"); if (!el) return;
+  const r = await rpc("acc_claims_list", { p_search: st.search || null, p_status: st.status || null, p_insurer: st.insurer || null, p_from: st.from || null, p_to: st.to || null, p_limit: LIM, p_offset: st.offset }); S.claimRows = r.rows;
+  el.innerHTML = figs([["Awaiting decision", money(r.submitted), `${r.submitted_n} claim(s)`], ["Approved", money(r.approved)], ["Paid by insurers", money(r.paid)], ["Still owed", money(r.outstanding)], ["Overdue", `<span class="${Number(r.overdue) > 0 ? "neg" : ""}">${money(r.overdue)}</span>`], ["Rejected", money(r.rejected)]]) +
+    `<div class="panel" style="margin-top:14px"><div class="scroll"><table><thead><tr><th>Claim</th><th>Date</th><th>Patient</th><th>Medical aid</th><th>Invoice</th><th class="num">Claimed</th><th class="num">Approved</th><th class="num">Paid</th><th>Status</th></tr></thead><tbody>
+    ${r.rows.map((x, n) => `<tr class="click" data-cl="${n}"><td>${esc(x.claim_no)}</td><td>${fd(x.claim_date)}</td><td>${esc(x.patient)}<div class="muted">${esc(x.member_number || "")}</div></td><td>${esc(x.insurer)}</td><td>${esc(x.invoice_no)}</td><td class="num">${money(x.claimed)}</td><td class="num">${amt(x.approved)}</td><td class="num">${amt(x.paid)}</td><td>${pill(x.status)}${x.overdue ? `<span class="pill bad">Overdue</span>` : ""}</td></tr>`).join("") || `<tr><td colspan="9" class="empty">No claims match.</td></tr>`}
+    </tbody></table></div>${pagerHtml(r.total_count, st.offset, "icp")}</div>`;
+  $$("[data-cl]", el).forEach(tr => tr.addEventListener("click", () => claimModal(S.claimRows[Number(tr.dataset.cl)].id).catch(e => toast(e.message, true))));
+  bindPager("icp", st, r.total_count, loadClaims);
+}
+async function claimModal(id) {
+  const d = await rpc("acc_claim_detail", { p_id: id }), c = d.claim, bal = Number(c.approved) - Number(c.paid), live = ["approved", "part_paid", "paid"].includes(c.status);
+  const body = openModal(`Claim ${c.claim_no}`, `<div class="stack"><div class="grid g3"><div><div class="muted">Patient</div><b>${esc(d.patient.name)}</b><div class="muted">${esc(d.patient.code || "")}</div></div>
+    <div><div class="muted">Medical aid</div><b>${esc(d.insurer.name)}</b><div class="muted">Member ${esc(d.coverage ? d.coverage.member_number : "-")}${d.coverage && d.coverage.plan_name ? " \u00b7 " + esc(d.coverage.plan_name) : ""}</div></div>
+    <div><div class="muted">Status</div>${pill(c.status)}<div class="muted">Claim date ${fd(c.claim_date)}</div></div>
+    <div><div class="muted">Invoice</div><b>${esc(d.invoice.invoice_no)}</b><div class="muted">Total ${money(d.invoice.total)}, patient still owes ${money(d.invoice.balance)}</div></div>
+    <div><div class="muted">Claimed / approved</div><b>${money(c.claimed)} / ${live ? money(c.approved) : "-"}</b></div><div><div class="muted">Paid / still owed</div><b>${money(c.paid)} / ${live ? money(bal) : "-"}</b></div></div>
+    ${c.note ? `<p style="margin:0"><span class="muted">Note:</span> ${esc(c.note)}</p>` : ""}${c.notes ? `<p class="muted" style="margin:0">${esc(c.notes)}</p>` : ""}
+    ${live ? `<div><h3 style="margin-bottom:6px">Insurer payments</h3><div class="scroll"><table><thead><tr><th>Date</th><th>Number</th><th>Paid into</th><th>Reference</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead><tbody>${d.payments.map(p => `<tr><td>${fd(p.date)}</td><td>${esc(p.payment_no)}</td><td>${esc(p.account || "")}</td><td>${esc(p.reference || "")}</td><td class="num">${money(p.amount)}</td><td>${pill(p.status)}</td><td class="num">${isCtl() && p.status === "posted" ? `<button class="btn small danger" data-rvp="${p.id}" data-no="${esc(p.payment_no)}">Reverse</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="7" class="empty">No payments yet.</td></tr>`}</tbody></table></div></div>` : ""}
+    <div id="cm-form"></div>
+    <div class="row">${c.status === "submitted" && isCtl() ? `<button class="btn primary" id="cm-ap" type="button">Approve</button><button class="btn danger" id="cm-rj" type="button">Reject</button>` : ""}
+      ${live && bal > 0 && canPost() ? `<button class="btn primary" id="cm-pay" type="button">Record insurer payment</button>` : ""}
+      ${(c.status === "submitted" && canPost()) || (["approved"].includes(c.status) && isCtl()) ? `<button class="btn" id="cm-cx" type="button">${c.status === "approved" ? "Withdraw approval" : "Cancel claim"}</button>` : ""}</div></div>`);
+  const slot = $("#cm-form", body), back = () => claimModal(id);
+  $$("[data-rvp]", body).forEach(b => b.addEventListener("click", () => reasonForm(`Reverse ${b.dataset.no}`, "The insurer payment is reversed with a new entry and the claim balance goes back up.", "Reverse payment", async reason => { await rpc("acc_reverse_insurer_payment", { p_id: b.dataset.rvp, p_reason: reason }); toast("Payment reversed"); closeModal(); loadClaims(); }, back)));
+  const ap = $("#cm-ap", body); if (ap) ap.addEventListener("click", () => { slot.innerHTML = `<form id="apf" class="row" style="align-items:flex-end;margin-top:6px"><label class="f"><span>Amount approved (up to ${money(c.claimed)})</span><input name="amount" inputmode="decimal" required value="${Number(c.claimed).toFixed(2)}"></label><label class="f" style="flex:1"><span>Note (optional)</span><input name="note" maxlength="300"></label><button class="btn primary" type="submit">Confirm approval</button></form>`;
+    const f = form($("#apf", slot)); f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button", f), async () => { await rpc("acc_decide_claim", { p_id: id, p_approve: true, p_amount: f.amount.value, p_note: f.note.value.trim() || null }); toast("Claim approved"); closeModal(); loadClaims(); }); }); });
+  const rj = $("#cm-rj", body); if (rj) rj.addEventListener("click", () => reasonForm(`Reject ${c.claim_no}`, "The patient stays responsible for the full amount.", "Reject claim", async reason => { await rpc("acc_decide_claim", { p_id: id, p_approve: false, p_amount: null, p_note: reason }); toast("Claim rejected"); closeModal(); loadClaims(); }, back));
+  const cx = $("#cm-cx", body); if (cx) cx.addEventListener("click", () => reasonForm(`${c.status === "approved" ? "Withdraw approval of" : "Cancel"} ${c.claim_no}`, c.status === "approved" ? "The approval is reversed and the patient owes the invoice again." : "Nothing has been posted, so the claim is simply cancelled.", c.status === "approved" ? "Withdraw approval" : "Cancel claim", async reason => { await rpc("acc_cancel_claim", { p_id: id, p_reason: reason }); toast("Claim cancelled"); closeModal(); loadClaims(); }, back));
+  const pay = $("#cm-pay", body); if (pay) pay.addEventListener("click", () => { slot.innerHTML = `<form id="ipf" data-key="${newKey()}" class="grid g3" style="margin-top:6px">${moneyField("amount", "Amount received", bal.toFixed(2))}<label class="f"><span>Paid into</span><select name="acct" required>${accountOptions(payFrom, "", "Cash, bank or mobile money")}</select></label><label class="f"><span>Date</span><input type="date" name="date" value="${today()}" required></label><label class="f" style="grid-column:1/-1"><span>Reference (optional)</span><input name="reference" maxlength="120"></label><div><button class="btn primary" type="submit">Record payment</button></div></form>`;
+    const f = form($("#ipf", slot)); f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button", f), async () => { const r = await rpc("acc_record_insurer_payment", { p_claim: id, p_amount: f.amount.value, p_paid_on: f.date.value, p_deposit: f.acct.value, p_reference: f.reference.value.trim() || null, p_idem: f.dataset.key }); toast(`${r.payment_no} recorded`); closeModal(); loadClaims(); }); }); });
+}
+async function claimForm() {
+  await loadLookups(); const body = openModal("New insurance claim", `<form id="clf" data-key="${newKey()}"><p class="muted" style="margin-top:0">A claim is for the part of an invoice the medical aid should pay. The financial controller approves it before it counts as paid by the medical aid.</p><div class="grid g3">
+    <label class="f"><span>Patient</span><select name="patient" required>${patientOptions("")}</select></label><label class="f"><span>Invoice</span><select name="invoice" required><option value="">Choose a patient first</option></select></label>
+    <label class="f"><span>Cover</span><select name="cover" required><option value="">Choose a patient first</option></select></label>${moneyField("amount", "Amount to claim")}
+    <label class="f"><span>Claim date</span><input type="date" name="date" value="${today()}" required></label><label class="f"><span>Note (optional)</span><input name="notes" maxlength="300"></label></div>
+    <p class="muted" id="cl-hint" style="margin:8px 0 0"></p><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Submit claim</button></div></form>`);
+  const f = form($("#clf", body)); let covs = [];
+  const hint = () => { const i = S.look.open_invoices.find(x => x.id === f.invoice.value), c = covs.find(x => x.id === f.cover.value); if (i && c) { const sug = Math.max(0, Math.round(Number(i.outstanding) * Number(c.percent)) / 100); f.amount.value = sug.toFixed(2); $("#cl-hint", body).textContent = `${c.insurer} pays ${c.percent}% of the invoice${c.annual_limit ? `, up to ${money(c.annual_limit)} a year (${money(c.used)} used)` : ""}. Suggested amount: ${money(sug)}.`; } };
+  f.patient.addEventListener("change", async () => { f.invoice.innerHTML = `<option value="">Choose an invoice</option>` + S.look.open_invoices.filter(i => i.patient_id === f.patient.value).map(i => opt(i.id, `${i.invoice_no}: ${money(i.outstanding)} due`, "")).join("");
+    try { covs = (await rpc("acc_coverages_list", { p_patient: f.patient.value || null })).filter(c => c.current); } catch (e) { covs = []; }
+    f.cover.innerHTML = covs.length ? covs.map(c => opt(c.id, `${c.insurer} (${c.member_number}, ${c.percent}%)`, "")).join("") : `<option value="">No active cover for this patient</option>`; hint(); });
+  f.invoice.addEventListener("change", hint); f.cover.addEventListener("change", hint);
+  f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => { const r = await rpc("acc_create_claim", { p_invoice: f.invoice.value, p_coverage: f.cover.value, p_amount: f.amount.value, p_claim_date: f.date.value, p_notes: f.notes.value.trim() || null, p_idem: f.dataset.key }); toast(`${r.claim_no} submitted`); closeModal(); await loadLookups(); if (S.page === "insurance") renderInsurance(); }); });
+}
+async function insInsurers() {
+  const r = await rpc("acc_insurers_list"); S.insList = r.rows;
+  $("#i-wrap").innerHTML = figs([["Owed by medical aids", money(r.outstanding)], ["Overdue", `<span class="${Number(r.overdue) > 0 ? "neg" : ""}">${money(r.overdue)}</span>`], ["Medical aids", String(r.rows.length)]]) +
+    `<div class="panel" style="margin-top:14px"><div class="scroll"><table><thead><tr><th>Medical aid</th><th>Contact</th><th class="num">Awaiting decision</th><th class="num">Approved</th><th class="num">Paid</th><th class="num">Owed</th><th class="num">Overdue</th><th>Terms</th><th></th></tr></thead><tbody>
+    ${r.rows.map((i, n) => `<tr class="${i.is_active ? "" : "inactive"}"><td>${esc(i.name)}${i.is_active ? "" : `<span class="pill bad">Inactive</span>`}</td><td>${esc(i.contact_person || "")}<div class="muted">${esc([i.phone, i.email].filter(Boolean).join(" \u00b7 "))}</div></td><td class="num">${amt(i.pending)}</td><td class="num">${amt(i.approved)}</td><td class="num">${amt(i.paid)}</td><td class="num"><b>${money(i.outstanding)}</b></td><td class="num ${Number(i.overdue) > 0 ? "neg" : ""}">${amt(i.overdue)}</td><td>${i.terms} days</td><td class="num">${canPost() ? `<button class="btn small" data-ie="${n}">Edit</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="9" class="empty">No medical aids yet. Add one to start claiming.</td></tr>`}</tbody></table></div></div>`;
+  $$("[data-ie]").forEach(b => b.addEventListener("click", () => insurerForm(S.insList[Number(b.dataset.ie)])));
+}
+function insurerForm(x) {
+  const isNew = !x; x = x || { is_active: true, terms: 30 };
+  const body = openModal(isNew ? "Add medical aid" : `Edit ${x.name}`, `<form id="inf"><div class="grid g2"><label class="f"><span>Name</span><input name="name" required minlength="2" maxlength="120" value="${esc(x.name || "")}"></label><label class="f"><span>Contact person</span><input name="contact" maxlength="120" value="${esc(x.contact_person || "")}"></label>
+    <label class="f"><span>Phone</span><input name="phone" maxlength="40" value="${esc(x.phone || "")}"></label><label class="f"><span>Email</span><input type="email" name="email" maxlength="160" value="${esc(x.email || "")}"></label>
+    <label class="f"><span>Address</span><input name="address" maxlength="300" value="${esc(x.address || "")}"></label><label class="f"><span>Days they take to pay</span><input name="terms" inputmode="numeric" required value="${esc(x.terms)}"></label>
+    <label class="check"><input type="checkbox" name="active" ${x.is_active ? "checked" : ""}> Active</label></div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">${isNew ? "Add medical aid" : "Save changes"}</button></div></form>`);
+  const f = form($("#inf", body)); f.addEventListener("submit", ev => { ev.preventDefault(); const t = Number(f.terms.value); if (!Number.isInteger(t) || t < 0 || t > 365) return toast("Days must be a whole number from 0 to 365", true);
+    busy($("button[type=submit]", f), async () => { await rpc("acc_save_insurer", { p_id: isNew ? null : x.id, p_name: f.name.value.trim(), p_contact: f.contact.value.trim() || null, p_phone: f.phone.value.trim() || null, p_email: f.email.value.trim() || null, p_address: f.address.value.trim() || null, p_terms: t, p_active: f.active.checked }); toast("Saved"); closeModal(); renderInsurance(); }); });
+}
+async function insCover() {
+  const [r, ins] = await Promise.all([rpc("acc_coverages_list", { p_patient: null }), rpc("acc_insurers_list")]); S.covRows = r; S.insList = ins.rows;
+  $("#i-wrap").innerHTML = `<div class="panel"><div class="scroll"><table><thead><tr><th>Patient</th><th>Medical aid</th><th>Member no.</th><th>Plan</th><th class="num">Pays</th><th class="num">Annual limit</th><th class="num">Used</th><th>Valid</th><th>Status</th><th></th></tr></thead><tbody>
+    ${r.map((c, n) => `<tr class="${c.is_active ? "" : "inactive"}"><td>${esc(c.patient)}</td><td>${esc(c.insurer)}</td><td>${esc(c.member_number)}</td><td>${esc(c.plan_name || "")}</td><td class="num">${Number(c.percent)}%</td><td class="num">${c.annual_limit ? money(c.annual_limit) : "No limit"}</td><td class="num">${amt(c.used)}</td><td>${fd(c.valid_from)}${c.valid_to ? " to " + fd(c.valid_to) : " onwards"}</td><td>${c.current ? pill("approved").replace("Approved", "Current") : `<span class="pill">Not current</span>`}</td><td class="num">${canPost() ? `<button class="btn small" data-ce="${n}">Edit</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="10" class="empty">No patient cover recorded yet.</td></tr>`}</tbody></table></div></div>`;
+  $$("[data-ce]").forEach(b => b.addEventListener("click", () => coverageForm(S.covRows[Number(b.dataset.ce)])));
+}
+async function coverageForm(x) {
+  await loadLookups(); if (!S.insList) S.insList = (await rpc("acc_insurers_list")).rows;
+  const isNew = !x; x = x || { is_active: true, valid_from: today(), percent: 80 };
+  const body = openModal(isNew ? "Add patient cover" : "Edit patient cover", `<form id="cvf"><div class="grid g3"><label class="f"><span>Patient</span><select name="patient" required>${patientOptions(x.patient_id || "")}</select></label>
+    <label class="f"><span>Medical aid</span><select name="insurer" required>${S.insList.filter(i => i.is_active || i.id === x.insurer_id).map(i => opt(i.id, i.name, x.insurer_id)).join("")}</select></label><label class="f"><span>Member number</span><input name="member" required maxlength="60" value="${esc(x.member_number || "")}"></label>
+    <label class="f"><span>Plan (optional)</span><input name="plan" maxlength="120" value="${esc(x.plan_name || "")}"></label><label class="f"><span>Pays (% of the bill)</span><input name="pct" inputmode="decimal" required value="${esc(x.percent)}"></label>
+    <label class="f"><span>Annual limit (blank = none)</span><input name="limit" inputmode="decimal" value="${x.annual_limit ? esc(Number(x.annual_limit).toFixed(2)) : ""}"></label>
+    <label class="f"><span>Valid from</span><input type="date" name="from" required value="${esc(x.valid_from)}"></label><label class="f"><span>Valid to (optional)</span><input type="date" name="to" value="${esc(x.valid_to || "")}"></label>
+    <label class="check"><input type="checkbox" name="active" ${x.is_active ? "checked" : ""}> Cover is active</label><label class="f" style="grid-column:1/-1"><span>Notes (optional)</span><input name="notes" maxlength="300" value="${esc(x.notes || "")}"></label></div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" type="submit">${isNew ? "Add cover" : "Save changes"}</button></div></form>`);
+  const f = form($("#cvf", body)); f.addEventListener("submit", ev => { ev.preventDefault(); const pct = Number(f.pct.value); if (!(pct >= 0 && pct <= 100)) return toast("Enter a percentage from 0 to 100", true); if (f.limit.value.trim() && !AMOUNT_RE.test(f.limit.value.trim())) return toast("Enter the annual limit as an amount", true);
+    busy($("button[type=submit]", f), async () => { await rpc("acc_save_coverage", { p_id: isNew ? null : x.id, p_patient: f.patient.value, p_insurer: f.insurer.value, p_member: f.member.value.trim(), p_plan: f.plan.value.trim() || null, p_percent: pct, p_limit: f.limit.value.trim() || null, p_from: f.from.value, p_to: f.to.value || null, p_active: f.active.checked, p_notes: f.notes.value.trim() || null }); toast("Saved"); closeModal(); renderInsurance(); }); });
+}
+
+/* ---------- 3. Payroll (financial controller only) ---------- */
+async function renderPayroll() {
+  setTitle("Payroll");
+  if (!isCtl()) { $("#view").innerHTML = `<div class="panel"><h2>Payroll is restricted</h2><p class="muted">Salaries and payslips can only be opened by the financial controller.</p></div>`; return; }
+  $("#toolbar").innerHTML = S.prl.tab === "runs" ? `<button class="btn primary" id="p-run" type="button">New payroll run</button>` : S.prl.tab === "employees" ? `<button class="btn primary" id="p-emp" type="button">Add employee</button>` : `<button class="btn primary" id="p-item" type="button">Add item</button>`;
+  $("#view").innerHTML = tabsHtml([["runs", "Payroll runs"], ["employees", "Employees"], ["items", "Allowances and deductions"]], S.prl.tab, "pt") + `<div id="p-wrap"><div class="loading">Loading\u2026</div></div>`;
+  $$("[data-pt]").forEach(b => b.addEventListener("click", () => { S.prl.tab = b.dataset.pt; renderPayroll(); }));
+  const fnc = { runs: prlRuns, employees: prlEmployees, items: prlItems }[S.prl.tab];
+  const nb = $("#p-run") || $("#p-emp") || $("#p-item");
+  if (S.prl.tab === "runs") nb.addEventListener("click", () => runForm()); else if (S.prl.tab === "employees") nb.addEventListener("click", () => employeeForm(null)); else nb.addEventListener("click", () => itemForm(null));
+  await fnc();
+}
+async function prlRuns() {
+  const r = await rpc("acc_payroll_runs_list"); S.runRows = r;
+  $("#p-wrap").innerHTML = `<div class="panel"><div class="scroll"><table><thead><tr><th>Run</th><th>Month</th><th>Pay date</th><th class="num">Staff</th><th class="num">Gross</th><th class="num">Deductions</th><th class="num">Net pay</th><th class="num">Employer cost</th><th>Status</th></tr></thead><tbody>
+    ${r.map((x, n) => `<tr class="click" data-run="${n}"><td>${esc(x.run_no)}</td><td>${esc(x.period)}</td><td>${fd(x.pay_date)}</td><td class="num">${x.payslips}</td><td class="num">${money(x.gross)}</td><td class="num">${money(x.deductions)}</td><td class="num"><b>${money(x.net)}</b></td><td class="num">${money(Number(x.gross) + Number(x.employer))}</td><td>${pill(x.status)}</td></tr>`).join("") || `<tr><td colspan="9" class="empty">No payroll runs yet. Add your employees first, then create a run.</td></tr>`}</tbody></table></div></div>`;
+  $$("[data-run]").forEach(tr => tr.addEventListener("click", () => runModal(S.runRows[Number(tr.dataset.run)].id).catch(e => toast(e.message, true))));
+}
+function runForm() {
+  const d = new Date(), m = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  const body = openModal("New payroll run", `<form id="prf" data-key="${newKey()}"><p class="muted" style="margin-top:0">This builds a payslip for every active employee from their salary, allowances and deductions. You can adjust each payslip before approving the run.</p><div class="grid g3">
+    <label class="f"><span>Month</span><input type="month" name="month" value="${m}" required></label><label class="f"><span>Pay date</span><input type="date" name="date" value="${today()}" required></label><label class="f"><span>Note (optional)</span><input name="notes" maxlength="300"></label></div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Create payroll run</button></div></form>`);
+  const f = form($("#prf", body)); f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => { const r = await rpc("acc_create_payroll_run", { p_month: f.month.value, p_pay_date: f.date.value, p_notes: f.notes.value.trim() || null, p_idem: f.dataset.key }); toast(`${r.run_no} created`); await runModal(r.id); }); });
+}
+async function runModal(id) {
+  const d = await rpc("acc_payroll_run_detail", { p_id: id }), r = d.run, rm = d.remit, unpaid = d.payslips.filter(s => !s.paid && Number(s.net) > 0);
+  const body = openModal(`${r.run_no}: ${r.period}`, `<div class="stack">${figs([["Gross pay", money(r.gross)], ["Deductions", money(r.deductions)], ["Net pay", money(r.net)], ["Employer contributions", money(r.employer)]])}
+    <div class="row" style="justify-content:space-between"><span>${pill(r.status)} <span class="muted">Pay date ${fd(r.pay_date)}${r.approved_by ? ` \u00b7 approved by ${esc(r.approved_by)}` : ""}</span></span></div>
+    ${r.status === "cancelled" ? `<p class="neg" style="margin:0">Cancelled: ${esc(r.cancel_reason || "")}</p>` : ""}
+    <div class="scroll"><table><thead><tr><th>Employee</th><th class="num">Basic</th><th class="num">Allowances</th><th class="num">Deductions</th><th class="num">Net pay</th><th>Paid</th><th></th></tr></thead><tbody>
+      ${d.payslips.map((s, n) => `<tr><td>${esc(s.name)}<div class="muted">${esc(s.emp_no)}${s.job_title ? " \u00b7 " + esc(s.job_title) : ""}</div></td><td class="num">${money(s.basic)}</td><td class="num">${amt(s.allowances)}</td><td class="num">${amt(s.deductions)}</td><td class="num"><b>${money(s.net)}</b></td><td>${s.paid ? fd(s.paid_on) : ""}</td><td class="num"><button class="btn small" data-sl="${n}">Payslip</button></td></tr>`).join("")}</tbody></table></div>
+    ${r.status === "approved" || r.status === "paid" ? `<p class="muted" style="margin:0">To pay over: PAYE, NSSA and other statutory deductions ${money(rm.statutory)}, employer contributions ${money(rm.employer)}${Number(rm.other) ? `, other deductions ${money(rm.other)}` : ""}. Record each payment on the Cash and banks page as a withdrawal to the matching liability account.</p>` : ""}
+    ${d.payments.length ? `<div><h3 style="margin-bottom:6px">Salary payments</h3><div class="scroll"><table><thead><tr><th>Date</th><th>Number</th><th>Paid from</th><th>Reference</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead><tbody>${d.payments.map(p => `<tr><td>${fd(p.date)}</td><td>${esc(p.pay_no)}</td><td>${esc(p.account || "")}</td><td>${esc(p.reference || "")}</td><td class="num">${money(p.amount)}</td><td>${pill(p.status)}</td><td class="num">${p.status === "posted" ? `<button class="btn small danger" data-rvs="${p.id}" data-no="${esc(p.pay_no)}">Reverse</button>` : ""}</td></tr>`).join("")}</tbody></table></div></div>` : ""}
+    <div id="rm-form"></div>
+    <div class="row">${r.status === "draft" ? `<button class="btn primary" id="rm-ap" type="button">Approve payroll</button>` : ""}${r.status === "approved" && unpaid.length ? `<button class="btn primary" id="rm-pay" type="button">Pay salaries</button>` : ""}${["draft", "approved"].includes(r.status) ? `<button class="btn danger" id="rm-cx" type="button">Cancel run</button>` : ""}</div></div>`);
+  const back = () => runModal(id), slot = $("#rm-form", body);
+  $$("[data-sl]", body).forEach(b => b.addEventListener("click", () => slipModal(d.payslips[Number(b.dataset.sl)].id, back, r.status === "draft").catch(e => toast(e.message, true))));
+  $$("[data-rvs]", body).forEach(b => b.addEventListener("click", () => reasonForm(`Reverse ${b.dataset.no}`, "The salary payment is reversed with a new entry and those payslips become unpaid again.", "Reverse payment", async reason => { await rpc("acc_reverse_payroll_payment", { p_id: b.dataset.rvs, p_reason: reason }); toast("Payment reversed"); await loadLookups(); runModal(id); }, back)));
+  const ap = $("#rm-ap", body); if (ap) ap.addEventListener("click", () => reasonForm(`Approve ${r.run_no}`, `Approving posts ${money(r.gross)} of salaries and ${money(r.employer)} of employer contributions to the books, and locks every payslip. It cannot be edited afterwards.`, "Approve payroll", async () => { await rpc("acc_approve_payroll", { p_run: id }); toast("Payroll approved"); runModal(id); }, back, false));
+  const cx = $("#rm-cx", body); if (cx) cx.addEventListener("click", () => reasonForm(`Cancel ${r.run_no}`, r.status === "approved" ? "The accounting entry is reversed. Reverse any salary payments first." : "The draft run is cancelled. Nothing was posted.", "Cancel run", async reason => { await rpc("acc_cancel_payroll", { p_run: id, p_reason: reason }); toast("Run cancelled"); closeModal(); renderPayroll(); }, back));
+  const pay = $("#rm-pay", body); if (pay) pay.addEventListener("click", () => { slot.innerHTML = `<form id="spf" data-key="${newKey()}" class="grid g3" style="margin-top:6px"><div><div class="muted">Salaries to pay</div><b>${money(unpaid.reduce((a, s) => a + Number(s.net), 0))}</b> <span class="muted">(${unpaid.length} payslip${unpaid.length > 1 ? "s" : ""})</span></div>
+      <label class="f"><span>Pay from</span><select name="acct" required>${accountOptions(payFrom, "", "Cash, bank or mobile money")}</select></label><label class="f"><span>Date</span><input type="date" name="date" value="${today()}" required></label>
+      <label class="f" style="grid-column:1/-1"><span>Reference (optional)</span><input name="reference" maxlength="120"></label><div><button class="btn primary" type="submit">Pay all salaries</button></div></form>`;
+    const f = form($("#spf", slot)); f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button", f), async () => { const x = await rpc("acc_pay_payroll", { p_run: id, p_account: f.acct.value, p_date: f.date.value, p_slips: null, p_reference: f.reference.value.trim() || null, p_idem: f.dataset.key }); toast(`${x.pay_no}: ${money(x.amount)} paid`); await loadLookups(); runModal(id); }); }); });
+}
+function payslipPdf(d) {
+  const s = d.payslip, run = d.run, earn = d.lines.filter(l => ["basic", "allowance"].includes(l.kind)), ded = d.lines.filter(l => l.kind === "deduction");
+  return pdfBuild({ title: "Payslip", number: run.period,
+    meta: [["Employee", s.name], ["Employee number", s.emp_no], ["Job title", s.job_title || "-"], ["Department", s.department || "-"], ["Pay period", `${fd(run.period_start)} to ${fd(run.period_end)}`], ["Pay date", fd(run.pay_date)]],
+    tables: [{ title: "Earnings", head: ["Description", "Amount"], widths: [5, 2], align: ["l", "r"], rows: earn.map(l => [l.label, money(l.amount)]) },
+             { title: "Deductions", head: ["Description", "Amount"], widths: [5, 2], align: ["l", "r"], rows: ded.map(l => [l.label, money(l.amount)]), empty: "No deductions." }],
+    totals: [["Gross pay", money(s.gross)], ["Total deductions", money(s.deductions)], ["Net pay", money(s.net), true]],
+    notes: [s.paid ? `Paid on ${fd(s.paid_on)}${s.method ? " from " + s.method : ""}.` : "Not yet paid.", "This payslip is confidential.", `Amounts are in ${cur()}.`] });
+}
+async function slipModal(id, back, editable) {
+  const d = await rpc("acc_payslip_detail", { p_id: id }), s = d.payslip, kinds = { basic: "Basic salary", allowance: "Allowance", deduction: "Deduction", employer: "Employer contribution" };
+  const body = openModal(`Payslip: ${s.name}`, `<div class="stack"><p class="muted" style="margin:0">${esc(s.emp_no)}${s.job_title ? " \u00b7 " + esc(s.job_title) : ""} \u00b7 ${esc(d.run.period)} \u00b7 ${esc(d.run.run_no)}</p>
+    <div class="scroll"><table><thead><tr><th>Type</th><th>Description</th><th class="num">Amount</th><th></th></tr></thead><tbody>${d.lines.map(l => `<tr><td>${esc(kinds[l.kind])}${l.one_off ? ` <span class="pill">One-off</span>` : ""}</td><td>${esc(l.label)}${l.destination ? `<div class="muted">${esc({ statutory: "Paid over to the tax or pension authority", advance: "Staff loan repayment", other: "Other deduction" }[l.destination])}</div>` : ""}</td><td class="num">${l.kind === "deduction" ? "-" : ""}${money(l.amount)}</td><td class="num">${editable && l.kind !== "basic" ? `<button class="btn small" data-rm="${l.id}" aria-label="Remove">\u00d7</button>` : ""}</td></tr>`).join("")}</tbody>
+    <tfoot><tr><td colspan="2" class="num">Gross pay</td><td class="num">${money(s.gross)}</td><td></td></tr><tr><td colspan="2" class="num">Deductions</td><td class="num">-${money(s.deductions)}</td><td></td></tr><tr><td colspan="2" class="num"><b>Net pay</b></td><td class="num"><b>${money(s.net)}</b></td><td></td></tr></tfoot></table></div>
+    ${editable ? `<form id="alf" class="grid g3"><label class="f"><span>Add a line</span><select name="kind"><option value="allowance">Allowance or bonus</option><option value="deduction">Deduction</option><option value="employer">Employer contribution</option></select></label><label class="f"><span>Description</span><input name="label" required minlength="2" maxlength="80"></label>${moneyField("amount")}
+      <label class="f hidden" id="al-dest"><span>Deducted money goes to</span><select name="dest"><option value="statutory">Tax or pension authority</option><option value="advance">Staff loan repayment</option><option value="other">Other</option></select></label><div><button class="btn" type="submit">Add line</button></div></form>` : ""}
+    <div class="row">${pdfButtons("slip")}${back ? `<button class="btn" id="sl-back" type="button">Back</button>` : ""}</div></div>`);
+  bindPdf(body, "slip", () => payslipPdf(d), `Payslip-${s.name.replace(/[^\w]+/g, "_")}-${d.run.period}.pdf`);
+  if (back) $("#sl-back", body).addEventListener("click", back);
+  $$("[data-rm]", body).forEach(b => b.addEventListener("click", () => busy(b, async () => { await rpc("acc_payslip_remove_line", { p_line: Number(b.dataset.rm) }); slipModal(id, back, editable); })));
+  const af = $("#alf", body); if (af) { const f = form(af); f.kind.addEventListener("change", () => $("#al-dest", body).classList.toggle("hidden", f.kind.value !== "deduction"));
+    f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button", f), async () => { await rpc("acc_payslip_add_line", { p_slip: id, p_kind: f.kind.value, p_label: f.label.value.trim(), p_amount: f.amount.value, p_dest: f.kind.value === "deduction" ? f.dest.value : null }); slipModal(id, back, editable); }); }); }
+}
+async function prlEmployees() {
+  const [emps, items] = await Promise.all([rpc("acc_employees_list"), rpc("acc_pay_items_list")]); S.empRows = emps; S.payItems = items;
+  $("#p-wrap").innerHTML = `<div class="panel"><div class="scroll"><table><thead><tr><th>Employee</th><th>Job title</th><th>Department</th><th>Started</th><th class="num">Basic salary</th><th>Allowances and deductions</th><th>Status</th><th></th></tr></thead><tbody>
+    ${emps.map((e, n) => `<tr class="${e.is_active ? "" : "inactive"}"><td>${esc(e.full_name)}<div class="muted">${esc(e.emp_no)}</div></td><td>${esc(e.job_title || "")}</td><td>${esc(e.department || "")}</td><td>${fd(e.start_date)}${e.end_date ? `<div class="muted">to ${fd(e.end_date)}</div>` : ""}</td><td class="num"><b>${money(e.base_salary)}</b></td>
+      <td>${e.items.map(i => `<span class="pill">${esc(i.name)} ${i.calc === "percent" ? Number(i.value) + "%" : money(i.value)}</span>`).join(" ") || `<span class="muted">None</span>`}</td><td>${e.is_active ? pill("approved").replace("Approved", "Active") : `<span class="pill">Inactive</span>`}</td><td class="num"><button class="btn small" data-ee="${n}">Edit</button></td></tr>`).join("") || `<tr><td colspan="8" class="empty">No employees yet.</td></tr>`}</tbody></table></div></div>`;
+  $$("[data-ee]").forEach(b => b.addEventListener("click", () => employeeForm(S.empRows[Number(b.dataset.ee)])));
+}
+async function employeeForm(x) {
+  if (!S.payItems) S.payItems = await rpc("acc_pay_items_list");
+  const isNew = !x; x = x || { is_active: true, start_date: today(), items: [] }; const mine = {}; x.items.forEach(i => { mine[i.item_id] = i; });
+  const body = openModal(isNew ? "Add employee" : `Edit ${x.full_name}`, `<form id="emf"><div class="grid g3"><label class="f"><span>Full name</span><input name="name" required minlength="2" maxlength="120" value="${esc(x.full_name || "")}"></label><label class="f"><span>Job title</span><input name="title" maxlength="120" value="${esc(x.job_title || "")}"></label>
+    <label class="f"><span>Department</span><input name="dept" maxlength="80" value="${esc(x.department || "")}"></label>${moneyField("salary", "Basic salary per month", x.base_salary ? Number(x.base_salary).toFixed(2) : "")}
+    <label class="f"><span>Start date</span><input type="date" name="start" required value="${esc(x.start_date)}"></label><label class="f"><span>Leaving date (optional)</span><input type="date" name="end" value="${esc(x.end_date || "")}"></label>
+    <label class="f" style="grid-column:span 2"><span>Pay note (optional)</span><input name="note" maxlength="200" value="${esc(x.pay_note || "")}" placeholder="e.g. paid by EcoCash"></label><label class="check"><input type="checkbox" name="active" ${x.is_active ? "checked" : ""}> Active</label></div>
+    <h3 style="margin:14px 0 6px">Allowances and deductions</h3><p class="muted" style="margin:0 0 6px">Tick what applies. Leave the amount empty to use the standard value, or type this employee's own amount.</p>
+    <div class="scroll"><table><tbody>${S.payItems.filter(i => i.is_active || mine[i.id]).map(i => `<tr><td><label class="check"><input type="checkbox" data-it="${i.id}" ${mine[i.id] ? "checked" : ""}> ${esc(i.name)}</label><div class="muted">${{ allowance: "Allowance", deduction: "Deduction", employer: "Employer contribution" }[i.kind]}, ${i.calc === "percent" ? Number(i.value) + "% (standard)" : money(i.value) + " (standard)"}</div></td>
+      <td><input data-iv="${i.id}" inputmode="decimal" placeholder="${i.calc === "percent" ? "%" : "amount"}" value="${mine[i.id] && mine[i.id].override ? esc(mine[i.id].value) : ""}" style="width:110px"></td></tr>`).join("")}</tbody></table></div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" type="submit">${isNew ? "Add employee" : "Save changes"}</button></div></form>`);
+  const f = form($("#emf", body)); f.addEventListener("submit", ev => { ev.preventDefault(); const items = [];
+    for (const c of $$("[data-it]:checked", body)) { const v = $(`[data-iv="${c.dataset.it}"]`, body).value.trim(); if (v && !/^\d{1,10}(\.\d{1,4})?$/.test(v)) return toast("Enter amounts as numbers, for example 45.50", true); items.push({ item_id: c.dataset.it, value: v || null }); }
+    busy($("button[type=submit]", f), async () => { await rpc("acc_save_employee", { p_id: isNew ? null : x.id, p_name: f.name.value.trim(), p_title: f.title.value.trim() || null, p_dept: f.dept.value.trim() || null, p_start: f.start.value, p_end: f.end.value || null, p_salary: f.salary.value, p_note: f.note.value.trim() || null, p_active: f.active.checked, p_items: items }); toast("Saved"); closeModal(); renderPayroll(); }); });
+}
+async function prlItems() {
+  const items = await rpc("acc_pay_items_list"); S.payItems = items;
+  $("#p-wrap").innerHTML = `<div class="panel"><p class="muted" style="margin-top:0">Allowances add to pay. Deductions come off pay. Employer contributions are extra costs to the hospital that are not taken from the employee. Percentages are of basic salary for allowances and of gross pay for deductions and contributions. Check the rates with your tax adviser before running payroll.</p>
+    <div class="scroll"><table><thead><tr><th>Name</th><th>Type</th><th>Calculation</th><th class="num">Standard value</th><th>Deducted money goes to</th><th>Status</th><th></th></tr></thead><tbody>
+    ${items.map((i, n) => `<tr class="${i.is_active ? "" : "inactive"}"><td>${esc(i.name)}</td><td>${{ allowance: "Allowance", deduction: "Deduction", employer: "Employer contribution" }[i.kind]}</td><td>${i.calc === "percent" ? "Percentage" : "Fixed amount"}</td><td class="num">${i.calc === "percent" ? Number(i.value) + "%" : money(i.value)}</td><td>${i.destination ? { statutory: "PAYE, NSSA or pension", advance: "Staff loan", other: "Other payable" }[i.destination] : ""}</td><td>${i.is_active ? "Active" : "Inactive"}</td><td class="num"><button class="btn small" data-ie2="${n}">Edit</button></td></tr>`).join("")}</tbody></table></div></div>`;
+  $$("[data-ie2]").forEach(b => b.addEventListener("click", () => itemForm(S.payItems[Number(b.dataset.ie2)])));
+}
+function itemForm(x) {
+  const isNew = !x; x = x || { kind: "allowance", calc: "fixed", value: 0, is_active: true, destination: "statutory" };
+  const body = openModal(isNew ? "Add allowance or deduction" : `Edit ${x.name}`, `<form id="itf"><div class="grid g3"><label class="f"><span>Name</span><input name="name" required minlength="2" maxlength="80" value="${esc(x.name || "")}"></label>
+    <label class="f"><span>Type</span><select name="kind">${[["allowance", "Allowance"], ["deduction", "Deduction"], ["employer", "Employer contribution"]].map(([k, l]) => opt(k, l, x.kind)).join("")}</select></label><label class="f"><span>Calculation</span><select name="calc">${[["fixed", "Fixed amount"], ["percent", "Percentage"]].map(([k, l]) => opt(k, l, x.calc)).join("")}</select></label>
+    <label class="f"><span>Standard value</span><input name="value" inputmode="decimal" required value="${esc(x.value)}"></label><label class="f" id="it-dest"><span>Deducted money goes to</span><select name="dest">${[["statutory", "PAYE, NSSA or pension"], ["advance", "Staff loan repayment"], ["other", "Other payable"]].map(([k, l]) => opt(k, l, x.destination)).join("")}</select></label>
+    <label class="check"><input type="checkbox" name="active" ${x.is_active ? "checked" : ""}> Active</label></div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">${isNew ? "Add" : "Save changes"}</button></div></form>`);
+  const f = form($("#itf", body)), tg = () => $("#it-dest", body).classList.toggle("hidden", f.kind.value !== "deduction"); f.kind.addEventListener("change", tg); tg();
+  f.addEventListener("submit", ev => { ev.preventDefault(); const v = Number(f.value.value); if (!(v >= 0) || (f.calc.value === "percent" && v > 100)) return toast("Enter a valid amount or a percentage up to 100", true);
+    busy($("button[type=submit]", f), async () => { await rpc("acc_save_pay_item", { p_id: isNew ? null : x.id, p_name: f.name.value.trim(), p_kind: f.kind.value, p_calc: f.calc.value, p_value: v, p_dest: f.kind.value === "deduction" ? f.dest.value : null, p_active: f.active.checked }); toast("Saved"); closeModal(); renderPayroll(); }); });
+}
+
+/* ---------- 4. Refunds, credit notes, patient credits and adjustments ---------- */
+async function renderRefunds() {
+  setTitle("Refunds and adjustments"); await loadLookups();
+  $("#toolbar").innerHTML = canPost() ? `<button class="btn primary" id="r-ref" type="button">New refund</button><button class="btn" id="r-cn" type="button">Credit note</button>${isCtl() ? `<button class="btn" id="r-wo" type="button">Write off a balance</button><button class="btn" id="r-adj" type="button">Adjustment</button>` : ""}` : "";
+  if (canPost()) { $("#r-ref").addEventListener("click", () => refundRequestForm()); $("#r-cn").addEventListener("click", () => creditNoteForm("credit_note")); if (isCtl()) { $("#r-wo").addEventListener("click", () => creditNoteForm("write_off")); $("#r-adj").addEventListener("click", () => adjustmentForm()); } }
+  $("#view").innerHTML = tabsHtml([["refunds", "Refunds"], ["cnotes", "Credit notes"], ["credits", "Patient credits"], ["adjust", "Adjustments"]], S.rfd.tab, "rt") + `<div id="r-wrap"><div class="loading">Loading\u2026</div></div>`;
+  $$("[data-rt]").forEach(b => b.addEventListener("click", () => { S.rfd.tab = b.dataset.rt; renderRefunds(); }));
+  ({ refunds: rfdRequests, cnotes: rfdNotes, credits: rfdCredits, adjust: rfdAdjust })[S.rfd.tab]().catch(e => { $("#r-wrap").innerHTML = `<div class="panel"><b>Could not load this tab.</b><p class="muted">${esc(e.message)}</p></div>`; });
+}
+async function rfdRequests() {
+  const st = S.rfd, fields = [{ n: "search", t: "search", l: "Search" }, { n: "status", t: "select", l: "Status", o: [["", "Any status"], ["pending", "Awaiting approval"], ["approved", "Approved"], ["rejected", "Rejected"], ["cancelled", "Cancelled"]] }];
+  $("#r-wrap").innerHTML = filterBar("rq", st, fields) + `<div id="rq-body"><div class="loading">Loading\u2026</div></div>`; bindFilter("rq", st, fields, loadRequests); await loadRequests();
+}
+async function loadRequests() {
+  const st = S.rfd, el = $("#rq-body"); if (!el) return;
+  const r = await rpc("acc_refund_requests_list", { p_status: st.status || null, p_search: st.search || null, p_from: null, p_to: null, p_limit: LIM, p_offset: st.offset }); S.rqRows = r.rows;
+  el.innerHTML = (Number(r.pending_n) && st.status !== "pending" ? `<div class="alert warning" style="margin-bottom:12px"><b>${r.pending_n} refund(s) awaiting approval</b>${money(r.pending)} in total.${isCtl() ? ` <button class="linkbtn" id="rq-rev" type="button">Review them</button>` : " Only the financial controller can approve them."}</div>` : "") +
+    figs([["Awaiting approval", money(r.pending), `${r.pending_n} request(s)`], ["Approved (this view)", money(r.approved)], ["Approval limit", money(r.limit), "Refunds above this need the controller"], ["Records", String(r.total_count)]]) +
+    `<div class="cols" style="margin-top:14px"><div class="c9"><div class="panel"><div class="scroll"><table><thead><tr><th>Request</th><th>Patient</th><th>Reason</th><th>Method</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead><tbody>
+    ${r.rows.map((x, n) => `<tr><td>${esc(x.request_no)}<div class="muted">${fdt(x.created_at)}</div></td><td>${esc(x.patient)}</td><td>${esc(x.reason)}<div class="muted">Asked by ${esc(x.requested_by || "")}${x.note ? " \u00b7 " + esc(x.note) : ""}${x.decided_by ? " \u00b7 decided by " + esc(x.decided_by) : ""}</div></td><td>${esc(mlabel(x.method))}</td><td class="num">${money(x.amount)}${x.refund_no ? `<div class="muted">${esc(x.refund_no)}</div>` : ""}</td><td>${pill(x.status)}</td>
+      <td class="num"><span class="row" style="justify-content:flex-end">${x.status === "pending" && isCtl() ? `<button class="btn small primary" data-ra="${n}">Approve</button><button class="btn small danger" data-rr="${n}">Reject</button>` : ""}${x.status === "pending" && canPost() ? `<button class="btn small" data-rc2="${n}">Cancel</button>` : ""}</span></td></tr>`).join("") || `<tr><td colspan="7" class="empty">No refund requests.</td></tr>`}</tbody></table></div>${pagerHtml(r.total_count, st.offset, "rqp")}</div></div>
+    <div class="c3"><div class="panel"><h3>Approval limit</h3><p class="muted" style="margin-top:0">Refunds up to ${money(r.limit)} are paid straight away. Larger ones wait for the financial controller. A refund can never be more than the credit the patient holds.</p>
+      ${isCtl() ? `<form id="rl-f" class="row" style="align-items:flex-end"><label class="f" style="flex:1"><span>Limit</span><input name="limit" inputmode="decimal" value="${Number(r.limit).toFixed(2)}"></label><button class="btn" type="submit">Save</button></form>` : ""}</div></div></div>`;
+  const row = k => S.rqRows[Number(k)], rv = $("#rq-rev"); if (rv) rv.addEventListener("click", () => { S.rfd.status = "pending"; S.rfd.offset = 0; renderRefunds(); });
+  $$("[data-ra]", el).forEach(b => b.addEventListener("click", () => { const x = row(b.dataset.ra); reasonForm(`Approve ${x.request_no}`, `${money(x.amount)} will be paid to ${x.patient} by ${mlabel(x.method)} and posted to the books.`, "Approve and pay", async note => { const q = await rpc("acc_decide_refund", { p_id: x.id, p_approve: true, p_note: note || null }); toast(`Refund ${q.refund_no} paid`); closeModal(); loadRequests(); }, null, false); }));
+  $$("[data-rr]", el).forEach(b => b.addEventListener("click", () => { const x = row(b.dataset.rr); reasonForm(`Reject ${x.request_no}`, "The person who asked will see your reason.", "Reject refund", async note => { await rpc("acc_decide_refund", { p_id: x.id, p_approve: false, p_note: note }); toast("Refund rejected"); closeModal(); loadRequests(); }); }));
+  $$("[data-rc2]", el).forEach(b => b.addEventListener("click", () => { const x = row(b.dataset.rc2); reasonForm(`Cancel ${x.request_no}`, "The request is cancelled and nothing is paid.", "Cancel request", async reason => { await rpc("acc_cancel_refund_request", { p_id: x.id, p_reason: reason }); toast("Request cancelled"); closeModal(); loadRequests(); }); }));
+  const lf = $("#rl-f"); if (lf) form(lf).addEventListener("submit", ev => { ev.preventDefault(); busy($("button", lf), async () => { await rpc("acc_set_refund_limit", { p_limit: form(lf).limit.value }); toast("Limit saved"); loadRequests(); }); });
+  bindPager("rqp", st, r.total_count, loadRequests);
+}
+async function refundRequestForm(pre = {}) {
+  const cr = await rpc("acc_patient_credits", { p_search: null }), by = {}; cr.rows.forEach(c => { by[c.patient_id] = c; });
+  const body = openModal("New refund", `<form id="rqf" data-key="${newKey()}"><p class="muted" style="margin-top:0">A refund pays back credit a patient holds, for example after a credit note on a paid invoice or an advance payment. You can refund all of it or only part.</p><div class="grid g3">
+    <label class="f"><span>Patient</span><select name="patient" required>${patientOptions(pre.patient || "")}</select></label>${moneyField("amount")}<label class="f"><span>Pay back by</span><select name="method" required>${methodKeys(["insurance"]).map(k => opt(k, mlabel(k), "cash")).join("")}</select></label>
+    <label class="f"><span>Date</span><input type="date" name="date" value="${today()}" required></label><label class="f" style="grid-column:span 2"><span>Reason</span><input name="reason" required minlength="3" maxlength="300"></label></div>
+    <p class="muted" id="rq-hint" style="margin:8px 0 0"></p><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Submit refund</button></div></form>`);
+  const f = form($("#rqf", body)), hint = () => { const c = by[f.patient.value]; $("#rq-hint", body).textContent = f.patient.value ? (c && Number(c.credit) > 0 ? `This patient can be refunded up to ${money(c.credit)}.` : "This patient has no credit to refund.") : ""; if (c && Number(c.credit) > 0 && !f.amount.value) f.amount.value = Number(c.credit).toFixed(2); };
+  f.patient.addEventListener("change", hint); if (pre.patient) hint();
+  f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => { const r = await rpc("acc_submit_refund", { p_patient: f.patient.value, p_amount: f.amount.value, p_method: f.method.value, p_date: f.date.value, p_reason: f.reason.value.trim(), p_invoice: null, p_idem: f.dataset.key });
+    toast(r.status === "approved" ? `Refund ${r.refund_no} paid` : `${r.request_no} sent to the financial controller`); closeModal(); if (S.page === "refunds") renderRefunds(); }); });
+}
+const CN_FIELDS = () => [{ n: "search", t: "search", l: "Search" }, { n: "kind", t: "select", l: "Type", o: [["", "All"], ["credit_note", "Credit notes"], ["write_off", "Write-offs"]] }, { n: "status", t: "select", l: "Status", o: [["", "Any status"], ["posted", "Successful"], ["reversed", "Reversed"]] }, { n: "from", t: "date", l: "From" }, { n: "to", t: "date", l: "To" }];
+async function rfdNotes() {
+  const st = S.rfd.cn, fields = CN_FIELDS(); $("#r-wrap").innerHTML = filterBar("cn", st, fields) + `<div id="cn-body"><div class="loading">Loading\u2026</div></div>`; bindFilter("cn", st, fields, loadNotes); await loadNotes();
+}
+async function loadNotes() {
+  const st = S.rfd.cn, el = $("#cn-body"); if (!el) return;
+  const r = await rpc("acc_credit_notes_list", { p_search: st.search || null, p_kind: st.kind || null, p_status: st.status || null, p_from: st.from || null, p_to: st.to || null, p_limit: LIM, p_offset: st.offset }); S.cnRows = r.rows;
+  el.innerHTML = figs([["Credit notes", money(r.credit_notes)], ["Written off", money(r.write_offs)], ["Records", String(r.total_count)]]) +
+    `<div class="panel" style="margin-top:14px"><div class="scroll"><table><thead><tr><th>Date</th><th>Number</th><th>Patient</th><th>Invoice</th><th>Reason</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead><tbody>
+    ${r.rows.map((x, n) => `<tr><td>${fd(x.date)}</td><td>${esc(x.cn_no)}${x.kind === "write_off" ? `<span class="pill">Write-off</span>` : ""}</td><td>${esc(x.patient)}</td><td>${esc(x.invoice_no)}</td><td>${esc(x.reason)}<div class="muted">${esc(x.account)}${x.by ? " \u00b7 " + esc(x.by) : ""}</div></td><td class="num">${money(x.amount)}</td><td>${pill(x.status)}</td><td class="num">${isCtl() && x.status === "posted" ? `<button class="btn small danger" data-rn="${n}">Reverse</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="8" class="empty">No credit notes match.</td></tr>`}</tbody></table></div>${pagerHtml(r.total_count, st.offset, "cnp")}</div>`;
+  $$("[data-rn]", el).forEach(b => b.addEventListener("click", () => { const x = S.cnRows[Number(b.dataset.rn)]; reasonForm(`Reverse ${x.cn_no}`, "The credit note is reversed with a new entry and the invoice balance goes back up.", "Reverse", async reason => { await rpc("acc_reverse_credit_note", { p_id: x.id, p_reason: reason }); toast("Reversed"); closeModal(); loadNotes(); }); }));
+  bindPager("cnp", st, r.total_count, loadNotes);
+}
+async function creditNoteForm(kind, pre = {}) {
+  await loadLookups(); const wo = kind === "write_off";
+  const body = openModal(wo ? "Write off a balance" : "Credit note", `<form id="cnf" data-key="${newKey()}"><p class="muted" style="margin-top:0">${wo ? "Use this when a patient cannot pay and the hospital gives up the balance. It is recorded as a bad debt. Only the financial controller can do this." : "Use this when a service is cancelled or a bill was too high. It reduces the invoice. If the patient had already paid, they are left with credit that can be refunded or used on another invoice."}</p><div class="grid g3">
+    <label class="f"><span>Patient</span><select name="patient" required>${patientOptions(pre.patient || "")}</select></label><label class="f"><span>Invoice</span><select name="invoice" required><option value="">Choose a patient first</option></select></label>
+    ${wo ? "" : `<label class="f"><span>Reduces revenue account</span><select name="account">${accountOptions(a => postable(a) && a.type === "revenue", "", "Same as the biggest line")}</select></label>`}${moneyField("amount")}
+    <label class="f"><span>Date</span><input type="date" name="date" value="${today()}" required></label><label class="f" style="grid-column:1/-1"><span>Reason</span><input name="reason" required minlength="3" maxlength="300"></label></div>
+    <p class="muted" id="cn-hint" style="margin:8px 0 0"></p><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">${wo ? "Write off" : "Issue credit note"}</button></div></form>`);
+  const f = form($("#cnf", body)); let invs = [];
+  const fill = async () => { f.invoice.innerHTML = `<option value="">Choose an invoice</option>`; invs = []; if (!f.patient.value) return; const nm = (S.look.patients.find(p => p.id === f.patient.value) || {}).name || "";
+    try { invs = (await rpc("acc_invoices_list", { p_search: nm || null, p_status: null, p_from: null, p_to: null, p_limit: 200, p_offset: 0 })).rows.filter(i => i.patient_id === f.patient.value && i.status !== "void" && (!wo || Number(i.balance) > 0)); } catch (e) { toast(e.message, true); }
+    f.invoice.innerHTML = `<option value="">Choose an invoice</option>` + invs.map(i => opt(i.id, `${i.invoice_no}: billed ${money(i.total)}, owes ${money(i.balance)}`, pre.invoice || "")).join(""); hint(); };
+  const hint = () => { const i = invs.find(x => x.id === f.invoice.value); $("#cn-hint", body).textContent = i ? (wo ? `Up to ${money(Math.max(Number(i.balance), 0))} can be written off.` : `Up to ${money(Number(i.total) - Number(i.credited || 0))} can still be credited.`) : ""; };
+  f.patient.addEventListener("change", fill); f.invoice.addEventListener("change", hint); if (pre.patient) fill();
+  f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => { const r = await rpc("acc_create_credit_note", { p_kind: kind, p_invoice: f.invoice.value, p_amount: f.amount.value, p_account: wo ? null : (f.account.value || null), p_date: f.date.value, p_reason: f.reason.value.trim(), p_idem: f.dataset.key });
+    toast(`${r.cn_no} recorded`); closeModal(); await loadLookups(); if (["refunds", "invoices"].includes(S.page)) go(S.page); }); });
+}
+async function rfdCredits() {
+  const r = await rpc("acc_patient_credits", { p_search: S.rfd.cr.search || null }); S.crRows = r.rows;
+  $("#r-wrap").innerHTML = `<form class="row" id="cr-f" style="margin-bottom:12px;align-items:flex-end"><label class="f" style="min-width:210px;flex:1"><span>Search patient</span><input type="search" name="search" value="${esc(S.rfd.cr.search)}"></label><button class="btn primary" type="submit">Filter</button></form>` +
+    figs([["Credit held for patients", money(r.total_advance)], ["Refundable now", money(r.total_credit)], ["Patients with credit", String(r.rows.length)]]) +
+    `<div class="panel" style="margin-top:14px"><p class="muted" style="margin-top:0">Credit comes from advance payments and from credit notes on invoices that were already paid. It can be used to pay an invoice or refunded. A refund is only possible when the patient owes nothing.</p><div class="scroll"><table><thead><tr><th>Patient</th><th class="num">Credit held</th><th class="num">Still owes</th><th class="num">Refundable</th><th></th></tr></thead><tbody>
+    ${r.rows.map((c, n) => `<tr><td>${esc(c.patient)}<div class="muted">${esc(c.code || "")}</div></td><td class="num"><b>${money(c.advance)}</b></td><td class="num">${amt(c.owing)}</td><td class="num">${amt(c.credit)}</td><td class="num"><span class="row" style="justify-content:flex-end"><button class="btn small" data-ch="${n}">History</button>${canPost() && Number(c.advance) > 0 && c.open_invoices > 0 ? `<button class="btn small" data-ca="${n}">Use on an invoice</button>` : ""}${canPost() && Number(c.credit) > 0 ? `<button class="btn small" data-cf="${n}">Refund</button>` : ""}</span></td></tr>`).join("") || `<tr><td colspan="5" class="empty">No patient holds any credit.</td></tr>`}</tbody></table></div></div>`;
+  form($("#cr-f")).addEventListener("submit", ev => { ev.preventDefault(); S.rfd.cr.search = form($("#cr-f")).search.value; rfdCredits(); });
+  $$("[data-ch]").forEach(b => b.addEventListener("click", () => creditHistory(S.crRows[Number(b.dataset.ch)].patient_id).catch(e => toast(e.message, true))));
+  $$("[data-ca]").forEach(b => b.addEventListener("click", () => applyCreditForm(S.crRows[Number(b.dataset.ca)].patient_id).catch(e => toast(e.message, true))));
+  $$("[data-cf]").forEach(b => b.addEventListener("click", () => refundRequestForm({ patient: S.crRows[Number(b.dataset.cf)].patient_id })));
+}
+async function creditHistory(pid) {
+  const d = await rpc("acc_patient_credit_history", { p_patient: pid });
+  openModal(`Account history: ${d.patient}`, `<div class="stack">${figs([["Account balance", `<span class="${Number(d.balance) < 0 ? "pos" : ""}">${money(d.balance)}</span>`, Number(d.balance) < 0 ? "The hospital owes the patient" : "The patient owes the hospital"], ["Credit held", money(d.advance)]])}
+    ${d.open_invoices.length ? `<div><h3 style="margin-bottom:6px">Open invoices</h3>${d.open_invoices.map(i => `<div class="row" style="justify-content:space-between;padding:3px 0"><span>${esc(i.invoice_no)} <span class="muted">due ${fd(i.due_date)}</span></span><b>${money(i.outstanding)}</b></div>`).join("")}</div>` : ""}
+    <div class="scroll"><table><thead><tr><th>Date</th><th>Entry</th><th>Description</th><th class="num">Owed</th><th class="num">Paid or credited</th><th class="num">Balance</th></tr></thead><tbody>${d.rows.map(x => `<tr><td>${fd(x.date)}</td><td>${esc(x.entry_no)}</td><td>${esc(x.description || "")}</td><td class="num">${amt(x.debit)}</td><td class="num">${amt(x.credit)}</td><td class="num">${money(x.balance)}</td></tr>`).join("") || `<tr><td colspan="6" class="empty">No activity.</td></tr>`}</tbody></table></div></div>`);
+}
+async function applyCreditForm(pid) {
+  const d = await rpc("acc_patient_credit_history", { p_patient: pid });
+  const body = openModal(`Use credit: ${d.patient}`, `<form id="acf" data-key="${newKey()}"><p class="muted" style="margin-top:0">This patient holds ${money(d.advance)} in credit. Choose an invoice to pay with it.</p><div class="grid g3"><label class="f"><span>Invoice</span><select name="invoice" required>${d.open_invoices.map(i => opt(i.id, `${i.invoice_no}: owes ${money(i.outstanding)}`, "")).join("")}</select></label>${moneyField("amount")}</div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Apply credit</button></div></form>`);
+  const f = form($("#acf", body)), fill = () => { const i = d.open_invoices.find(x => x.id === f.invoice.value); if (i) f.amount.value = Math.min(Number(i.outstanding), Number(d.advance)).toFixed(2); }; f.invoice.addEventListener("change", fill); fill();
+  f.addEventListener("submit", ev => { ev.preventDefault(); busy($("button[type=submit]", f), async () => { const r = await rpc("acc_apply_credit", { p_patient: pid, p_invoice: f.invoice.value, p_amount: f.amount.value, p_idem: f.dataset.key }); toast(`${r.app_no} applied`); closeModal(); await loadLookups(); renderRefunds(); }); });
+}
+async function rfdAdjust() {
+  const st = S.rfd.ad, fields = [{ n: "search", t: "search", l: "Search" }, { n: "status", t: "select", l: "Status", o: [["", "Any status"], ["posted", "Successful"], ["reversed", "Reversed"]] }, { n: "from", t: "date", l: "From" }, { n: "to", t: "date", l: "To" }];
+  $("#r-wrap").innerHTML = filterBar("ad", st, fields) + `<div id="ad-body"><div class="loading">Loading\u2026</div></div>`; bindFilter("ad", st, fields, loadAdjust); await loadAdjust();
+}
+async function loadAdjust() {
+  const st = S.rfd.ad, el = $("#ad-body"); if (!el) return;
+  const r = await rpc("acc_adjustments_list", { p_search: st.search || null, p_status: st.status || null, p_from: st.from || null, p_to: st.to || null, p_limit: LIM, p_offset: st.offset }); S.adRows = r.rows;
+  el.innerHTML = `<p class="muted" style="margin-top:0">Adjustments correct the books when something was recorded wrongly, such as a patient balance or an accrual. Only the financial controller can make them, each needs a reason, and they are reversed rather than deleted. Cash, bank and mobile money balances are changed on the Cash and banks page.</p>` + figs([["Adjustments (successful)", money(r.total)], ["Records", String(r.total_count)]]) +
+    `<div class="panel" style="margin-top:14px"><div class="scroll"><table><thead><tr><th>Date</th><th>Number</th><th>Debit</th><th>Credit</th><th>Reason</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead><tbody>
+    ${r.rows.map((x, n) => `<tr><td>${fd(x.date)}</td><td>${esc(x.adj_no)}</td><td>${esc(x.debit)}</td><td>${esc(x.credit)}</td><td>${esc(x.reason)}<div class="muted">${x.patient ? esc(x.patient) + " \u00b7 " : ""}${esc(x.by || "")}</div></td><td class="num">${money(x.amount)}</td><td>${pill(x.status)}</td><td class="num">${isCtl() && x.status === "posted" ? `<button class="btn small danger" data-ra2="${n}">Reverse</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="8" class="empty">No adjustments.</td></tr>`}</tbody></table></div>${pagerHtml(r.total_count, st.offset, "adp")}</div>`;
+  $$("[data-ra2]", el).forEach(b => b.addEventListener("click", () => { const x = S.adRows[Number(b.dataset.ra2)]; reasonForm(`Reverse ${x.adj_no}`, "The adjustment is reversed with a new entry. Nothing is deleted.", "Reverse", async reason => { await rpc("acc_reverse_adjustment", { p_id: x.id, p_reason: reason }); toast("Reversed"); closeModal(); loadAdjust(); }); }));
+  bindPager("adp", st, r.total_count, loadAdjust);
+}
+function adjustmentForm() {
+  const adjAcct = a => postable(a) && !["cash", "bank", "mobile_money", "payable_supplier", "receivable_insurance"].includes(a.subtype);
+  const body = openModal("Financial adjustment", `<form id="adf" data-key="${newKey()}"><p class="muted" style="margin-top:0">Move an amount from one account to another to correct the books. The account you debit goes up (or down, for liabilities, equity and revenue) and the account you credit does the opposite.</p><div class="grid g3">
+    <label class="f"><span>Debit account</span><select name="debit" required>${accountOptions(adjAcct, "", "Choose an account")}</select></label><label class="f"><span>Credit account</span><select name="credit" required>${accountOptions(adjAcct, "", "Choose an account")}</select></label>${moneyField("amount")}
+    <label class="f"><span>Date</span><input type="date" name="date" value="${today()}" required></label><label class="f hidden" id="ad-pt"><span>Patient whose balance changes</span><select name="patient">${patientOptions("")}</select></label>
+    <label class="f" style="grid-column:1/-1"><span>Reason</span><input name="reason" required minlength="3" maxlength="300"></label></div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Post adjustment</button></div></form>`);
+  const f = form($("#adf", body)), isAR = id => (acctById(id) || {}).subtype === "receivable_patient", tg = () => $("#ad-pt", body).classList.toggle("hidden", !(isAR(f.debit.value) || isAR(f.credit.value)));
+  f.debit.addEventListener("change", tg); f.credit.addEventListener("change", tg);
+  f.addEventListener("submit", ev => { ev.preventDefault(); if (f.debit.value === f.credit.value) return toast("Choose two different accounts", true); busy($("button[type=submit]", f), async () => { const r = await rpc("acc_create_adjustment", { p_date: f.date.value, p_debit: f.debit.value, p_credit: f.credit.value, p_amount: f.amount.value, p_reason: f.reason.value.trim(), p_patient: f.patient.value || null, p_idem: f.dataset.key }); toast(`${r.adj_no} posted`); closeModal(); if (S.page === "refunds") renderRefunds(); }); });
 }
 
 /* ---------- settings ---------- */
