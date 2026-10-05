@@ -252,7 +252,7 @@ const sched=w=>w<28?'every 4 weeks':w<36?'every 2 weeks':'every week';
 const tip=w=>w<=13?'Take folic acid, rest, and book your first antenatal visit. Avoid alcohol and unprescribed medicine.':w<=27?'Keep up your clinic visits, eat iron-rich food and sleep under a treated net.':'Pack your hospital bag and count baby movements daily. Know the warning signs below.';
 let me=null,chans=[],mode='login',role='patient';
 const shell=id=>{document.body.classList.add('in');app.innerHTML=`<div class="lay"><aside class="side" id="side"></aside><div class="scrim" onclick="document.body.classList.remove('nav')"></div><div class="mainc"><div class="mob"><button class="ib" onclick="document.body.classList.add('nav')">${ic('menu')}</button><img class="logo" src="/logo.png" alt=""><span class="brand">Maternity Help</span><span class="sp"></span><button class="ib bell" title="Notifications" onclick="nav('${me.role==='doctor'?'overview':'notes'}')">${ic('bell')}<span class="bd" id="bellc" style="display:none"></span></button><button class="ib" data-tb="" title="Change theme" onclick="toggleTheme()">${tIc()}</button><button class="ib" title="Log out" onclick="logout()">${ic('out')}</button></div><div id="${id}"></div></div></div>`};
-const GROUPS={care:{label:'Care',icon:'users',keys:['queue','ambulance','patients','beds','medalerts','reports']},sched_grp:{label:'Schedule',icon:'cal',keys:['bookings','schedule']},admin_grp:{label:'Administration',icon:'shield',keys:['staff','assign','audit']},preg:{label:'My pregnancy',icon:'heart',keys:['plan','steps']},appts_grp:{label:'Appointments',icon:'cal',keys:['book','appts']}};
+const GROUPS={care:{label:'Care',icon:'users',keys:['queue','ambulance','patients','pregdash','beds','medalerts','reports']},sched_grp:{label:'Schedule',icon:'cal',keys:['bookings','schedule']},admin_grp:{label:'Administration',icon:'shield',keys:['staff','assign','audit']},preg:{label:'My pregnancy',icon:'heart',keys:['plan','care','steps']},appts_grp:{label:'Appointments',icon:'cal',keys:['book','appts']}};
 const groupOf={};Object.entries(GROUPS).forEach(([g,c])=>c.keys.forEach(k=>groupOf[k]=g));
 let navOpen={};
 function toggleGroup(g){navOpen[g]=!navOpen[g];me.role==='doctor'?drawDoc():drawPt()}
@@ -289,7 +289,7 @@ function toast(msg,fn){
  document.body.appendChild(t);try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}arm()}
 function setBell(n){const b=$('bellc');if(b){b.textContent=n>9?'9+':n;b.style.display=n?'block':'none'}document.title=(n?'('+n+') ':'')+'Maternity Help'}
 let ptLoaded=false,lastAl=-1,lastQ={},qInit=false;
-function nav(k){document.body.classList.remove('nav');if(me.role==='doctor'){view=k;sel=null;ad.sel=null;ad.data=null;if(k==='audit')loadAudit();if(k==='chat')chatPt=null;if(k==='schedule'){scheduleModal(me.id);view='overview';drawDoc();return}pFilter=null;drawDoc()}else{ptab=k;bk={};conf='';drawPt()}}
+function nav(k){document.body.classList.remove('nav');if(me.role==='doctor'){view=k;sel=null;ad.sel=null;ad.data=null;if(k==='audit')loadAudit();if(k==='pregdash')loadPregDash();if(k==='chat')chatPt=null;if(k==='schedule'){scheduleModal(me.id);view='overview';drawDoc();return}pFilter=null;drawDoc()}else{ptab=k;bk={};conf='';drawPt()}}
 async function logout(){chans.forEach(c=>sb.removeChannel(c));chans=[];me=null;sel=null;view='overview';ptab='home';ptLoaded=false;lastAl=-1;lastQ={};qInit=false;CH.msgs=[];GR.g=null;GR.msgs=[];chatPt=null;if(CALL)endCall('me');await sb.auth.signOut({scope:'local'});authView()}
 const BF=`<div class="wlc"><b>Welcome to Maternity Help</b><div class="wl"><span>Book antenatal visits and see your fees</span><span>Message your care team any time</span><span>Track your care plan and daily steps</span><span>Get updates from the clinic in the group chat</span><span>Help is one tap away when you need it</span></div></div>`;
 const GLOGO='<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-2.9-.8-4.7s.3-3.3.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.9 2.3-8.5 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>';
@@ -383,7 +383,7 @@ const friendly=e=>{const m=e.message||String(e);return /violates check constrain
 const fld=(l,n,t='text',v='',x='')=>`<label class="l">${l}</label><input name="${n}" type="${t}" value="${esc(v)}" ${x}>`;
 /* ---------- patient ---------- */
 let ptab='home',PD={ap:[],nt:[],svc:[],staff:[],al:[],plan:[],amb:[],steps:[],team:[]},bk={},conf='';
-const PITEMS=[['home','Home','home'],['plan','Care plan','file'],['steps','Daily steps','act'],['book','Book appointment','cal'],['appts','Appointments','clock'],['fees','Fees','file'],['chat','Messages','msg'],['group','Group chat','users'],['notes','Notifications','bell']];
+const PITEMS=[['home','Home','home'],['plan','Care plan','file'],['care','Results and medication','file'],['steps','Daily steps','act'],['book','Book appointment','cal'],['appts','Appointments','clock'],['fees','Fees','file'],['chat','Messages','msg'],['group','Group chat','users'],['notes','Notifications','bell']];
 const KINDS=[['message','Hospital message'],['test_result','New test result'],['medication','Medication reminder'],['follow_up','Follow-up appointment'],['checkup','Antenatal checkup'],['lab','Laboratory appointment'],['ultrasound','Ultrasound appointment'],['doctor_appointment','Doctor appointment'],['missed','Missed appointment']];
 const ft=t=>t?String(t).slice(0,5):'';
 const overdue=a=>a.status==='scheduled'&&new Date(a.appt_date+'T'+(a.appt_time?String(a.appt_time).slice(0,5):'23:59')).getTime()<Date.now();
@@ -400,7 +400,7 @@ async function patientView(){
  chans.push(ch.subscribe())}
 async function loadPatient(){
  const oldN=new Set(PD.nt.map(x=>x.id));
- const [a,n,s,st,al,cp,am,sl,tm]=await Promise.all([
+ const [a,n,s,st,al,cp,am,sl,tm,mpg,mms,mnv,mrx]=await Promise.all([
   sb.from('appointments').select('*').eq('patient_id',me.id).order('appt_date',{ascending:false}).order('appt_time',{ascending:false}),
   sb.from('notifications').select('*').eq('patient_id',me.id).order('created_at',{ascending:false}).limit(100),
   sb.from('services').select('*').eq('active',true).order('name'),
@@ -409,8 +409,8 @@ async function loadPatient(){
   sb.from('care_plan_items').select('*').eq('patient_id',me.id).order('due_date',{ascending:true,nullsFirst:false}),
   sb.from('ambulance_requests').select('*').eq('patient_id',me.id).order('requested_at',{ascending:false}).limit(5),
   sb.from('step_logs').select('*').eq('patient_id',me.id).gte('log_date',new Date(Date.now()-13*864e5).toISOString().slice(0,10)).order('log_date',{ascending:false}),
-  sb.rpc('my_care_team')]);
- PD={ap:a.data||[],nt:n.data||[],svc:s.data||[],staff:st.data||[],al:al.data||[],plan:cp.data||[],amb:am.data||[],steps:sl.data||[],team:tm.data||[]};
+  sb.rpc('my_care_team'),sb.from('pregnancies').select('*').eq('patient_id',me.id).order('created_at',{ascending:false}),sb.from('pregnancy_milestones').select('*').eq('patient_id',me.id),sb.from('investigations').select('*').eq('patient_id',me.id).order('performed_on',{ascending:false}),sb.from('prescriptions').select('*').eq('patient_id',me.id).order('start_date',{ascending:false})]);
+ PD={preg:(mpg&&mpg.data)||[],ms:(mms&&mms.data)||[],inv:(mnv&&mnv.data)||[],rx:(mrx&&mrx.data)||[],ap:a.data||[],nt:n.data||[],svc:s.data||[],staff:st.data||[],al:al.data||[],plan:cp.data||[],amb:am.data||[],steps:sl.data||[],team:tm.data||[]};
  if(ptLoaded){const nw=PD.nt.filter(x=>!x.read&&!oldN.has(x.id));if(nw.length&&ST.notif.sound)playSound(ST.notif.tone||'chime');if(nw.length&&ptab!=='notes')toast('New notification: '+nw[0].title+(nw.length>1?' (+'+(nw.length-1)+' more)':''),()=>{ptab='notes';drawPt()})}
  ptLoaded=true;drawPt()}
 function drawPt(){
@@ -418,7 +418,7 @@ function drawPt(){
  $('side').innerHTML=navHtml(PITEMS,ptab,{notes:un,chat:chatUn()});setBell(un);showInst();
  if(ptab==='chat'&&$('chat')){paintChat();return}
  if(ptab==='steps'&&document.activeElement&&document.activeElement.tagName==='INPUT'&&$('pv').contains(document.activeElement))return;
- $('pv').innerHTML={home:ptHome,plan:ptPlan,steps:ptSteps,book:ptBook,appts:ptAppts,chat:()=>threadView(me.id),group:groupView,notes:ptNotes,fees:ptFees,settings:settingsView}[ptab]();
+ $('pv').innerHTML={home:ptHome,care:ptCare,plan:ptPlan,steps:ptSteps,book:ptBook,appts:ptAppts,chat:()=>threadView(me.id),group:groupView,notes:ptNotes,fees:ptFees,settings:settingsView}[ptab]();
  if(ptab==='chat')afterChat();
  ambSync();checkReminders()}
 function reminders(){
@@ -539,7 +539,7 @@ async function sendAlert(){
  toast((lvl==='EMERGENCY'?'Emergency':'Labour')+' alert sent. The team has been notified.');loadPatient()}
 /* ---------- doctor ---------- */
 let D={pts:[],vis:[],ap:[],al:[],notes:[],plan:[],audit:[],staff:[],svc:[],se:[],amb:[],steps:[],asg:[],ract:[],rv:[],rem:[]},sel=null,view='overview',pFilter=null,pScope=null,aUn=false;
-const DITEMS=()=>{const base=[['overview','Overview','home'],['queue','Queue','clock'],['ambulance','Ambulance','alert'],['patients','Patients','users'],['chat','Messages','msg'],['group','Group chat','users'],['bookings','Bookings','cal'],['beds','Beds','bed'],['medalerts','Medical alerts','alert'],['reports','Reports','file'],['schedule','My schedule','cal']];return isAdmin()?[['admin','Admin dashboard','shield']].concat(base,[['staff','Staff','users'],['assign','Assignments','user'],['audit','Audit log','shield']]):base};
+const DITEMS=()=>{const base=[['overview','Overview','home'],['queue','Queue','clock'],['ambulance','Ambulance','alert'],['patients','Patients','users'],['pregdash','Pregnancy monitoring','heart'],['chat','Messages','msg'],['group','Group chat','users'],['bookings','Bookings','cal'],['beds','Beds','bed'],['medalerts','Medical alerts','alert'],['reports','Reports','file'],['schedule','My schedule','cal']];return isAdmin()?[['admin','Admin dashboard','shield']].concat(base,[['staff','Staff','users'],['assign','Assignments','user'],['audit','Audit log','shield']]):base};
 const dsn=a=>{const s=D.svc.find(x=>x.id===a.service_id),f=D.staff.find(x=>x.id===a.staff_id);return esc((s?s.name:a.kind)+(a.appt_time?' at '+String(a.appt_time).slice(0,5):'')+(f?' with '+(f.staff_title||'Doctor')+' '+f.full_name:'')+(a.bed_no?' \u00b7 Bed '+a.bed_no:''))};
 const P=id=>D.pts.find(p=>p.id===id),lastV=id=>D.vis.find(v=>v.patient_id===id);
 const DEFTH={bp_sys:{high:140,severe_high:160},bp_dia:{high:90,severe_high:110},temp_c:{high:38,severe_high:39},pulse:{low:50,high:100,severe_high:120},fetal_heart_rate:{low:110,high:160,severe_low:100,severe_high:170},fundal_mismatch_cm:{high:3,severe_high:5}};
@@ -596,7 +596,7 @@ function overview(){
  const H2=h;h='';h+=`<h2>Patients (${D.pts.length})</h2>${scopeChips()}${pFilter?`<button class="btn g" style="margin-bottom:10px" onclick="pFilter=null;drawDoc()">Showing admitted only \u00d7</button>`:''}<input placeholder="Search name, ID or phone" oninput="filt(this.value)" style="margin-bottom:10px">`;
  h+=[...pList()].sort((a,b)=>riskRank[riskOf(b).level]-riskRank[riskOf(a).level]).map(p=>{const d=p.status==='delivered';return `<div class="pr" data-q="${esc((p.full_name+' '+p.patient_code+' '+p.phone).toLowerCase())}" onclick="openPt('${p.id}')"><div><b>${esc(p.full_name)}</b> <span class="mu">${esc(p.patient_code)}</span><div class="mu">${d?'Postnatal week '+pnw(p):p.lmp?'Week '+wk(p)+' \u00b7 EDD '+due(p):'No dates'}</div></div><div class="row">${p.admitted_at?'<span class="pill hot">Admitted</span>':''}${riskPill(p)}${isAdmin()?`<button class="btn g" onclick="event.stopPropagation();makeStaffModal('${p.id}')">Make staff</button>`:''}</div></div>`}).join('')||'<div class="mu">No patients registered yet.</div>';
  if(view==='settings')return settingsView();
- return {overview:H1,bookings:H2,patients:h,staff:staffView(),admin:adminDash(),assign:assignView(),audit:auditPanel(),chat:staffChat(),group:groupView(),queue:queueView(),ambulance:ambulanceView(),beds:bedsView(),medalerts:medAlertsView(),reports:reportsView()}[view]||H1}
+ return {overview:H1,bookings:H2,patients:h,staff:staffView(),admin:adminDash(),assign:assignView(),audit:auditPanel(),chat:staffChat(),group:groupView(),queue:queueView(),ambulance:ambulanceView(),beds:bedsView(),medalerts:medAlertsView(),pregdash:view==='pregdash'?pregDashView():'',reports:reportsView()}[view]||H1}
 function filt(q){q=q.toLowerCase();document.querySelectorAll('.pr[data-q]').forEach(r=>r.style.display=r.dataset.q.includes(q)?'':'none')}
 async function loadPap(id){const {data}=await sb.from('appointments').select('*').eq('patient_id',id).order('appt_date',{ascending:false});if(sel===id){D.pap=data||[];drawDoc()}}
 async function openPt(id){sel=id;D.notes=[];D.plan=[];D.steps=[];D.pap=null;D.inv=null;D.rx=null;D.docs=null;drawDoc();scrollTo(0,0);loadClin(id);sb.rpc('log_view',{p_patient:id});loadPap(id);const [n,p,sl]=await Promise.all([sb.from('clinical_notes').select('*').eq('patient_id',id).order('created_at',{ascending:false}),sb.from('care_plan_items').select('*').eq('patient_id',id).order('done').order('due_date',{ascending:true,nullsFirst:false}),sb.from('step_logs').select('*').eq('patient_id',id).gte('log_date',new Date(Date.now()-13*864e5).toISOString().slice(0,10))]);D.notes=n.data||[];D.plan=p.data||[];D.steps=sl.data||[];if(sel===id)drawDoc()}
@@ -619,6 +619,7 @@ function detail(p){
  ${pregCard(p)}
  <div class="card"><h3>Pregnancy timeline</h3>${timeline(p)}${up.length?`<div class="mu" style="margin-top:8px">Next appointment: ${fd(up[0].appt_date)} (${esc(up[0].kind)})</div>`:''}</div>
  ${msCard(p)}
+ ${trendCard(p)}
  <h2>Care plan</h2><div class="card">${D.plan.map(x=>`<div class="li" style="margin-bottom:6px"><div class="fl" style="color:${x.done?'var(--tx)':'var(--mu)'}">${ic(x.done?'check':'clock')}<div><b>${esc(x.title)}</b><div class="mu">${x.due_date?fd(x.due_date)+(x.due_time?' at '+String(x.due_time).slice(0,5):''):'No date'}${x.notes?' \u00b7 '+esc(x.notes):''}</div></div></div><div class="row"><button class="btn g" onclick="togglePlan('${x.id}',${!x.done})">${x.done?'Undo':'Mark done'}</button><button class="ib" onclick="delPlan('${x.id}')">${ic('x')}</button></div></div>`).join('')||'<div class="mu">No care plan items yet.</div>'}<button class="btn" style="margin-top:8px" onclick="addPlan('${p.id}')">${ic('plus')} Add care plan item</button></div>
  <h2>Daily steps</h2><div class="card">${stepsCard(p)}</div>
  ${visitsCard(p)}
@@ -1292,6 +1293,87 @@ function caSection(){const all=D.ca||[],tabs=[['open','Open'],['reviewed','Revie
  ${l.length?l.map(a=>caCard(a)).join(''):'<div class="mu">'+(caf==='open'?'No open alerts.':caf==='reviewed'?'Nothing is waiting for resolution.':'No alerts resolved in the last 30 days.')+'</div>'}</div>`}
 function ptAlerts(p){const l=caOpen().filter(a=>a.patient_id===p.id).sort((x,y)=>SEV[y.severity][2]-SEV[x.severity][2]);
  if(!l.length)return '';return `<div class="card"><h3>Clinical alerts (${l.length})</h3>${l.map(a=>caCard(a,true)).join('')}</div>`}
+
+/* ---------- dashboard, trend charts and patient view (Stage 5) ---------- */
+let pdf={q:'',tri:'all',f:'all'};
+async function loadPregDash(){D.dinv=null;D.drx=null;
+ const [i,r]=await Promise.all([sb.from('investigations').select('*').order('updated_at',{ascending:false}).limit(500),sb.from('prescriptions').select('*').order('created_at',{ascending:false}).limit(200)]);
+ D.dinv=i.data||[];D.drx=r.data||[];D.dErr=!!(i.error||r.error);if(view==='pregdash')drawDoc()}
+function pdRows(){const t=today(),in7=addD(t,7),in30=addD(t,30),pend=new Set((D.dinv||[]).filter(v=>v.status==='requested').map(v=>v.patient_id));
+ return (D.preg||[]).filter(g=>g.status==='active').map(g=>{const p=P(g.patient_id);if(!p)return null;
+  const w=g.lmp?Math.max(1,Math.floor((Date.now()-new Date(g.lmp+'T00:00:00'))/864e5/7)+1):null,od=overdueInfo(p),r=riskOf(p),al=caOpen().filter(a=>a.patient_id===p.id),
+   nxt=(D.ap||[]).filter(a=>a.patient_id===p.id&&['scheduled','pending'].includes(a.status)&&a.appt_date>=t).sort((x,y)=>x.appt_date.localeCompare(y.appt_date))[0],
+   lv=(D.vis||[]).find(v=>v.patient_id===p.id);
+  const attn=g.risk_level==='high'||['critical','priority'].includes(r.level)||al.some(a=>['critical','high'].includes(a.severity));
+  return {p,g,w,od,r,al,nxt,lv,attn,due7:!!(nxt&&nxt.appt_date<=in7),del30:!!(g.edd&&g.edd>=t&&g.edd<=in30),pend:pend.has(p.id)}}).filter(Boolean)}
+function pregDashView(){
+ const all=pdRows(),t=today(),q=pdf.q.trim().toLowerCase();
+ const fl={all:()=>true,due7:x=>x.due7,overdue:x=>!!x.od,attn:x=>x.attn,del30:x=>x.del30,pend:x=>x.pend};
+ const rows=all.filter(x=>fl[pdf.f](x)&&(pdf.tri==='all'||(x.w!=null&&tri(x.w).startsWith(pdf.tri)))&&(!q||(x.p.full_name||'').toLowerCase().includes(q)||String(x.p.patient_code||'').toLowerCase().includes(q)))
+  .sort((a,b)=>(b.attn-a.attn)||(!!b.od-!!a.od)||String(a.g.edd||'9').localeCompare(String(b.g.edd||'9')));
+ const c=k=>all.filter(fl[k]).length,tl=(icn,l,k,warn)=>tile(icn,l,c(k),"pdf.f='"+k+"';drawDoc()",warn&&c(k)>0);
+ const trc=['1st','2nd','3rd'].map(k=>[k+' trimester',all.filter(x=>x.w!=null&&tri(x.w).startsWith(k)).length]);
+ const lvl=[['High risk',all.filter(x=>x.g.risk_level==='high').length],['Moderate risk',all.filter(x=>x.g.risk_level==='moderate').length],['Low risk',all.filter(x=>x.g.risk_level==='low').length],['Not yet assessed',all.filter(x=>x.g.risk_level==='unassessed').length]];
+ const mo=[];for(let i=0;i<9;i++){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+i);const key=d.toISOString().slice(0,7);mo.push([d.toLocaleDateString(undefined,{month:'short',year:'2-digit'}),all.filter(x=>x.g.edd&&x.g.edd.slice(0,7)===key).length])}
+ const late=all.filter(x=>x.g.edd&&x.g.edd<t).length;
+ const ev=[];(D.vis||[]).slice(0,12).forEach(v=>ev.push({k:v.created_at||v.visit_date,pid:v.patient_id,tx:'Visit recorded'+(flags(v).length?' \u00b7 '+flags(v).length+' flag(s)':'')}));
+ (D.dinv||[]).filter(v=>v.status==='resulted').slice(0,12).forEach(v=>ev.push({k:v.updated_at,pid:v.patient_id,tx:(v.kind==='lab'?'Lab':'Scan')+' result: '+v.name+(v.interpretation&&v.interpretation!=='normal'?' ('+v.interpretation+')':'')}));
+ (D.drx||[]).slice(0,12).forEach(r=>ev.push({k:r.created_at,pid:r.patient_id,tx:'Prescribed '+r.drug_name}));
+ ev.sort((a,b)=>String(b.k).localeCompare(String(a.k)));
+ const hdr=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Pregnancy monitoring</h2><button class="btn g" style="padding:4px 12px" onclick="loadPregDash();loadDoc()">Refresh</button></div><div class="mu" style="margin-bottom:10px">Active pregnancies only. Figures come from the live records. Select a tile to filter the list.</div>`;
+ if(!all.length&&!(D.preg||[]).length)return hdr+'<div class="card">No pregnancy records yet. Register a patient with her last menstrual period to start one.</div>';
+ return hdr+(D.dErr?'<div class="card fl">'+ic('alert')+' Some laboratory or prescription data could not be loaded. Counts for those may be incomplete.</div>':'')+`<div class="stats">${tl('heart','Active pregnancies','all')}${tl('cal','Visits due in 7 days','due7')}${tl('alert','High-risk, need attention','attn',1)}${tl('clock','Overdue checkups','overdue',1)}${tl('bed','Deliveries in 30 days','del30')}${tl('file',D.dinv==null?'Pending tests (loading)':'Pending tests','pend')}</div>
+ <div class="card" style="margin-top:12px"><h3>Pregnancies by trimester</h3>${bars(trc)}<h3 style="margin-top:14px">Clinician risk assessment</h3>${bars(lvl)}<h3 style="margin-top:14px">Expected deliveries, next 9 months</h3>${bars(mo)}${late?`<div class="mu" style="margin-top:6px">${late} pregnanc${late>1?'ies are':'y is'} past the estimated due date.</div>`:''}</div>
+ <div class="card" style="margin-top:12px"><div class="row" style="gap:8px;flex-wrap:wrap"><input placeholder="Search name or patient ID" value="${esc(pdf.q)}" oninput="pdf.q=this.value;pdRedraw()" style="flex:1;min-width:150px"><select onchange="pdf.tri=this.value;drawDoc()"><option value="all"${pdf.tri==='all'?' selected':''}>All trimesters</option>${['1st','2nd','3rd'].map(k=>`<option value="${k}"${pdf.tri===k?' selected':''}>${k} trimester</option>`).join('')}</select><select onchange="pdf.f=this.value;drawDoc()">${[['all','All'],['due7','Visit due in 7 days'],['overdue','Overdue checkup'],['attn','Needs attention'],['del30','Delivery in 30 days'],['pend','Pending tests']].map(o=>`<option value="${o[0]}"${pdf.f===o[0]?' selected':''}>${o[1]}</option>`).join('')}</select></div>
+ <div class="mu" style="margin:8px 0">${rows.length} of ${all.length} shown</div><div id="pdlist">${pdList(rows)}</div></div>
+ <div class="card" style="margin-top:12px"><h3>Recent clinical updates</h3>${D.dinv==null?'<div class="mu">Loading...</div>':ev.slice(0,8).map(e=>{const p=P(e.pid)||{};return `<div class="ms"><div style="flex:1;cursor:pointer" onclick="openPt('${e.pid}')"><b>${esc(p.full_name||'Patient')}</b><div class="mu">${esc(e.tx)} \u00b7 ${new Date(e.k).toLocaleString()}</div></div></div>`}).join('')||'<div class="mu">Nothing recorded yet.</div>'}</div>`}
+function pdList(rows){if(!rows.length)return '<div class="mu">No pregnancies match these filters.</div>';
+ return rows.map(x=>{const rl=RLV[x.g.risk_level]||RLV.unassessed;
+  return `<div class="card ${x.attn?'sev2':''}" style="margin:8px 0"><div class="row" style="justify-content:space-between;gap:8px"><b style="cursor:pointer" onclick="openPt('${x.p.id}')">${esc(x.p.full_name)}</b><span class="row"><span class="pill ${rl[1]}">${rl[0]}</span>${x.al.length?`<span class="pill hot">${x.al.length} alert${x.al.length>1?'s':''}</span>`:''}</span></div>
+  <div class="mu">${x.w!=null?'Week '+Math.min(x.w,42)+' \u00b7 '+tri(x.w):'Gestation not recorded'} \u00b7 Due ${x.g.edd?fd(x.g.edd):'-'}</div>
+  <div class="mu">${x.nxt?'Next visit '+fd(x.nxt.appt_date):'No visit booked'} \u00b7 ${x.lv?'Last visit '+fd(x.lv.visit_date):'No visit recorded'}</div>
+  ${x.od?`<div class="fl">${ic('clock')} ${esc(x.od.text)}</div>`:''}${x.pend?'<div class="mu">Has tests waiting for results</div>':''}
+  <div class="row" style="margin-top:6px"><button class="btn g" style="padding:3px 10px" onclick="openPt('${x.p.id}')">Open record</button></div></div>`}).join('')}
+function pdRedraw(){const el=$('pdlist');if(!el)return;const all=pdRows(),q=pdf.q.trim().toLowerCase();
+ const rows=all.filter(x=>(pdf.f==='all'||x[{due7:'due7',overdue:'od',attn:'attn',del30:'del30',pend:'pend'}[pdf.f]])&&(pdf.tri==='all'||(x.w!=null&&tri(x.w).startsWith(pdf.tri)))&&(!q||(x.p.full_name||'').toLowerCase().includes(q)||String(x.p.patient_code||'').toLowerCase().includes(q)));
+ el.innerHTML=pdList(rows)}
+
+/* trend charts: inline SVG, theme aware */
+function lineChart(o){
+ const pts=(o.series||[]).map(se=>({...se,p:se.p.filter(q=>q.y!=null&&!isNaN(q.y))}));
+ const n=Math.max(0,...pts.filter(se=>!se.ref).map(se=>se.p.length));
+ if(n<2)return `<div class="mu">${esc(o.title)}: not enough readings yet (needs at least 2 visits with this measurement).</div>`;
+ const W=320,H=150,L=34,R=8,T=10,B=22,all=pts.flatMap(se=>se.p),ys=all.map(q=>q.y).concat((o.lines||[]).map(l=>l.y));
+ const xs=all.map(q=>q.x);let x0=Math.min(...xs),x1=Math.max(...xs);if(x1===x0)x1=x0+1;
+ let y0=Math.min(...ys),y1=Math.max(...ys);const pad=(y1-y0||1)*.12;y0-=pad;y1+=pad;
+ const X=v=>L+(v-x0)/(x1-x0)*(W-L-R),Y=v=>T+(1-(v-y0)/(y1-y0))*(H-T-B),f=v=>Math.abs(v)>=100?Math.round(v):Math.round(v*10)/10;
+ const grid=[0,.5,1].map(k=>{const v=y0+(y1-y0)*k;return `<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--bd)"/><text x="${L-4}" y="${Y(v)+3}" text-anchor="end" font-size="9" fill="var(--mu)">${f(v)}</text>`}).join('');
+ const lines=(o.lines||[]).map(l=>`<line x1="${L}" x2="${W-R}" y1="${Y(l.y)}" y2="${Y(l.y)}" stroke="var(--rs)" stroke-dasharray="4 3" opacity=".7"/><text x="${W-R}" y="${Y(l.y)-2}" text-anchor="end" font-size="8" fill="var(--rs)">${esc(l.label)}</text>`).join('');
+ const dl=v=>new Date(v*864e5).toLocaleDateString(undefined,{day:'numeric',month:'short'});
+ const ser=pts.map(se=>{const d=se.p.map(q=>X(q.x)+','+Y(q.y)).join(' ');return `<polyline points="${d}" fill="none" stroke="${se.color||'var(--ac)'}" stroke-width="2"${se.ref?' stroke-dasharray="5 4" opacity=".6"':''}/>`+(se.ref?'':se.p.map(q=>`<circle cx="${X(q.x)}" cy="${Y(q.y)}" r="${q.bad?4.5:3}" fill="${q.bad?'var(--rs)':(se.color||'var(--ac)')}"><title>${esc(se.name)}: ${q.y}${o.unit?' '+esc(o.unit):''} on ${dl(q.x)}${q.bad?' (outside range)':''}</title></circle>`).join(''))}).join('');
+ const leg=pts.map(se=>`<span style="color:${se.color||'var(--ac)'}">\u25CF ${esc(se.name)}</span>`).join(' \u00b7 ');
+ return `<div style="margin:10px 0"><b>${esc(o.title)}</b>${o.unit?' <span class="mu">'+esc(o.unit)+'</span>':''}<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="${esc(o.title)} over time">${grid}${lines}${ser}<text x="${L}" y="${H-6}" font-size="9" fill="var(--mu)">${dl(x0)}</text><text x="${W-R}" y="${H-6}" text-anchor="end" font-size="9" fill="var(--mu)">${dl(x1)}</text></svg><div class="mu" style="font-size:12px">${leg}${(o.lines||[]).length?' \u00b7 dashed = alert threshold':''}</div></div>`}
+function trendCard(p){const vs=D.vis.filter(v=>v.patient_id===p.id).slice().reverse(),dd=v=>Math.floor(new Date(v.visit_date+'T00:00:00').getTime()/864e5);
+ const bs=TH('bp_sys'),bd=TH('bp_dia'),fh=TH('fetal_heart_rate'),pr=pregOf(p.id),lmp=(pr&&pr.lmp)||p.lmp;
+ const pt=(k,bad)=>vs.filter(v=>v[k]!=null).map(v=>({x:dd(v),y:+v[k],bad:bad?bad(+v[k]):false}));
+ const hi=(t)=>v=>t.high!=null&&v>=t.high;
+ const charts=[
+  lineChart({title:'Blood pressure',unit:'mmHg',series:[{name:'Systolic',p:pt('bp_sys',hi(bs)),color:'var(--ac)'},{name:'Diastolic',p:pt('bp_dia',hi(bd)),color:'var(--mu)'}],lines:[bs.high!=null?{y:+bs.high,label:'systolic '+bs.high}:null,bd.high!=null?{y:+bd.high,label:'diastolic '+bd.high}:null].filter(Boolean)}),
+  lineChart({title:'Weight',unit:'kg',series:[{name:'Weight',p:pt('weight_kg'),color:'var(--ac)'}]}),
+  lineChart({title:'Fundal height',unit:'cm',series:[{name:'Measured',p:pt('fundal_height_cm'),color:'var(--ac)'}].concat(lmp?[{name:'Expected (= weeks)',ref:1,color:'var(--mu)',p:vs.filter(v=>v.fundal_height_cm!=null&&Math.floor((new Date(v.visit_date+'T00:00:00')-new Date(lmp+'T00:00:00'))/864e5/7)+1>=20).map(v=>({x:dd(v),y:Math.floor((new Date(v.visit_date+'T00:00:00')-new Date(lmp+'T00:00:00'))/864e5/7)+1}))}]:[])}),
+  lineChart({title:'Fetal heart rate',unit:'bpm',series:[{name:'FHR',p:pt('fetal_heart_rate',v=>(fh.low!=null&&v<fh.low)||(fh.high!=null&&v>fh.high)),color:'var(--ac)'}],lines:[fh.low!=null?{y:+fh.low,label:'low '+fh.low}:null,fh.high!=null?{y:+fh.high,label:'high '+fh.high}:null].filter(Boolean)})];
+ return `<div class="card"><h3>Measurement trends</h3>${vs.length?charts.join(''):'<div class="mu">No visits recorded yet, so there is nothing to chart.</div>'}<div class="mu">Missing readings are skipped, not treated as normal. Thresholds come from the alert settings.</div></div>`}
+
+/* patient's own view */
+function ptCare(){
+ const t=today(),pg=(PD.preg||[])[0],ms=(PD.ms||[]).slice().sort((a,b)=>String(a.due_date||'9').localeCompare(String(b.due_date||'9')));
+ const up=ms.filter(m=>m.status==='planned'),dn=ms.filter(m=>m.status==='done'),res=(PD.inv||[]).filter(v=>v.status==='resulted');
+ const cur=(PD.rx||[]).filter(r=>r.status==='active'&&!(r.end_date&&r.end_date<t)),old=(PD.rx||[]).filter(r=>!cur.includes(r));
+ let h='<h2 style="margin-top:0">My care</h2><div class="mu" style="margin-bottom:10px">This shows what your care team has shared with you. It is information, not a diagnosis. Speak to your clinician if you are worried, and use the emergency button on the home page if you are unwell.</div>';
+ h+=`<div class="card"><h3>Pregnancy milestones</h3>${!ms.length?'<div class="mu">No milestones have been set up yet.</div>':(up.length?up.map(m=>`<div class="ms"><i class="msd ${m.due_date&&m.due_date<t?'over':''}"></i><div><b>${esc(m.title)}</b><div class="mu">${m.due_date?(m.due_date<t?'Was due ':'Around ')+fd(m.due_date):'Date to be confirmed'}</div></div></div>`).join(''):'<div class="mu">Nothing is waiting.</div>')+(dn.length?`<details style="margin-top:8px"><summary class="mu" style="cursor:pointer">Done (${dn.length})</summary>${dn.map(m=>`<div class="ms"><i class="msd done"></i><div><b>${esc(m.title)}</b><div class="mu">${fd(m.done_on)}</div></div></div>`).join('')}</details>`:'')}${pg&&pg.edd?`<div class="mu" style="margin-top:8px">Estimated due date: ${fd(pg.edd)}. Babies are often born a little before or after this date.</div>`:''}</div>`;
+ h+=`<div class="card"><h3>Test and scan results</h3>${res.length?res.map(v=>`<div class="ms" style="display:block"><b>${esc(v.name)}</b> <span class="mu">${v.kind==='lab'?'Laboratory':'Ultrasound'} \u00b7 ${fd(v.performed_on)}</span>${v.result_value?`<div>${esc(v.result_value)}${v.unit?' '+esc(v.unit):''}${v.ref_range?' <span class="mu">(usual range '+esc(v.ref_range)+')</span>':''}</div>`:''}${v.findings?`<div>${esc(v.findings)}</div>`:''}</div>`).join(''):'<div class="mu">No results have been shared with you yet. Results appear here once your clinician has reviewed them.</div>'}${res.length?'<div class="mu" style="margin-top:6px">Your care team will go through your results with you.</div>':''}</div>`;
+ h+=`<div class="card"><h3>My medication</h3>${cur.length?cur.map(r=>`<div class="ms" style="display:block"><b>${esc(r.drug_name)}</b> <span class="mu">${esc(r.dose)} \u00b7 ${esc(r.frequency)}</span>${r.instructions?`<div>${esc(r.instructions)}</div>`:''}<div class="mu">From ${fd(r.start_date)}${r.end_date?' to '+fd(r.end_date):''}${r.followup_due?' \u00b7 Review '+fd(r.followup_due):''}</div></div>`).join(''):'<div class="mu">No medication is currently prescribed.</div>'}${old.length?`<details style="margin-top:8px"><summary class="mu" style="cursor:pointer">Earlier medication (${old.length})</summary>${old.map(r=>`<div class="ms" style="display:block"><b>${esc(r.drug_name)}</b> <span class="mu">${esc(r.dose)} \u00b7 ${esc(r.frequency)} \u00b7 ${r.status==='stopped'?'stopped '+fd(r.stopped_on):'course ended'}</span></div>`).join('')}</details>`:''}<div class="mu" style="margin-top:6px">Do not stop or change medication without speaking to your clinician.</div></div>`;
+ return h}
 let maf='all';
 function remindCheckup(pid){const p=P(pid);if(!p||!confirm('Send '+p.full_name+' a checkup reminder?'))return;
  sb.from('notifications').insert({patient_id:pid,kind:'follow_up',priority:'important',title:p.status==='delivered'?'Postnatal check due':'Antenatal checkup due',body:'Your checkup is due. Please book an appointment or visit the clinic soon.'}).then(({error})=>error?alert(friendly(error)):toast('Reminder sent.'))}
