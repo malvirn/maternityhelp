@@ -403,10 +403,10 @@ function budTargets(d) {
 
 /* ====================== NOTIFICATIONS ====================== */
 const NKIND = { overdue_invoice: "Overdue invoices", new_payment: "New payments", pending_approval: "Pending approvals", low_balance: "Low balances", failed_transaction: "Failed transactions", upcoming_bill: "Upcoming bills", tax_due: "Tax due", budget: "Budget limits" };
-const NGO = { invoice: "invoices", receipt: "payments", insurer_payment: "payments", expense_request: "expenses", refund_request: "payments", payroll_run: "dashboard", account: "ledger", sync_error: "settings", bill: "suppliers", tax: "taxes", budget: "budgets" };
+const NGO = { invoice: "invoices", receipt: "payments", insurer_payment: "payments", expense_request: "expenses", refund_request: "payments", payroll_run: "dashboard", account: "ledger", sync_error: "settings", bill: "expenses", tax: "taxes", budget: "budgets" };
 let audio;
 function beep() { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === "suspended") audio.resume(); [[880, 0], [1320, .18]].forEach(([fq, t0]) => { const o = audio.createOscillator(), g = audio.createGain(), s = audio.currentTime + t0; o.frequency.value = fq; g.gain.setValueAtTime(.0001, s); g.gain.exponentialRampToValueAtTime(.2, s + .02); g.gain.exponentialRampToValueAtTime(.0001, s + .3); o.connect(g); g.connect(audio.destination); o.start(s); o.stop(s + .35); }); } catch (e) {} }
-function badge(n) { const b = $('[data-nav="notifications"]'); if (!b) return; b.innerHTML = `Notifications${n ? ` <span class="nbadge" aria-label="${n} unread">${n > 99 ? "99+" : n}</span>` : ""}`; }
+function badge(n) { const b = $('[data-nav="notifications"] .nl'); if (!b) return; b.innerHTML = `Notifications${n ? ` <span class="nbadge" aria-label="${n} unread">${n > 99 ? "99+" : n}</span>` : ""}`; }
 async function ntPoll(refresh) {
   if (!S.access) return clearInterval(X.nt.timer);
   try {
@@ -446,7 +446,7 @@ async function renderNotifications() {
 
 /* ====================== wiring ====================== */
 const PAGES = { reports: renderReports, taxes: renderTaxes, budgets: renderBudgets, notifications: renderNotifications };
-const at = NAV.findIndex(n => n[0] === "suppliers") + 1;
+const at = NAV.findIndex(n => n[0] === "expenses") + 1;
 NAV.splice(at, 0, ["reports", "Reports"], ["budgets", "Budgets"], ["taxes", "Taxes"], ["notifications", "Notifications"]);
 const origGo = window.go;
 window.go = function (page) {

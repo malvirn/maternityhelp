@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0d1117">
+<meta name="theme-color" content="#0b1220">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/icons/icon-64.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
@@ -194,6 +194,211 @@ a{color:var(--al)}
 .gbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1f1f1f;border:1px solid #dadce0;border-radius:10px;padding:12px 16px;font:600 15px 'Inter',system-ui,sans-serif;cursor:pointer}.gbtn:hover{background:#f7f8f8}
 .okm{color:var(--gr)}
 .ms{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--bd)}.ms:first-of-type{border-top:0}.msd{width:12px;height:12px;border-radius:50%;margin-top:4px;flex:none;background:var(--bd)}.msd.done{background:var(--gr)}.msd.over{background:var(--rs)}.msd.book{background:var(--ac)}details.ms summary{list-style:none}details.ms summary::-webkit-details-marker{display:none}
+
+/* ===== v4 professional hospital design ===== */
+:root{--bg:#0b1220;--card:#111a2b;--bd:#1e2a3e;--in:#0d1626;--tx:#e6ebf3;--mu:#8d99ad;--ac:#4f8cf7;--ah:#3b78e6;--al:#8db4ff;--glow:#13213a;--rs:#fb7185;--gr:#34d399;--tl:#2dd4bf;--am:#fbbf24;--vi:#a78bfa;--gd:#fbbf24;--sh:0 1px 2px rgba(0,0,0,.3);--sh2:0 12px 32px rgba(0,0,0,.45);--r:16px;color-scheme:dark}
+:root[data-theme="light"]{--bg:#f3f6fb;--card:#ffffff;--bd:#e3e8f0;--in:#f6f8fc;--tx:#0f172a;--mu:#64748b;--ac:#1f5fd6;--ah:#174cb0;--al:#1f5fd6;--glow:#e9f0fd;--rs:#e11d48;--gr:#059669;--tl:#0d9488;--am:#d97706;--vi:#7c3aed;--gd:#d97706;--sh:0 1px 2px rgba(15,23,42,.04),0 1px 3px rgba(15,23,42,.06);--sh2:0 18px 40px rgba(15,23,42,.14);color-scheme:light}
+body{background:var(--bg);font-feature-settings:"cv11","ss01";-webkit-font-smoothing:antialiased}
+h1{font-size:24px;letter-spacing:-.02em}h2{font-size:18px;letter-spacing:-.01em}
+.card,.st,.portion,.sg{border-radius:var(--r);box-shadow:var(--sh)}
+.card{padding:18px}
+.btn{border-radius:11px;padding:10px 16px;font-size:14.5px;transition:background .15s,border-color .15s,transform .1s,box-shadow .15s}
+.btn:not(.g):hover{box-shadow:0 4px 14px color-mix(in srgb,var(--ac) 35%,transparent)}
+.btn:active{transform:translateY(1px)}
+.btn.sm{padding:6px 11px;font-size:13px;border-radius:9px}.btn.sm svg{width:15px;height:15px}
+.btn[disabled]{opacity:.6;cursor:not-allowed}
+.pill{font-size:11.5px;padding:3px 9px;background:var(--in)}
+.pill.ok{background:color-mix(in srgb,var(--gr) 14%,transparent);border-color:color-mix(in srgb,var(--gr) 45%,transparent);color:var(--gr)}
+.pill.warnp{background:color-mix(in srgb,var(--am) 14%,transparent);border-color:color-mix(in srgb,var(--am) 45%,transparent);color:var(--am)}
+.pill.hot{background:color-mix(in srgb,var(--rs) 14%,transparent);border-color:color-mix(in srgb,var(--rs) 45%,transparent);color:var(--rs)}
+input,select,textarea{border-radius:11px;transition:border-color .15s,box-shadow .15s}
+label.l{font-size:11.5px;font-weight:600;letter-spacing:.08em;margin:14px 0 6px}input:disabled,select:disabled,textarea:disabled{opacity:.65;cursor:not-allowed;background:color-mix(in srgb,var(--bd) 35%,var(--in))}
+.mu{font-size:13.5px}
+/* layout */
+.side{width:252px;padding:18px 12px;gap:3px;background:var(--card);box-shadow:var(--sh)}
+.side .brand{font-size:17px;padding:2px 6px 8px;gap:10px}.side .brand .logo{width:36px;height:36px;border-radius:10px;box-shadow:var(--sh)}
+.side .who{background:var(--in);border:1px solid var(--bd);border-radius:14px;padding:10px;margin:6px 0 10px}
+.nv{padding:10px 12px;font-size:14.5px;border-radius:11px}.nv svg{width:18px;height:18px;opacity:.9}
+.nv.on{background:color-mix(in srgb,var(--ac) 13%,transparent);color:var(--al)}
+.nv.on::before{background:var(--tl);left:-12px}
+.nv.grp{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);font-weight:700;padding:14px 12px 6px}.nv.grp svg{display:none}.nv.grp:hover{background:none;color:var(--tx)}
+.grpwrap{border-left:0;margin:0 0 4px;padding-left:0}
+.nv.sub{padding:9px 12px;font-size:14.5px}
+.mainc{max-width:1240px;padding:22px 26px 60px}
+body.in .mob{position:sticky;top:0;z-index:12;margin:-22px -26px 16px;padding:10px 14px;background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--bd)}
+@media(max-width:820px){.mainc{padding:14px 14px 90px}body.in .mob{margin:-14px -14px 14px}.side{width:270px!important}}
+/* modals */
+.ov{background:rgba(6,10,20,.62);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:ovin .15s ease-out}
+@keyframes ovin{from{opacity:0}to{opacity:1}}
+.md{box-shadow:var(--sh2);animation:mdin .2s ease-out}
+@keyframes mdin{from{transform:translateY(16px);opacity:.6}to{transform:none;opacity:1}}
+@media(min-width:720px){.ov{align-items:center;padding:20px}.md{border-radius:20px;max-width:600px}.md form{padding-bottom:18px}}
+.ovc{align-items:center;padding:16px}.mdc{max-width:420px;border-radius:20px;padding:22px 20px}
+.lki{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;margin:0 auto 10px;background:color-mix(in srgb,var(--ac) 14%,transparent);color:var(--al)}.lki svg{width:28px;height:28px}
+.lockc{text-align:center;padding:34px 18px;max-width:520px;margin:30px auto}.lockc h2{margin:6px 0 4px}.lockc .btn{margin-top:16px}
+.lockn,.okn{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border-radius:12px;font-size:14px;margin-bottom:6px}
+.lockn{background:color-mix(in srgb,var(--am) 12%,transparent);color:var(--tx);border:1px solid color-mix(in srgb,var(--am) 35%,transparent)}.lockn svg{color:var(--am)}
+.okn{background:color-mix(in srgb,var(--gr) 10%,transparent);border:1px solid color-mix(in srgb,var(--gr) 30%,transparent);margin-top:12px}.okn svg{color:var(--gr)}
+/* page header, kpis, panels */
+.pghd{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:16px}.pghd h2{margin:0 0 2px;font-size:22px}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:16px}@media(min-width:700px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(min-width:1180px){.kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}}
+.kpi{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:14px;box-shadow:var(--sh);position:relative;overflow:hidden;transition:border-color .15s,transform .15s}
+.kpi.click{cursor:pointer}.kpi.click:hover{border-color:var(--ac);transform:translateY(-1px)}
+.kic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none;background:color-mix(in srgb,var(--k,var(--ac)) 14%,transparent);color:var(--k,var(--ac))}.kic svg{width:20px;height:20px}
+.kt{min-width:0}.kt b{display:block;font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.1}.kt b small{font-size:14px;color:var(--mu);font-weight:600}.kt span{display:block;font-size:13px;color:var(--mu);font-weight:500}.kt em{display:block;font-style:normal;font-size:12px;color:var(--mu);opacity:.85;margin-top:1px}
+.kpi.blue{--k:var(--ac)}.kpi.teal{--k:var(--tl)}.kpi.violet{--k:var(--vi)}.kpi.amber{--k:var(--am)}.kpi.rose{--k:var(--rs)}.kpi.gold{--k:var(--gd)}
+.kpi.amber::after,.kpi.rose::after{content:'';position:absolute;inset:0 auto 0 0;width:3px;background:var(--k)}
+.pnl{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:16px;overflow:hidden}
+.pnl>header{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--bd)}.pnl>header svg{color:var(--al);width:18px;height:18px}.pnl>header h3{margin:0;flex:1;font-size:15px}
+.pnb{padding:14px 16px}
+.dgrid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:1060px){.dgrid{grid-template-columns:1fr}}
+.hero{display:flex;gap:18px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;padding:22px;margin-bottom:16px;border-radius:20px;color:#fff;background:linear-gradient(120deg,#1d4ed8 0%,#2563eb 40%,#0d9488 100%);box-shadow:0 14px 34px rgba(29,78,216,.25);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;right:-60px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%)}
+.hero-t{position:relative;min-width:240px;flex:1}.hero-k{font-size:13px;opacity:.85;font-weight:500}.hero h1{color:#fff;font-size:28px;margin:4px 0}.hero p{margin:0;opacity:.92}
+.hero-s{position:relative;flex:1;min-width:260px;max-width:460px}
+.hero .sbox{background:rgba(255,255,255,.97);border-color:transparent}.hero .sbox input{color:#0f172a}.hero .sbox svg{color:#64748b}
+.adres{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:5}.adres:empty{display:none}.adres .pr{box-shadow:var(--sh2);margin-bottom:4px;color:var(--tx)}
+.alist{display:flex;flex-direction:column;gap:6px}
+.arow{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:12px;background:var(--in);color:var(--tx);font:inherit;text-align:left;cursor:pointer;transition:border-color .15s}
+.arow:hover{border-color:var(--ac)}.aic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--card);color:var(--mu);flex:none}.aic svg{width:16px;height:16px}
+.atx{flex:1;font-size:14.5px}.acn{font-weight:700;font-size:15px;min-width:28px;text-align:center;padding:2px 8px;border-radius:99px;background:var(--card);color:var(--mu)}.ach{color:var(--mu);font-size:20px}
+.arow.amber .aic,.arow.amber .acn{background:color-mix(in srgb,var(--am) 16%,transparent);color:var(--am)}
+.arow.rose .aic,.arow.rose .acn{background:color-mix(in srgb,var(--rs) 16%,transparent);color:var(--rs)}
+.trow,.srow{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--bd)}.trow:first-child,.srow:first-child{border-top:0;padding-top:0}
+.trow{cursor:pointer}.trow:hover b{color:var(--al)}.ttm{font-weight:700;font-variant-numeric:tabular-nums;min-width:52px;padding:6px 8px;border-radius:10px;background:var(--in);text-align:center;font-size:14px}
+.qa{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.qa button{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px;border:1px solid var(--bd);border-radius:12px;background:var(--in);color:var(--tx);font:600 13.5px 'Inter',system-ui,sans-serif;text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
+.qa button:hover{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 7%,var(--in))}.qa button svg{color:var(--al);width:20px;height:20px}
+.mny{display:grid;gap:10px}.mny div{display:flex;justify-content:space-between;align-items:center;font-size:14px}.mny span{color:var(--mu)}.mny b{font-size:16px}.mny b.neg{color:var(--rs)}
+.team{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.team div{background:var(--in);border:1px solid var(--bd);border-radius:12px;padding:10px;text-align:center}.team b{display:block;font-size:22px}.team span{font-size:12.5px;color:var(--mu)}
+.lnk{font-size:13.5px}
+.sech{margin:18px 0 8px;font-size:14px;color:var(--mu);text-transform:uppercase;letter-spacing:.07em}
+.dim{opacity:.55}
+/* tiles from older pages get the new look */
+.st{padding:14px;display:flex;flex-direction:column;gap:2px}.st>svg{width:36px;height:36px;padding:8px;border-radius:11px;background:color-mix(in srgb,var(--ac) 13%,transparent);color:var(--al)}
+.st.warn>svg{background:color-mix(in srgb,var(--rs) 14%,transparent);color:var(--rs)}
+.st.click>svg{background:color-mix(in srgb,var(--ac) 13%,transparent);padding:8px;width:36px;height:36px}.st.warn.click>svg{background:color-mix(in srgb,var(--rs) 14%,transparent)}
+.st b,.st.click>b{font-size:26px;margin-top:6px}
+.portion{padding:18px}.portion>.ph svg{color:var(--al)}
+.pr,.li{border-radius:13px;padding:12px 14px;transition:border-color .15s}
+/* search, chips, tables */
+.toolbar2{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.sbox{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:0 12px;flex:1;min-width:200px;max-width:360px}.sbox svg{color:var(--mu)}
+.sbox input{border:0;background:none;padding:10px 0;box-shadow:none!important}.sbox.big{max-width:none}.sbox.big input{padding:13px 0;font-size:15px}
+.sbox:focus-within{border-color:var(--ac);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 18%,transparent)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--bd);background:var(--card);color:var(--mu);border-radius:99px;padding:6px 12px;font:600 13px 'Inter',system-ui,sans-serif;cursor:pointer}.chip:hover{color:var(--tx);border-color:var(--mu)}
+.chip.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.tcard{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.itbl th{background:var(--in);font-size:11.5px;padding:10px 12px}.itbl td{padding:12px;vertical-align:middle}.itbl .r{text-align:right}
+.itbl tr.dim td{opacity:.55}
+.sbar{height:6px;border-radius:99px;background:var(--in);border:1px solid var(--bd);overflow:hidden;margin-top:5px;min-width:70px}.sbar i{display:block;height:100%;background:var(--gr);border-radius:99px}.sbar i.warnp{background:var(--am)}.sbar i.hot{background:var(--rs)}
+.mrow{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--bd)}.mrow:first-child{border-top:0;padding-top:0}
+.mch{min-width:56px;text-align:center;font-weight:700;padding:5px 8px;border-radius:9px;font-variant-numeric:tabular-nums}.mch.pos{background:color-mix(in srgb,var(--gr) 14%,transparent);color:var(--gr)}.mch.neg{background:color-mix(in srgb,var(--rs) 13%,transparent);color:var(--rs)}
+/* bill builder */
+.bll{border:1px solid var(--bd);border-radius:12px;padding:10px;margin-bottom:8px;background:var(--in)}
+.blr{display:grid;grid-template-columns:1fr 84px 34px;gap:8px;align-items:center}.blr select,.blr input{background:var(--card)}
+.bll .two{margin-top:8px}.bll .two input{background:var(--card)}.bllt{margin-top:6px;min-height:18px}
+.bltot{display:flex;justify-content:space-between;align-items:center;padding:12px 2px;margin-top:8px;border-top:1px dashed var(--bd);font-size:16px}.bltot b{font-size:20px}
+/* booking */
+.nxt{display:flex;gap:12px;align-items:center;padding:14px;margin:14px 0 4px;border-radius:14px;background:linear-gradient(120deg,color-mix(in srgb,var(--ac) 12%,var(--card)),color-mix(in srgb,var(--tl) 10%,var(--card)));border:1px solid color-mix(in srgb,var(--ac) 30%,var(--bd))}
+.nxt b{font-size:17px}.nxi{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--ac);color:#fff;flex:none}
+.dchips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x mandatory}
+.dchip{flex:none;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:74px;padding:9px 6px;border:1px solid var(--bd);border-radius:13px;background:var(--card);color:var(--tx);font:inherit;cursor:pointer}
+.dchip b{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mu)}.dchip span{font-weight:700;font-size:15px}.dchip i{font-style:normal;font-size:11.5px;color:var(--gr)}
+.dchip.on{background:var(--ac);border-color:var(--ac);color:#fff}.dchip.on b,.dchip.on i{color:#fff}
+.slots .btn{padding:9px 4px;font-variant-numeric:tabular-nums}
+textarea.bigta{min-height:200px;max-height:55vh;overflow-y:auto;resize:vertical;line-height:1.55;font-size:15px}
+.avl{display:grid;gap:10px}.avd{border:1px solid var(--bd);border-radius:12px;padding:10px 12px;background:var(--in)}.avd>b{display:block;margin-bottom:4px}
+.avr{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:4px 0;font-size:14px;flex-wrap:wrap}.avr>span:first-child{flex:1;min-width:140px}
+.pnb{container-type:inline-size}.avgrid{display:grid;grid-template-columns:1fr;gap:18px}@container (min-width:760px){.avgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr)}}.avform input,.avform select{min-width:0}
+.avform{background:var(--in);border:1px solid var(--bd);border-radius:14px;padding:4px 14px 14px}
+.avs{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--bd)}
+/* reviews */
+.stars{display:inline-flex;gap:2px;vertical-align:middle}.stars svg{width:var(--sz);height:var(--sz);fill:var(--bd);stroke:none}.stars svg.on{fill:#f5b301}
+.rvsum{display:flex;gap:22px;align-items:center;flex-wrap:wrap}.rvbig{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:120px}.rvbig b{font-size:42px;line-height:1;letter-spacing:-.03em}
+.rvbars{flex:1;min-width:200px;display:grid;gap:5px}.rvb{display:grid;grid-template-columns:14px 1fr 30px;gap:8px;align-items:center;font-size:13px}.rvb i{height:8px;border-radius:99px;background:var(--in);border:1px solid var(--bd);overflow:hidden}.rvb em{display:block;height:100%;background:#f5b301;border-radius:99px}
+.starpick{display:flex;align-items:center;gap:4px;margin:4px 0 6px}.starpick button{background:none;border:0;padding:3px;cursor:pointer}.starpick svg{width:34px;height:34px;fill:var(--bd);stroke:none;transition:transform .12s,fill .12s}.starpick button.on svg{fill:#f5b301}.starpick button:hover svg{transform:scale(1.12)}.starpick .mu{margin-left:8px}
+.rvc{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;box-shadow:var(--sh)}.rvc p{margin:10px 0 0;white-space:pre-wrap}
+.rvh{display:flex;gap:10px;align-items:center}.rvr{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--in);border-left:3px solid var(--tl);font-size:14px}.rvr b{display:block;font-size:12.5px;color:var(--tl);margin-bottom:2px}
+.rvmini{display:flex;align-items:center;gap:8px;margin-bottom:8px}.rvmini b{font-size:20px}
+.rvq{font-size:14px;padding:10px 12px;border-radius:12px;background:var(--in);margin-top:8px;font-style:italic}.rvq span{display:block;font-style:normal;font-size:12.5px;color:var(--mu);margin-top:4px}
+/* voice notes */
+.wain .mic{width:44px;height:44px;border-radius:50%;border:0;background:transparent;color:#54656f;display:grid;place-items:center;flex:none;cursor:pointer}.wain .mic:hover{background:rgba(0,0,0,.06)}
+:root:not([data-theme="light"]) .wain .mic{color:#aebac1}
+.wain.rec{gap:10px}.rdot{width:12px;height:12px;border-radius:50%;background:#e53935;animation:rpulse 1s infinite;flex:none}@keyframes rpulse{50%{opacity:.25}}
+.rtm{font-weight:700;font-variant-numeric:tabular-nums;color:#e53935}.rhint{flex:1;font-size:13px;color:#667781;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wain.rec .ib{color:#667781}
+.vn{display:flex;align-items:center;gap:10px;min-width:210px;padding:2px 0 4px}
+.vnp{width:38px;height:38px;border-radius:50%;border:0;background:#00a884;color:#fff;display:grid;place-items:center;cursor:pointer;flex:none}.vnp svg{width:16px;height:16px;fill:#fff;stroke:none}.vnp .spin{border-color:#fff;border-right-color:transparent}
+.vnw{flex:1;height:4px;border-radius:99px;background:rgba(0,0,0,.15);position:relative;overflow:hidden}.vnw i{position:absolute;inset:0 auto 0 0;width:0;background:#00a884;border-radius:99px}
+:root:not([data-theme="light"]) .vnw{background:rgba(255,255,255,.2)}
+.vnt{font-size:12px;opacity:.75;font-variant-numeric:tabular-nums;min-width:30px}
+/* watermark */
+body::after{content:'MALVIRN GOMO';position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-28deg);font:800 clamp(44px,9vw,130px)/1 'Inter',system-ui,sans-serif;letter-spacing:.14em;color:var(--tx);opacity:.03;pointer-events:none;user-select:none;-webkit-user-select:none;z-index:70;white-space:nowrap}
+@media print{body::after{position:fixed;opacity:.06;color:#000}}
+/* ===== animated sign in / register ===== */
+body.authp{background:var(--bg)}body.authp main{max-width:none;padding:0}
+.authx{min-height:100vh;min-height:100dvh;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(380px,.9fr)}
+.ax-art{position:relative;overflow:hidden;color:#fff;padding:40px 48px;display:flex;flex-direction:column;background:linear-gradient(150deg,#0f2b6b 0%,#1d4ed8 45%,#0f766e 100%)}
+.orb{position:absolute;border-radius:50%;filter:blur(40px);opacity:.55;animation:orbf 16s ease-in-out infinite}
+.o1{width:380px;height:380px;background:#38bdf8;left:-120px;top:-100px}.o2{width:320px;height:320px;background:#2dd4bf;right:-80px;bottom:60px;animation-delay:-5s}.o3{width:260px;height:260px;background:#818cf8;left:40%;top:40%;animation-delay:-10s;opacity:.35}
+@keyframes orbf{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,30px) scale(1.08)}66%{transform:translate(-30px,20px) scale(.95)}}
+.ax-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.14) 1px,transparent 1px);background-size:22px 22px;mask-image:linear-gradient(180deg,#000 0%,transparent 85%);-webkit-mask-image:linear-gradient(180deg,#000 0%,transparent 85%)}
+.ax-top{position:relative;display:flex;align-items:center;gap:12px;font:700 19px 'Inter',system-ui,sans-serif;letter-spacing:-.01em}
+.mark{width:var(--mk);height:var(--mk);stroke:none;flex:none;filter:drop-shadow(0 6px 14px rgba(0,0,0,.25))}
+.mark .mk-ecg{stroke-dasharray:40;stroke-dashoffset:40;animation:mkecg 2.4s ease-in-out infinite}
+@keyframes mkecg{0%{stroke-dashoffset:40}45%,70%{stroke-dashoffset:0}100%{stroke-dashoffset:-40}}
+.ax-copy{position:relative;margin-top:auto;max-width:520px;animation:rise .8s ease-out both}
+.ax-copy h2{color:#fff;font-size:clamp(28px,3.2vw,40px);line-height:1.12;letter-spacing:-.03em;margin:0 0 12px}.ax-copy p{margin:0;font-size:16px;opacity:.88;max-width:440px}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.ax-vitals{position:relative;display:grid;grid-template-columns:1.3fr 1fr;gap:12px;margin:30px 0 22px;max-width:560px}
+.vit{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:18px;padding:14px 16px;animation:rise .8s ease-out both,floaty 7s ease-in-out infinite}
+.vit .vl{display:flex;align-items:center;gap:6px;font-size:12.5px;opacity:.85}.vit .vl svg{width:15px;height:15px}
+.vit b{display:block;font-size:26px;letter-spacing:-.02em;margin-top:2px}.vit small{font-size:13px;opacity:.8;font-weight:500}
+.v3 b{font-size:20px}.v1{grid-row:span 2;animation-delay:.1s,0s}.v2{animation-delay:.25s,-2s}.v3{display:flex;gap:12px;align-items:center;animation-delay:.4s,-4s}
+@keyframes floaty{0%,100%{translate:0 0}50%{translate:0 -6px}}
+.v1 .ecg{width:100%;height:64px;margin-top:10px;fill:none;stroke:#5eead4;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.v1 .ecg path{stroke-dasharray:420;stroke-dashoffset:420;animation:ecgd 2.6s linear infinite;filter:drop-shadow(0 0 6px rgba(94,234,212,.8))}
+@keyframes ecgd{to{stroke-dashoffset:0}}
+.okc{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;color:#a7f3d0;margin-top:2px}.okc svg{width:14px;height:14px}
+.vs{display:block;font-size:12.5px;opacity:.8}
+.ring{position:relative;width:54px;height:54px;flex:none}.ring svg{width:54px;height:54px;transform:rotate(-90deg);fill:none;stroke-width:3.2}.ring .rb{stroke:rgba(255,255,255,.2)}.ring .rf{stroke:#5eead4;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;animation:ringf 2.2s .5s ease-out forwards}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:16px!important;margin:0!important}
+@keyframes ringf{to{stroke-dashoffset:20}}
+.ax-ecgline{position:absolute;left:0;right:0;bottom:70px;height:110px;opacity:.35;pointer-events:none;z-index:0}.ax-top,.ax-copy,.ax-vitals,.ax-feat{z-index:1}
+.ax-ecgline svg{width:100%;height:100%;fill:none;stroke:#fff;stroke-width:2;stroke-linejoin:round}
+.ax-ecgline path{stroke-dasharray:1600;stroke-dashoffset:1600;animation:ecgl 5s linear infinite}
+@keyframes ecgl{to{stroke-dashoffset:-1600}}
+.ax-feat{position:relative;display:flex;align-items:center;gap:10px;font-size:14.5px;opacity:.95}
+.fdot{width:8px;height:8px;border-radius:50%;background:#5eead4;box-shadow:0 0 0 0 rgba(94,234,212,.7);animation:fping 2s infinite;flex:none}@keyframes fping{70%{box-shadow:0 0 0 10px rgba(94,234,212,0)}100%{box-shadow:0 0 0 0 rgba(94,234,212,0)}}
+.fl2{position:relative;height:22px;flex:1;overflow:hidden}.fl2 span{position:absolute;left:0;top:0;white-space:nowrap;opacity:0;animation:wlf 20s infinite}
+.fl2 span:nth-child(2){animation-delay:4s}.fl2 span:nth-child(3){animation-delay:8s}.fl2 span:nth-child(4){animation-delay:12s}.fl2 span:nth-child(5){animation-delay:16s}
+.ax-form{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;position:relative}
+.axcard{width:100%;max-width:430px;animation:rise .6s ease-out both}
+.axhead{display:flex;align-items:center;gap:12px;margin-bottom:26px}.axhead b{display:block;font-size:16px}.axhead span{display:block;font-size:13px;color:var(--mu)}
+.axh{font-size:28px;letter-spacing:-.03em;margin:0 0 6px;text-align:left}.axs{color:var(--mu);margin:0 0 18px;font-size:15px}
+.axseg{position:relative;display:grid;grid-template-columns:1fr 1fr;background:var(--in);border:1px solid var(--bd);border-radius:13px;padding:4px;margin-bottom:6px}
+.axseg button{position:relative;z-index:1;background:none;border:0;padding:10px;font:600 14.5px 'Inter',system-ui,sans-serif;color:var(--mu);cursor:pointer;border-radius:10px;transition:color .2s}.axseg button.on{color:var(--tx)}
+.axseg i{position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);background:var(--card);border-radius:10px;box-shadow:var(--sh);transition:transform .25s ease}
+.ax-form .f{padding:0 12px;border-radius:12px;background:var(--card)}.ax-form .f input{padding:13px 0}
+.ax-form .btn.w{padding:14px;border-radius:12px;background:linear-gradient(120deg,var(--ac),#0d9488);font-size:15.5px}
+.axgo.ld{position:relative;color:transparent!important}.axgo.ld::after{content:'';position:absolute;width:18px;height:18px;border:2px solid #fff;border-right-color:transparent;border-radius:50%;animation:spn .7s linear infinite}
+.ax-form .gbtn{border-radius:12px;padding:13px}
+.axfoot{display:flex;align-items:center;gap:6px;color:var(--mu);font-size:12.5px;margin:22px 0 0}.axfoot svg{width:14px;height:14px}
+.authp .err{text-align:left}
+@media(max-width:900px){
+ .authx{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+ .ax-art{padding:22px 20px 52px;min-height:230px}
+ .ax-vitals,.ax-feat{display:none}
+ .ax-copy{margin-top:28px}.ax-copy h2{font-size:24px;margin-bottom:6px}.ax-copy p{font-size:14px}
+ .ax-ecgline{bottom:6px;height:70px;opacity:.3}
+ .ax-form{padding:0 16px 30px;justify-content:flex-start}
+ .axcard{margin-top:-28px;background:var(--card);border:1px solid var(--bd);border-radius:22px;padding:22px 18px;box-shadow:var(--sh2)}
+ .axhead{display:none}
+}
+@media(prefers-reduced-motion:reduce){.orb,.vit,.mark .mk-ecg,.v1 .ecg path,.ax-ecgline path,.fdot,.ring .rf,.ax-copy,.axcard,.md,.ov{animation:none!important}.v1 .ecg path,.ax-ecgline path,.mark .mk-ecg{stroke-dashoffset:0}.ring .rf{stroke-dashoffset:20}.fl2 span{animation:none}.fl2 span:first-child{opacity:1}}
 </style></head><body><main id="app"></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
@@ -221,14 +426,21 @@ plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
 x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
 file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/>',
 act:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
-sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',dl:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',phoneoff:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/><path d="m2 2 20 20"/>',video:'<path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/>',mic:'<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/>',menu:'<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>',home:'<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>'};
+sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',dl:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',phoneoff:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/><path d="m2 2 20 20"/>',video:'<path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/>',mic:'<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/>',menu:'<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>',home:'<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+star:'<path d="M11.5 2.3a.6.6 0 0 1 1 0l2.6 5.4 5.9.9a.6.6 0 0 1 .3 1l-4.3 4.2 1 5.9a.6.6 0 0 1-.8.6L12 17.5l-5.3 2.8a.6.6 0 0 1-.8-.6l1-5.9-4.3-4.2a.6.6 0 0 1 .3-1l5.9-.9Z"/>',
+box:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+pill:'<path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/>',
+play:'<path d="M6 3l14 9-14 9V3z"/>',pause:'<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
+stop:'<rect x="5" y="5" width="14" height="14" rx="2"/>',trash:'<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',grid:'<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
+trend:'<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',cart:'<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>'};
 const ic=n=>`<svg viewBox="0 0 24 24">${I[n]}</svg>`;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $=id=>document.getElementById(id),app=$('app');
 const tIc=()=>ic(document.documentElement.dataset.theme==='light'?'moon':'sun');
 const tLb=()=>document.documentElement.dataset.theme==='light'?'Night mode':'Light mode';
 function setTheme(t){document.documentElement.dataset.theme=t;
- const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#f5f6f8':'#0d1117';
+ const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#f3f6fb':'#0b1220';
  document.querySelectorAll('[data-tb]').forEach(b=>{b.innerHTML=tIc()+(b.dataset.tb?'<span>'+tLb()+'</span>':'')})}
 const MODES=['light','dark','system'],sysTheme=()=>matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
 let themeMode='system';try{themeMode=localStorage.getItem('themeMode')||localStorage.getItem('theme')||'system'}catch(e){}if(!MODES.includes(themeMode))themeMode='system';
@@ -252,8 +464,8 @@ const tri=w=>w<=13?'1st trimester':w<=27?'2nd trimester':'3rd trimester';
 const sched=w=>w<28?'every 4 weeks':w<36?'every 2 weeks':'every week';
 const tip=w=>w<=13?'Take folic acid, rest, and book your first antenatal visit. Avoid alcohol and unprescribed medicine.':w<=27?'Keep up your clinic visits, eat iron-rich food and sleep under a treated net.':'Pack your hospital bag and count baby movements daily. Know the warning signs below.';
 let me=null,chans=[],mode='login',role='patient';
-const shell=id=>{document.body.classList.add('in');app.innerHTML=`<div class="lay"><aside class="side" id="side"></aside><div class="scrim" onclick="document.body.classList.remove('nav')"></div><div class="mainc"><div class="mob"><button class="ib" onclick="document.body.classList.add('nav')">${ic('menu')}</button><img class="logo" src="/logo.png" alt=""><span class="brand">Maternity Help</span><span class="sp"></span><button class="ib bell" title="Notifications" onclick="nav('${me.role==='doctor'?'overview':'notes'}')">${ic('bell')}<span class="bd" id="bellc" style="display:none"></span></button></div><div id="${id}"></div></div></div>`};
-const GROUPS={care:{label:'Care',icon:'users',keys:['queue','ambulance','patients','pregdash','beds','medalerts','reports']},sched_grp:{label:'Schedule',icon:'cal',keys:['bookings','schedule']},admin_grp:{label:'Administration',icon:'shield',keys:['staff','assign','accounting','audit']},preg:{label:'My pregnancy',icon:'heart',keys:['plan','care','steps']},appts_grp:{label:'Appointments',icon:'cal',keys:['book','appts']}};
+const shell=id=>{document.body.classList.remove('authp');document.body.classList.add('in');app.innerHTML=`<div class="lay"><aside class="side" id="side"></aside><div class="scrim" onclick="document.body.classList.remove('nav')"></div><div class="mainc"><div class="mob"><button class="ib" onclick="document.body.classList.add('nav')">${ic('menu')}</button><img class="logo" src="/logo.png" alt=""><span class="brand">Maternity Help</span><span class="sp"></span><button class="ib bell" title="Notifications" onclick="nav('${me.role==='doctor'?'overview':'notes'}')">${ic('bell')}<span class="bd" id="bellc" style="display:none"></span></button></div><div id="${id}"></div></div></div>`};
+const GROUPS={care:{label:'Care',icon:'users',keys:['queue','ambulance','patients','pregdash','beds','inventory','medalerts','reports']},sched_grp:{label:'Schedule',icon:'cal',keys:['bookings','schedule']},admin_grp:{label:'Administration',icon:'shield',keys:['staff','assign','rvadmin','accounting']},preg:{label:'My pregnancy',icon:'heart',keys:['plan','care','steps']},appts_grp:{label:'Appointments',icon:'cal',keys:['book','appts']}};
 const groupOf={};Object.entries(GROUPS).forEach(([g,c])=>c.keys.forEach(k=>groupOf[k]=g));
 let navOpen={};
 function toggleGroup(g){navOpen[g]=!navOpen[g];me.role==='doctor'?drawDoc():drawPt()}
@@ -290,23 +502,36 @@ function toast(msg,fn){
  document.body.appendChild(t);try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}arm()}
 function setBell(n){const b=$('bellc');if(b){b.textContent=n>9?'9+':n;b.style.display=n?'block':'none'}document.title=(n?'('+n+') ':'')+'Maternity Help'}
 let ptLoaded=false,lastAl=-1,lastQ={},qInit=false;
-function nav(k){document.body.classList.remove('nav');if(me.role==='doctor'){if(k!=='accounting'){ACC.ok=false;ACC.asked=false}view=k;sel=null;ad.sel=null;ad.data=null;if(k==='audit')loadAudit();if(k==='pregdash')loadPregDash();if(k==='chat')chatPt=null;if(k==='schedule'){scheduleModal(me.id);view='overview';drawDoc();return}pFilter=null;drawDoc()}else{ptab=k;bk={};conf='';if(k==='book')PD.slots=undefined;drawPt()}}
-async function logout(){chans.forEach(c=>sb.removeChannel(c));chans=[];me=null;sel=null;view='overview';ptab='home';ptLoaded=false;lastAl=-1;lastQ={};qInit=false;CH.msgs=[];GR.g=null;GR.msgs=[];chatPt=null;if(CALL)endCall('me');await sb.auth.signOut({scope:'local'});authView()}
+function nav(k){document.body.classList.remove('nav');recCancel();if(k==='settings'&&isAdmin()&&!SETOK){setGate(()=>{SETOK=true;nav('settings')});return}if(k!=='settings')SETOK=false;if(me.role==='doctor'){if(k!=='accounting'){ACC.ok=false;ACC.asked=false}view=k;sel=null;ad.sel=null;ad.data=null;if(k==='inventory')loadInv();if(k==='rvadmin')loadReviews();if(k==='pregdash')loadPregDash();if(k==='chat')chatPt=null;if(k==='schedule'){scheduleModal(me.id);view='overview';drawDoc();return}pFilter=null;drawDoc()}else{ptab=k;bk={};conf='';if(k==='book')PD.slots=undefined;if(k==='reviews')loadReviews();drawPt()}}
+async function logout(){SETOK=false;recCancel();if(VNA){VNA.pause();VNA=null}RV={list:null,f:'all',draft:null};INV.mov=null;chans.forEach(c=>sb.removeChannel(c));chans=[];me=null;sel=null;view='overview';ptab='home';ptLoaded=false;lastAl=-1;lastQ={};qInit=false;CH.msgs=[];GR.g=null;GR.msgs=[];chatPt=null;if(CALL)endCall('me');await sb.auth.signOut({scope:'local'});authView()}
 const BF=`<div class="wlc"><b>Welcome to Maternity Help</b><div class="wl"><span>Book antenatal visits and see your fees</span><span>Message your care team any time</span><span>Track your care plan and daily steps</span><span>Get updates from the clinic in the group chat</span><span>Help is one tap away when you need it</span></div></div>`;
 const GLOGO='<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-2.9-.8-4.7s.3-3.3.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.9 2.3-8.5 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>';
+const MARK=sz=>`<svg class="mark" viewBox="0 0 48 48" style="--mk:${sz}px" aria-hidden="true"><defs><linearGradient id="mkg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2f6fe4"/><stop offset="1" stop-color="#14b8a6"/></linearGradient></defs><rect width="48" height="48" rx="14" fill="url(#mkg)"/><path d="M24 36.5s-11.5-6.9-11.5-14.8A6.6 6.6 0 0 1 24 17.6a6.6 6.6 0 0 1 11.5 4.1c0 7.9-11.5 14.8-11.5 14.8Z" fill="#fff"/><path class="mk-ecg" d="M14.5 25.5h5.5l2-4.2 3.2 8.4 2.1-4.2h6.2" fill="none" stroke="#14b8a6" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const AX_FEAT=['Book antenatal visits in 30-minute slots','Message your care team, with voice notes','Track your care plan, results and medication','Beds, medicines and billing in one place','Help is one tap away when you need it'];
+const AX_ART=()=>`<section class="ax-art" aria-hidden="true"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div><div class="ax-dots"></div>
+<div class="ax-top">${MARK(42)}<span>Maternity Help</span></div>
+<div class="ax-copy"><h2>Care for mother and baby, every single week.</h2><p>Appointments, beds, medicines, billing and messages in one secure hospital system.</p></div>
+<div class="ax-vitals"><div class="vit v1"><span class="vl">${ic('heart')} Fetal heart rate</span><b><span id="ax-fhr">142</span> <small>bpm</small></b><svg class="ecg" viewBox="0 0 300 60" preserveAspectRatio="none"><path d="M0 32 H70 L80 32 L88 12 L98 52 L106 22 L114 32 H180 L190 32 L198 10 L208 54 L216 20 L224 32 H300"/></svg></div>
+<div class="vit v2"><span class="vl">${ic('act')} Blood pressure</span><b>118/76 <small>mmHg</small></b><span class="okc">${ic('check')} Normal range</span></div>
+<div class="vit v3"><div class="ring"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9" class="rb"/><circle cx="18" cy="18" r="15.9" class="rf"/></svg><b>32</b></div><div><span class="vl">Pregnancy</span><b>Week 32</b><span class="vs">Third trimester</span></div></div></div>
+<div class="ax-ecgline"><svg viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0 60 H210 l18 0 l12 -42 l16 84 l14 -58 l10 16 H530 l18 0 l12 -42 l16 84 l14 -58 l10 16 H850 l18 0 l12 -42 l16 84 l14 -58 l10 16 H1200"/></svg></div>
+<div class="ax-feat"><span class="fdot"></span><div class="fl2">${AX_FEAT.map(t=>`<span>${t}</span>`).join('')}</div></div></section>`;
+const authFrame=inner=>`<div class="authx">${AX_ART()}<section class="ax-form"><div class="axcard"><div class="axhead">${MARK(40)}<div style="flex:1"><b>Maternity Help</b><span>Hospital management system</span></div><button class="ib" data-tb="" title="Change theme" onclick="toggleTheme()">${tIc()}</button></div>${inner}</div><p class="axfoot">${ic('shield')} Secure clinic system · Your data is private</p></section></div>`;
+setInterval(()=>{const e=document.getElementById('ax-fhr');if(e&&!document.hidden)e.textContent=String(136+Math.round(Math.random()*12))},1400);
 let RECOV=/type=recovery/.test(location.hash),HASHERR=(()=>{const m=location.hash.match(/error_description=([^&]+)/);return m?decodeURIComponent(m[1].replace(/\+/g,' ')):''})();
 function authView(msg=''){
  document.querySelectorAll('.toast').forEach(t=>t.remove());document.body.classList.remove('in','nav','sos');sosStop();{const f=document.getElementById('sosfab');if(f)f.remove()}document.title='Maternity Help';
  const reg=mode==='reg',pat=true;
- app.innerHTML=`<div class="card auth"><div style="text-align:right"><button class="ib" data-tb="" title="Change theme" onclick="toggleTheme()">${tIc()}</button></div><div style="display:flex;justify-content:center"><img class="logo big" src="/logo.png" alt="Maternity Help"></div>${BF}<h1>${reg?'Register':'Sign in'}</h1><p class="tag">Care for you and your baby, every week</p><div class="mu">${reg?'Create your account':'Use your Maternity Help account'}</div>
- <div class="seg"><button class="btn ${!reg?'on':''}" onclick="mode='login';authView()">Log in</button><button class="btn ${reg?'on':''}" onclick="mode='reg';authView()">Register</button></div>
+ document.body.classList.add('authp');
+ app.innerHTML=authFrame(`<h1 class="axh">${reg?'Create your account':'Welcome back'}</h1><p class="axs">${reg?'Register as a patient to book visits and message your care team.':'Sign in to continue to Maternity Help.'}</p>
+ <div class="axseg" role="tablist"><button role="tab" aria-selected="${!reg}" class="${!reg?'on':''}" onclick="mode='login';authView()">Sign in</button><button role="tab" aria-selected="${reg}" class="${reg?'on':''}" onclick="mode='reg';authView()">Register</button><i style="transform:translateX(${reg?'100%':'0'})"></i></div>
  ${reg?`<div class="mu" style="margin-bottom:6px">Sign-up is for patients. Doctors, midwives and nurses get their accounts from the hospital administrator.</div>
  <label class="l">Full name</label><div class="f">${ic('user')}<input id="fn" autocomplete="name"></div>
  ${pat?`<label class="l">Phone</label><div class="f">${ic('msg')}<input id="ph" type="tel" autocomplete="tel"></div><label class="l">Weeks pregnant now (1-40)</label><div class="f">${ic('cal')}<input id="wks" type="number" min="1" max="40"></div>`:''}`:''}
  <label class="l">Email</label><div class="f">${ic('mail')}<input id="em" type="email" autocomplete="email"></div>
- <label class="l">Password</label><div class="f">${ic('lock')}<input id="pw" type="password" autocomplete="${reg?'new-password':'current-password'}"><button class="ib" type="button" onclick="const i=$('pw');i.type=i.type==='password'?'text':'password'">${ic('eye')}</button></div>
+ <label class="l">Password</label><div class="f">${ic('lock')}<input id="pw" type="password" autocomplete="${reg?'new-password':'current-password'}" onkeydown="if(event.key==='Enter')submitAuth()"><button class="ib" type="button" onclick="const i=$('pw');i.type=i.type==='password'?'text':'password'">${ic('eye')}</button></div>
  ${reg?'':`<div style="text-align:right;margin:2px 0 6px"><button class="lnk" type="button" onclick="forgotView()">Forgot password?</button></div>`}
- <button class="btn w" onclick="submitAuth()">${ic('login')} ${reg?'Create account':'Sign in'}</button><div class="orl">or</div><button class="gbtn" type="button" onclick="googleAuth()">${GLOGO} Continue with Google</button><p class="err" id="msg">${esc(msg)}</p><div class="mu">Maternity Help \u00b7 Clinic system</div><div style="text-align:center;margin-top:8px"><button class="btn g" data-inst style="display:none" onclick="installApp()">${ic('dl')} Install app</button></div></div>`;showInst()}
+ <button class="btn w axgo" id="axgo" onclick="submitAuth()">${ic('login')} ${reg?'Create account':'Sign in'}</button><div class="orl">or</div><button class="gbtn" type="button" onclick="googleAuth()">${GLOGO} Continue with Google</button><p class="err" id="msg" role="alert">${esc(msg)}</p><div style="text-align:center;margin-top:4px"><button class="btn g" data-inst style="display:none" onclick="installApp()">${ic('dl')} Install app</button></div>`);showInst();setTimeout(()=>{const i=$(reg?'fn':'em');if(i&&matchMedia('(min-width:900px)').matches)i.focus()},80)}
 
 async function googleAuth(){
  const m=$('msg');if(m)m.textContent='';
@@ -316,7 +541,8 @@ async function googleAuth(){
  if(error&&m)m.textContent=error.message}
 function authShell(title,sub,inner,msg,ok){
  document.body.classList.remove('in','nav','sos');
- app.innerHTML=`<div class="card auth"><div style="text-align:right"><button class="ib" data-tb="" title="Change theme" onclick="toggleTheme()">${tIc()}</button></div><div style="display:flex;justify-content:center"><img class="logo big" src="/logo.png" alt="Maternity Help"></div>${BF}<h1>${title}</h1><div class="mu">${sub}</div>${inner}<p class="${ok?'okm':'err'}" id="msg">${esc(msg||'')}</p></div>`}
+ document.body.classList.add('authp');
+ app.innerHTML=authFrame(`<h1 class="axh">${title}</h1><p class="axs">${sub}</p>${inner}<p class="${ok?'okm':'err'}" id="msg" role="alert">${esc(msg||'')}</p>`)}
 function forgotView(msg,ok){
  authShell('Forgot password','Enter your email and we will send you a link to choose a new password.',`<label class="l">Email</label><div class="f">${ic('mail')}<input id="em" type="email" autocomplete="email" onkeydown="if(event.key==='Enter')sendReset()"></div><button class="btn w" id="rsb" onclick="sendReset()">${ic('mail')} Send reset link</button><div style="text-align:center;margin-top:10px"><button class="lnk" onclick="mode='login';authView()">Back to sign in</button></div>`,msg,ok)}
 async function sendReset(){
@@ -333,7 +559,8 @@ async function saveNewPw(){
  btn.disabled=true;const {error}=await sb.auth.updateUser({password:a});btn.disabled=false;
  if(error)return m.textContent=/same|different/i.test(error.message)?'Choose a password you have not used before.':error.message;
  RECOV=false;history.replaceState(null,'',location.pathname);await sb.auth.signOut();mode='login';authView('Password changed. Log in with your new password.')}
-async function submitAuth(){
+async function submitAuth(){const b=$('axgo');if(b&&b.disabled)return;if(b){b.disabled=true;b.classList.add('ld')}try{await submitAuth2()}finally{const b2=$('axgo');if(b2){b2.disabled=false;b2.classList.remove('ld')}}}
+async function submitAuth2(){
  const em=$('em').value.trim().toLowerCase(),pw=$('pw').value,m=$('msg');m.textContent='';
  if(!em||pw.length<8)return m.textContent='Enter your email and a password of at least 8 characters.';
  if(mode==='reg'){
@@ -384,7 +611,7 @@ const friendly=e=>{const m=e.message||String(e);if(/appt_slot/.test(m))return 'T
 const fld=(l,n,t='text',v='',x='')=>`<label class="l">${l}</label><input name="${n}" type="${t}" value="${esc(v)}" ${x}>`;
 /* ---------- patient ---------- */
 let ptab='home',PD={ap:[],nt:[],svc:[],staff:[],al:[],plan:[],amb:[],steps:[],team:[]},bk={},conf='';
-const PITEMS=[['home','Home','home'],['plan','Care plan','file'],['care','Results and medication','file'],['steps','Daily steps','act'],['book','Book appointment','cal'],['appts','Appointments','clock'],['fees','Fees','file'],['chat','Messages','msg'],['group','Group chat','users'],['notes','Notifications','bell']];
+const PITEMS=[['home','Home','home'],['plan','Care plan','file'],['care','Results and medication','file'],['steps','Daily steps','act'],['book','Book appointment','cal'],['appts','Appointments','clock'],['fees','Fees','file'],['chat','Messages','msg'],['group','Group chat','users'],['reviews','Reviews','star'],['notes','Notifications','bell']];
 const KINDS=[['message','Hospital message'],['test_result','New test result'],['medication','Medication reminder'],['follow_up','Follow-up appointment'],['checkup','Antenatal checkup'],['lab','Laboratory appointment'],['ultrasound','Ultrasound appointment'],['doctor_appointment','Doctor appointment'],['missed','Missed appointment']];
 const ft=t=>t?String(t).slice(0,5):'';
 const overdue=a=>a.status==='scheduled'&&new Date(a.appt_date+'T'+(a.appt_time?String(a.appt_time).slice(0,5):'23:59')).getTime()<Date.now();
@@ -419,9 +646,9 @@ function drawPt(){
  $('side').innerHTML=navHtml(PITEMS,ptab,{notes:un,chat:chatUn()});setBell(un);showInst();
  if(ptab==='chat'&&$('chat')){paintChat();return}
  if(ptab==='steps'&&document.activeElement&&document.activeElement.tagName==='INPUT'&&$('pv').contains(document.activeElement))return;
- $('pv').innerHTML={home:ptHome,care:ptCare,plan:ptPlan,steps:ptSteps,book:ptBook,appts:ptAppts,chat:()=>threadView(me.id),group:groupView,notes:ptNotes,fees:ptFees,settings:settingsView}[ptab]();
+ $('pv').innerHTML={home:ptHome,care:ptCare,plan:ptPlan,steps:ptSteps,book:ptBook,appts:ptAppts,chat:()=>threadView(me.id),group:groupView,notes:ptNotes,fees:ptFees,reviews:ptReviews,settings:settingsView}[ptab]();
  if(ptab==='chat')afterChat();
- ambSync();checkReminders()}
+ ambSync();checkReminders();if(REC)setTimeout(recBar,0)}
 function reminders(){
  if(!ST.notif.appt)return [];
  const t=today(),tm=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10),r=[];
@@ -498,47 +725,56 @@ const PAY_OPT=[['cash','Cash at clinic'],['ecocash','EcoCash'],['innbucks','InnB
 const FEE_KEYS={'Booking fee':'booking','Delivery fee':'delivery','Unbooked':'unbooked','Suture':'suture','Bedding fee':'bedding','ANC':'anc','Gyno consultation':'gyno'};
 const feeTotal=()=>FEES.flatMap(g=>g.items).filter(i=>(bk.fees||[]).includes(FEE_KEYS[i[0]])).reduce((n,i)=>n+i[1],0);
 function togFee(k){bk.fees=bk.fees||[];const i=bk.fees.indexOf(k);i<0?bk.fees.push(k):bk.fees.splice(i,1);drawPt()}
-const BOOK_REASONS=['Routine antenatal checkup','First antenatal booking','Follow-up visit','Blood pressure check','Ultrasound scan','Laboratory tests or results','Baby is moving less','Headache, swelling or blurred vision','Pain, bleeding or discharge','Medication or prescription review','Postnatal checkup','Family planning','Other (please describe)'];
 async function loadSlots(){
- const t=today(),to=new Date(Date.now()+60*864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10),from=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
- const {data,error}=await sb.rpc('open_slots',{p_from:from,p_to:to,p_staff:null});
- PD.slots=error?[]:(data||[]);PD.slotErr=!!error;if(ptab==='book')drawPt()}
+ const from=addD(today(),1),to=addD(today(),60);
+ const [s,a]=await Promise.all([sb.rpc('open_slots',{p_from:from,p_to:to,p_staff:null}),sb.rpc('public_availability',{p_from:from,p_to:to})]);
+ PD.slots=s.error?[]:(s.data||[]);PD.slotErr=!!s.error;PD.avail=a.error?[]:(a.data||[]);if(ptab==='book')drawPt()}
 const dayLabel=d=>new Date(d+'T00:00:00').toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
+const docName=id=>{const x=PD.staff.find(y=>y.id===id);return x?x.staff_title+' '+x.full_name:'Doctor'};
+function bkCount(el){const c=$('rsn-n');if(c)c.textContent=el.value.length+' / 2000'}
+function bkPick(d,t){bk.date=d;bk.time=t;bk.auto=false;drawPt()}
+function availCard(){
+ const av=(PD.avail||[]).filter(r=>!bk.staff||r.staff_id===bk.staff),days=Array.from(new Set(av.map(r=>r.avail_date))).slice(0,7);
+ if(!days.length)return '';
+ return `<div class="card"><h3>${ic('cal')} Doctor availability</h3><div class="mu" style="margin-bottom:8px">When each doctor sees patients. Visits are 30 minutes, so each doctor sees at most 2 patients an hour.</div><div class="avl">${days.map(d=>`<div class="avd"><b>${dayLabel(d)}</b>${av.filter(r=>r.avail_date===d).map(r=>`<div class="avr"><span>${esc(docName(r.staff_id))}</span><span class="mu">${ft(r.start_time)} to ${ft(r.end_time)}</span><span class="pill ${r.free_slots?'ok':''}">${r.free_slots?r.free_slots+' free':'Full'}</span></div>`).join('')}</div>`).join('')}</div></div>`}
 function ptBook(){
  if(PD.slots===undefined){PD.slots=null;loadSlots()}
  const o=(arr,v,f)=>arr.map(x=>`<option value="${x.id}"${v===x.id?' selected':''}>${f(x)}</option>`).join('');
+ const head=`<h2 style="margin-top:0">${bk.id?'Reschedule your appointment':'Book an appointment'}</h2>`;
+ if(PD.slots===null)return head+`<div class="card"><div class="mu"><span class="spin"></span> Loading available times...</div></div>`;
+ if(PD.slotErr)return head+`<div class="card"><div class="fl">${ic('alert')} Available times could not be loaded. Check your connection and try again.</div><button class="btn w" onclick="PD.slots=undefined;drawPt()">Try again</button></div>`;
  const all=PD.slots||[],docs=PD.staff.filter(x=>all.some(y=>y.staff_id===x.id)),sl=bk.staff?all.filter(x=>x.staff_id===bk.staff):all;
+ if(!all.length)return head+`<div class="card"><div class="mu">No appointment times are free right now. The clinic publishes doctors’ hours in advance, so please check again soon. If you are unwell, use the emergency button on the home page.</div></div>`+availCard();
+ if(bk.staff&&!sl.length){bk.staff='';return ptBook()}
  const dates=Array.from(new Set(sl.map(x=>x.slot_date)));
  if(bk.date&&!dates.includes(bk.date)){bk.date='';bk.time=''}
+ const next=sl[0];
+ if(!bk.date){bk.date=next.slot_date;bk.time=ft(next.slot_time);bk.auto=true}
  const times=Array.from(new Set(sl.filter(x=>x.slot_date===bk.date).map(x=>ft(x.slot_time))));
  if(bk.time&&!times.includes(bk.time))bk.time='';
- const head=`<h3>${bk.id?'Reschedule request':'Request an appointment'}</h3>`;
- if(PD.slots===null)return `<div class="card">${head}<div class="mu">Loading available times...</div></div>`;
- if(PD.slotErr)return `<div class="card">${head}<div class="fl">${ic('alert')} Available times could not be loaded. Check your connection and try again.</div><button class="btn w" style="margin-top:10px" onclick="PD.slots=undefined;drawPt()">Try again</button></div>`;
- if(!all.length)return `<div class="card">${head}<div class="mu">No appointment times are available right now. The clinic publishes times in advance, so please check again soon. If you are unwell, use the emergency button on the home page.</div></div>`;
- const rs=bk.rsn||'',other=rs==='Other (please describe)';
- return `<div class="card">${head}<div class="mu" style="margin-bottom:6px">Pick a time the doctor is available. Each visit is 30 minutes. The administrator will confirm your request.</div>
- <label class="l">Department / service</label><select onchange="bk.svc=this.value"><option value="">Select...</option>${o(PD.svc,bk.svc,x=>esc(x.name))}</select>
- <label class="l">Doctor / midwife</label><select onchange="bk.staff=this.value;bk.date='';bk.time='';drawPt()"><option value="">Any available</option>${o(docs,bk.staff,x=>esc(x.staff_title+' '+x.full_name))}</select>
- <label class="l">Available date</label><select onchange="bk.date=this.value;bk.time='';drawPt()"><option value="">Select a date...</option>${dates.map(d=>`<option value="${d}"${bk.date===d?' selected':''}>${dayLabel(d)} \u00b7 ${new Set(sl.filter(x=>x.slot_date===d).map(x=>ft(x.slot_time))).size} times free</option>`).join('')}</select>
- ${bk.date?`<label class="l">Available times</label><div class="slots">${times.map(t=>`<button type="button" class="btn ${bk.time===t?'':'g'}" onclick="bk.time='${t}';drawPt()">${t}</button>`).join('')}</div>`:''}
- <label class="l">Reason for visit</label><select onchange="bk.rsn=this.value;drawPt()"><option value="">Select a reason...</option>${BOOK_REASONS.map(x=>`<option${rs===x?' selected':''}>${x}</option>`).join('')}</select>
- <label class="l">${other?'Please describe':'Anything else the doctor should know (optional)'}</label><textarea rows="2" maxlength="400" oninput="bk.rtext=this.value">${esc(bk.rtext||'')}</textarea>
- <button class="btn w" style="margin-top:12px" onclick="confirmBook()">${ic('send')} ${bk.id?'Send new request':'Send request'}</button></div>`}
-async function confirmBook(){
+ const pick=sl.find(x=>x.slot_date===bk.date&&ft(x.slot_time)===bk.time);
+ return head+`<div class="mu" style="margin:-4px 0 12px">Each visit is 30 minutes. The next free time is picked for you, and you can change it. The administrator confirms your request.</div>
+ <div class="card"><label class="l">Department / service</label><select onchange="bk.svc=this.value"><option value="">Select a service...</option>${o(PD.svc,bk.svc,x=>esc(x.name))}</select>
+ <label class="l">Doctor / midwife</label><select onchange="bk.staff=this.value;bk.date='';bk.time='';drawPt()"><option value="">Any available doctor</option>${o(docs,bk.staff,x=>esc(x.staff_title+' '+x.full_name))}</select>
+ <div class="nxt"><div class="nxi">${ic('clock')}</div><div style="flex:1;min-width:0"><div class="mu">${bk.auto?'Next available time, selected for you':'Your selected time'}</div><b>${pick?dayLabel(pick.slot_date)+' at '+ft(pick.slot_time):'Choose a time below'}</b>${pick?`<div class="mu">${esc(docName(pick.staff_id))} · 30 minutes</div>`:''}</div>${bk.auto||!pick||(pick.slot_date===next.slot_date&&ft(pick.slot_time)===ft(next.slot_time))?'':`<button class="btn g" onclick="bkPick('${next.slot_date}','${ft(next.slot_time)}')">Use next free</button>`}</div>
+ <label class="l">Date</label><div class="dchips">${dates.slice(0,21).map(d=>{const n=new Set(sl.filter(x=>x.slot_date===d).map(x=>ft(x.slot_time))).size;return `<button type="button" class="dchip ${bk.date===d?'on':''}" onclick="bk.date='${d}';bk.time='';bk.auto=false;drawPt()"><b>${new Date(d+'T00:00:00').toLocaleDateString(undefined,{weekday:'short'})}</b><span>${new Date(d+'T00:00:00').getDate()} ${new Date(d+'T00:00:00').toLocaleDateString(undefined,{month:'short'})}</span><i>${n} free</i></button>`}).join('')}</div>
+ <label class="l">Time on ${dayLabel(bk.date)}</label><div class="slots">${times.map(t=>`<button type="button" class="btn ${bk.time===t?'':'g'}" onclick="bkPick('${bk.date}','${t}')">${t}</button>`).join('')}</div>
+ <label class="l" for="rsn">Reason for visit</label><textarea id="rsn" class="bigta" maxlength="2000" placeholder="Describe why you need to be seen. Include your symptoms, when they started, anything that makes them better or worse, medicines you are taking and any questions for the doctor." oninput="bk.reason=this.value;bkCount(this)">${esc(bk.reason||'')}</textarea><div class="mu" id="rsn-n" style="text-align:right">${(bk.reason||'').length} / 2000</div>
+ <button class="btn w" onclick="confirmBook(this)">${ic('send')} ${bk.id?'Send new request':'Request this appointment'}</button></div>`+availCard()}
+async function confirmBook(btn){
  if(!bk.svc)return alert('Please choose a service.');
  if(!bk.date||!bk.time)return alert('Please choose an available date and time.');
- if(!bk.rsn)return alert('Please choose a reason for the visit.');
- const other=bk.rsn==='Other (please describe)',det=(bk.rtext||'').trim();
- if(other&&!det)return alert('Please describe the reason for your visit.');
- const reason=(other?det:bk.rsn+(det?' - '+det:'')).slice(0,500);
+ const reason=(bk.reason||'').trim();
+ if(reason.length<3)return alert('Please describe the reason for your visit.');
  const pick=(PD.slots||[]).find(x=>x.slot_date===bk.date&&ft(x.slot_time)===bk.time&&(!bk.staff||x.staff_id===bk.staff));
- if(!pick){PD.slots=undefined;bk.time='';drawPt();return alert('That time is no longer available. Please choose another.')}
- const s=PD.svc.find(x=>x.id===bk.svc);
- const row={patient_id:me.id,service_id:bk.svc,staff_id:pick.staff_id,appt_date:bk.date,appt_time:bk.time+':00',kind:s.name,status:'pending',reason,admin_comment:null,decided_by:null,decided_at:null};
+ if(!pick){PD.slots=undefined;bk.date='';bk.time='';drawPt();return alert('That time is no longer available. The next free time has been picked for you.')}
+ const s=PD.svc.find(x=>x.id===bk.svc);if(!s)return alert('Please choose a service.');
+ const row={patient_id:me.id,service_id:bk.svc,staff_id:pick.staff_id,appt_date:bk.date,appt_time:bk.time+':00',kind:s.name,status:'pending',reason:reason.slice(0,2000),admin_comment:null,decided_by:null,decided_at:null};
+ if(btn)btn.disabled=true;
  const {error}=bk.id?await sb.from('appointments').update(row).eq('id',bk.id):await sb.from('appointments').insert(row);
- if(error){PD.slots=undefined;bk.time='';drawPt();return alert(friendly(error))}
- conf=(bk.id?'Reschedule request sent for ':'Request sent for ')+s.name+' on '+fd(bk.date)+' at '+bk.time+'. Waiting for the administrator to confirm.';
+ if(btn)btn.disabled=false;
+ if(error){PD.slots=undefined;bk.date='';bk.time='';drawPt();return alert(friendly(error)+' The next free time has been picked for you.')}
+ conf=(bk.id?'Reschedule request sent for ':'Request sent for ')+s.name+' on '+fd(bk.date)+' at '+bk.time+' with '+docName(pick.staff_id)+'. Waiting for the administrator to confirm.';
  bk={};PD.slots=undefined;ptab='appts';await loadPatient()}
 function ptAppts(){
  const t=today(),row=a=>{const can=(a.status==='scheduled'&&a.appt_date>t)||a.status==='pending';return `<div class="li"><div><b>${esc(svcName(a))}</b><div class="mu">${fd(a.appt_date)}${a.appt_time?' at '+ft(a.appt_time):''} \u00b7 ${esc(stfName(a))} \u00b7 ${apStat(a)}${a.bed_no&&a.status==='scheduled'?' \u00b7 Bed '+a.bed_no:''}${a.fee_usd?' \u00b7 USD '+a.fee_usd:''}</div>${a.admin_comment?`<div class="mu" style="margin-top:4px"><b>Administrator:</b> ${esc(a.admin_comment)}</div>`:''}</div>${can?`<div class="row">${a.status==='scheduled'?`<button class="btn g" onclick="resched('${a.id}')">Reschedule</button>`:''}<button class="btn g" onclick="cancelAppt('${a.id}')">Cancel</button></div>`:''}</div>`};
@@ -558,7 +794,7 @@ async function sendAlert(){
  toast((lvl==='EMERGENCY'?'Emergency':'Labour')+' alert sent. The team has been notified.');loadPatient()}
 /* ---------- doctor ---------- */
 let D={pts:[],vis:[],ap:[],al:[],notes:[],plan:[],audit:[],staff:[],svc:[],se:[],amb:[],steps:[],asg:[],ract:[],rv:[],rem:[]},sel=null,view='overview',pFilter=null,pScope=null,aUn=false;
-const DITEMS=()=>{const base=[['overview','Overview','home'],['queue','Queue','clock'],['ambulance','Ambulance','alert'],['patients','Patients','users'],['pregdash','Pregnancy monitoring','heart'],['chat','Messages','msg'],['group','Group chat','users'],['bookings','Bookings','cal'],['beds','Beds','bed'],['medalerts','Medical alerts','alert'],['reports','Reports','file'],['schedule','My schedule','cal']];return isAdmin()?[['admin','Admin dashboard','shield']].concat(base,[['staff','Staff','users'],['assign','Assignments','user'],['accounting','Accounting','file'],['audit','Audit log','shield']]):base};
+const DITEMS=()=>{const base=[['overview','Overview','home'],['queue','Queue','clock'],['ambulance','Ambulance','alert'],['patients','Patients','users'],['pregdash','Pregnancy monitoring','heart'],['chat','Messages','msg'],['group','Group chat','users'],['bookings','Bookings','cal'],['beds','Beds','bed'],['inventory','Inventory','box'],['medalerts','Medical alerts','alert'],['reports','Reports','file'],['schedule','My schedule','cal']];return isAdmin()?[['admin','Admin dashboard','shield']].concat(base,[['staff','Staff','users'],['assign','Assignments','user'],['rvadmin','Reviews','star'],['accounting','Accounting','file']]):base};
 const dsn=a=>{const s=D.svc.find(x=>x.id===a.service_id),f=D.staff.find(x=>x.id===a.staff_id);return esc((s?s.name:a.kind)+(a.appt_time?' at '+String(a.appt_time).slice(0,5):'')+(f?' with '+(f.staff_title||'Doctor')+' '+f.full_name:'')+(a.bed_no?' \u00b7 Bed '+a.bed_no:''))};
 const P=id=>D.pts.find(p=>p.id===id),lastV=id=>D.vis.find(v=>v.patient_id===id);
 const DEFTH={bp_sys:{high:140,severe_high:160},bp_dia:{high:90,severe_high:110},temp_c:{high:38,severe_high:39},pulse:{low:50,high:100,severe_high:120},fetal_heart_rate:{low:110,high:160,severe_low:100,severe_high:170},fundal_mismatch_cm:{high:3,severe_high:5}};
@@ -590,14 +826,14 @@ async function loadDoc(){
  if(lastAl>=0&&D.al.length>lastAl)toast('New emergency alert from a patient',()=>{view='overview';sel=null;drawDoc()});lastAl=D.al.length;
  if(qInit&&ST.notif.general)D.ap.forEach(a=>{if(a.appt_date!==today())return;const o=lastQ[a.id],nmx=(P(a.patient_id)||{}).full_name||'Patient';if(a.status==='with_doctor'&&(!o||o.s!=='with_doctor')&&isMD()&&a.handover_by!==me.id)toast('Handover: '+nmx+(a.triage_level?' ('+TL[a.triage_level]+')':''),()=>{view='queue';sel=null;drawDoc()});else if(a.triage_level==='emergency'&&(!o||o.t!=='emergency')&&a.triaged_at)toast('EMERGENCY triage: '+nmx,()=>{view='queue';sel=null;drawDoc()})});
  lastQ={};D.ap.forEach(a=>{lastQ[a.id]={s:a.status,t:a.triage_level}});qInit=true;
- const [e,f,g,ga,pg,th,ra,rv,rm,ms,ca]=await Promise.all([sb.from('services').select('*'),isAdmin()?sb.from('staff_emails').select('*').order('email'):{data:[]},sb.from('ambulance_requests').select('*').order('requested_at',{ascending:false}).limit(100),sb.from('patient_assignments').select('*'),sb.from('pregnancies').select('*'),sb.from('clinical_thresholds').select('*'),sb.from('audit_log').select('*').order('created_at',{ascending:false}).limit(8),sb.from('audit_log').select('patient_id,created_at').eq('actor_id',me.id).eq('action','viewed patient record').order('created_at',{ascending:false}).limit(30),sb.from('staff_reminders').select('*').eq('staff_id',me.id).order('done').order('due_date',{ascending:true,nullsFirst:false}).order('due_time',{ascending:true,nullsFirst:false}),sb.from('pregnancy_milestones').select('*'),sb.from('clinical_alerts').select('*').or('status.neq.resolved,resolved_at.gte.'+new Date(Date.now()-30*864e5).toISOString()).order('created_at',{ascending:false}).limit(300)]);D.ca=(ca&&ca.data)||[];D.ms=(ms&&ms.data)||[];D.preg=(pg&&pg.data)||[];if(!caRan){caRan=1;setTimeout(runChecks,1500);loadAvail()}D.th=(th&&th.data)||[];D.svc=e.data||[];D.se=f.data||[];D.amb=g.data||[];D.asg=ga.data||[];D.ract=(ra&&ra.data)||[];D.rem=(rm&&rm.data)||[];
+ const [e,f,g,ga,pg,th,ra,rv,rm,ms,ca]=await Promise.all([sb.from('services').select('*'),isAdmin()?sb.from('staff_emails').select('*').order('email'):{data:[]},sb.from('ambulance_requests').select('*').order('requested_at',{ascending:false}).limit(100),sb.from('patient_assignments').select('*'),sb.from('pregnancies').select('*'),sb.from('clinical_thresholds').select('*'),{data:[]},sb.from('audit_log').select('patient_id,created_at').eq('actor_id',me.id).eq('action','viewed patient record').order('created_at',{ascending:false}).limit(30),sb.from('staff_reminders').select('*').eq('staff_id',me.id).order('done').order('due_date',{ascending:true,nullsFirst:false}).order('due_time',{ascending:true,nullsFirst:false}),sb.from('pregnancy_milestones').select('*'),sb.from('clinical_alerts').select('*').or('status.neq.resolved,resolved_at.gte.'+new Date(Date.now()-30*864e5).toISOString()).order('created_at',{ascending:false}).limit(300)]);D.ca=(ca&&ca.data)||[];D.ms=(ms&&ms.data)||[];D.preg=(pg&&pg.data)||[];if(!caRan){caRan=1;setTimeout(runChecks,1500);loadAvail()}D.th=(th&&th.data)||[];D.svc=e.data||[];D.se=f.data||[];D.amb=g.data||[];D.asg=ga.data||[];D.ract=(ra&&ra.data)||[];D.rem=(rm&&rm.data)||[];
  const [bd,ci,ch]=await Promise.all([sb.from('beds').select('*').order('bed_no'),sb.from('charge_items').select('*').order('name'),sb.from('bed_charges').select('*').order('charged_on',{ascending:false}).limit(3000)]);D.beds=bd.data||[];D.items=ci.data||[];D.chg=ch.data||[];
  if(isAdmin()){const fa=await sb.from('appointments').select('id,patient_id,kind,appt_date,status,fee_usd,fee_items,fee_paid,fee_paid_at,fee_paid_method').gt('fee_usd',0).order('appt_date',{ascending:false}).limit(5000);D.acap=fa.data||[]}
  const seenP=new Set();D.rv=((rv&&rv.data)||[]).filter(x=>x.patient_id&&!seenP.has(x.patient_id)&&seenP.add(x.patient_id)).slice(0,5);
  drawDoc()}
-function drawDoc(){if(!$('doc'))return;caSound();trackNav();$('side').innerHTML=navHtml(DITEMS(),sel?'patients':view,{overview:D.al.length,queue:qN(),ambulance:ambN(),bookings:isAdmin()?pendingReqs().length:0,medalerts:medAlerts().filter(x=>x.sev===3).length+caCrit(),chat:chatUn()});setBell(D.al.length+openAmb()+caCrit());showInst();sosSync();
+function drawDoc(){if(!$('doc'))return;if(view!=='settings'||sel)SETOK=false;caSound();trackNav();$('side').innerHTML=navHtml(DITEMS(),sel?'patients':view,{overview:D.al.length,queue:qN(),ambulance:ambN(),bookings:isAdmin()?pendingReqs().length:0,medalerts:medAlerts().filter(x=>x.sev===3).length+caCrit(),chat:chatUn()});setBell(D.al.length+openAmb()+caCrit());showInst();sosSync();
  if(!sel&&view==='chat'&&chatPt&&$('chat')){paintChat();return}
- $('doc').innerHTML=sel&&P(sel)?detail(P(sel)):overview();if(!sel&&view==='chat'&&chatPt)afterChat()}
+ $('doc').innerHTML=sel&&P(sel)?detail(P(sel)):overview();if(!sel&&view==='chat'&&chatPt)afterChat();if(REC)setTimeout(recBar,0)}
 function overview(){
  const t=today(),act=D.pts.filter(p=>p.status==='antenatal'),qs=D.ap.filter(a=>a.appt_date===t&&!['cancelled','pending','rejected'].includes(a.status)).sort((x,y)=>(x.appt_time||'').localeCompare(y.appt_time||'')),
  missed=D.ap.filter(a=>a.appt_date<t&&['scheduled','waiting'].includes(a.status)),
@@ -612,12 +848,12 @@ function overview(){
  const pr=D.pts.filter(p=>riskOf(p).level==='priority'&&!cl.some(x=>x.p.id===p.id)).slice(0,5);
  if(pr.length)h+=`<h3 style="margin:14px 0 6px">Priority patients</h3>`+pr.map(p=>`<div class="pr" onclick="openPt('${p.id}')"><div><b>${esc(p.full_name)}</b><span class="row">${riskPill(p)}</span></div></div>`).join('');
  h+=`<h2>Today\u2019s queue</h2><div class="pr" onclick="nav('queue')"><div><b>${qN()} in the queue</b><div class="mu">${qs.filter(a=>a.status==='waiting').length} waiting \u00b7 ${qs.filter(a=>a.status==='with_nurse').length} with nurse \u00b7 ${qs.filter(a=>a.status==='with_doctor').length} with doctor \u00b7 ${qs.filter(a=>a.status==='lab').length} in lab</div></div><span class="pill">Open queue</span></div>`;
- h+=reqList(false)+confirmList(false)+activityWidget()+recentWidget()+remindersWidget();const H1=h;h='';const upc=D.ap.filter(a=>a.status==='scheduled'&&!overdue(a)).sort((x,y)=>(x.appt_date+(x.appt_time||'')).localeCompare(y.appt_date+(y.appt_time||''))).slice(0,15);
+ h+=reqList(false)+confirmList(false)+recentWidget()+remindersWidget();const H1=h;h='';const upc=D.ap.filter(a=>a.status==='scheduled'&&!overdue(a)).sort((x,y)=>(x.appt_date+(x.appt_time||'')).localeCompare(y.appt_date+(y.appt_time||''))).slice(0,15);
  h+=reqList(true)+confirmList(false)+'<h2>Upcoming bookings</h2>'+(upc.length?upc.map(a=>`<div class="pr" onclick="openPt('${a.patient_id}')"><div><b>${esc((P(a.patient_id)||{}).full_name)}</b><div class="mu">${fd(a.appt_date)} \u00b7 ${dsn(a)}</div></div></div>`).join(''):'<div class="mu">No upcoming bookings.</div>');
  const H2=h;h='';h+=`<h2>Patients (${D.pts.length})</h2>${scopeChips()}${pFilter?`<button class="btn g" style="margin-bottom:10px" onclick="pFilter=null;drawDoc()">Showing admitted only \u00d7</button>`:''}<input placeholder="Search name, ID or phone" oninput="filt(this.value)" style="margin-bottom:10px">`;
  h+=[...pList()].sort((a,b)=>riskRank[riskOf(b).level]-riskRank[riskOf(a).level]).map(p=>{const d=p.status==='delivered';return `<div class="pr" data-q="${esc((p.full_name+' '+p.patient_code+' '+p.phone).toLowerCase())}" onclick="openPt('${p.id}')"><div><b>${esc(p.full_name)}</b> <span class="mu">${esc(p.patient_code)}</span><div class="mu">${d?'Postnatal week '+pnw(p):p.lmp?'Week '+wk(p)+' \u00b7 EDD '+due(p):'No dates'}</div></div><div class="row">${p.admitted_at?'<span class="pill hot">Admitted</span>':''}${riskPill(p)}${isAdmin()?`<button class="btn g" onclick="event.stopPropagation();makeStaffModal('${p.id}')">Make staff</button>`:''}</div></div>`}).join('')||'<div class="mu">No patients registered yet.</div>';
- if(view==='settings')return settingsView();
- return {overview:H1,bookings:H2,patients:h,staff:staffView(),admin:adminDash(),assign:assignView(),audit:auditPanel(),chat:staffChat(),group:groupView(),queue:queueView(),ambulance:ambulanceView(),beds:bedsView(),accounting:accountingView(),medalerts:medAlertsView(),pregdash:view==='pregdash'?pregDashView():'',reports:reportsView()}[view]||H1}
+ if(view==='settings')return isAdmin()&&!SETOK?setLock():settingsView();
+ return {overview:H1,bookings:H2,patients:h,staff:staffView(),admin:adminDash(),assign:assignView(),inventory:inventoryView(),rvadmin:reviewsAdminView(),chat:staffChat(),group:groupView(),queue:queueView(),ambulance:ambulanceView(),beds:bedsView(),accounting:accountingView(),medalerts:medAlertsView(),pregdash:view==='pregdash'?pregDashView():'',reports:reportsView()}[view]||H1}
 function filt(q){q=q.toLowerCase();document.querySelectorAll('.pr[data-q]').forEach(r=>r.style.display=r.dataset.q.includes(q)?'':'none')}
 async function loadPap(id){const {data}=await sb.from('appointments').select('*').eq('patient_id',id).order('appt_date',{ascending:false});if(sel===id){D.pap=data||[];drawDoc()}}
 async function openPt(id){sel=id;D.notes=[];D.plan=[];D.steps=[];D.pap=null;D.inv=null;D.rx=null;D.docs=null;drawDoc();scrollTo(0,0);loadClin(id);sb.rpc('log_view',{p_patient:id});loadPap(id);const [n,p,sl]=await Promise.all([sb.from('clinical_notes').select('*').eq('patient_id',id).order('created_at',{ascending:false}),sb.from('care_plan_items').select('*').eq('patient_id',id).order('done').order('due_date',{ascending:true,nullsFirst:false}),sb.from('step_logs').select('*').eq('patient_id',id).gte('log_date',new Date(Date.now()-13*864e5).toISOString().slice(0,10))]);D.notes=n.data||[];D.plan=p.data||[];D.steps=sl.data||[];if(sel===id)drawDoc()}
@@ -658,7 +894,7 @@ const confirmList=(top)=>{const l=D.ap.filter(a=>overdue(a)&&(isAdmin()||!a.staf
  return l.length?`<h${top?2:3} style="margin:${top?'0':'14px'} 0 6px">Confirm past appointments (${l.length})</h${top?2:3}>`+l.map(a=>`<div class="li"><div><b>${esc((P(a.patient_id)||{}).full_name)}</b><div class="mu">${fd(a.appt_date)} \u00b7 ${dsn(a)}</div></div><div class="row"><button class="btn" onclick="confirmAppt('${a.id}','done')">\u2714\uFE0F Done</button><button class="btn g" onclick="confirmAppt('${a.id}','missed')">Missed</button></div></div>`).join(''):''};
 let bedDate=null;
 const roomOf=(n,list)=>((list||[]).find(b=>b.bed_no===n)||{}).room||'';
-const CAT_LB={room:'Room',food:'Food',medication:'Medication',dressing:'Bandages and dressings',supplies:'Supplies',lab:'Lab',procedure:'Procedure',other:'Other'};
+const CAT_LB={medication:'Medicines',supplies:'Medical supplies',dressing:'Bandages and dressings',lab:'Tests and lab',procedure:'Procedures and services',room:'Room',food:'Meals',other:'Other'};
 const chgOf=a=>(D.chg||[]).filter(c=>!c.voided&&(c.appointment_id===a.id));
 const money=n=>'$'+Number(n||0).toFixed(2);
 function bedsView(){const d=bedDate||today(),occ={};D.ap.filter(a=>bedOcc(a,d)).forEach(a=>occ[a.bed_no]=a);
@@ -668,19 +904,12 @@ function bedsView(){const d=bedDate||today(),occ={};D.ap.filter(a=>bedOcc(a,d)).
   (D.beds||[]).filter(b=>(b.room||'No room')===rm).forEach(b=>{const n=b.bed_no,a=occ[n],p=a?(P(a.patient_id)||{}):null;
    if(!a){h+=`<div class="st"><div class="fl">${ic('bed')} <b>Bed ${n}</b></div><div class="mu">Free</div><div class="row" style="margin-top:6px"><button class="btn g" style="padding:4px 10px" onclick="bedAssign(${n})">Assign patient</button></div></div>`;return}
    const days=a.bed_days||1,day=Math.round((new Date(d+'T00:00:00Z')-new Date(a.appt_date+'T00:00:00Z'))/864e5)+1,until=addD(a.appt_date,days-1),cs=chgOf(a),ct=cs.reduce((x,c)=>x+Number(c.total),0);
-   h+=`<div class="st" style="border-color:var(--ac)"><div class="fl">${ic('bed')} <b>Bed ${n}</b></div><div style="cursor:pointer" onclick="openPt('${a.patient_id}')"><b>${esc(p.full_name||'Patient')}</b></div><div class="mu">${esc(a.kind)} \u00b7 day ${day} of ${days}</div><div class="mu">In ${fd(a.appt_date)} \u00b7 until ${fd(until)}</div><div class="mu">Charges so far: <b>${money(ct)}</b> (${cs.length})</div><div class="row" style="margin-top:6px"><button class="btn" style="padding:4px 10px" onclick="chargeModal('${a.id}')">${ic('plus')} Add charge</button><button class="btn g" style="padding:4px 10px" onclick="bedDays('${a.id}')">Edit days</button><button class="btn g" style="padding:4px 10px" onclick="bedFree('${a.id}')">Free bed</button></div></div>`});
+   h+=`<div class="st" style="border-color:var(--ac)"><div class="fl">${ic('bed')} <b>Bed ${n}</b></div><div style="cursor:pointer" onclick="openPt('${a.patient_id}')"><b>${esc(p.full_name||'Patient')}</b></div><div class="mu">${esc(a.kind)} \u00b7 day ${day} of ${days}</div><div class="mu">In ${fd(a.appt_date)} \u00b7 until ${fd(until)}</div><div class="mu">Charges so far: <b>${money(ct)}</b> (${cs.length})</div><div class="row" style="margin-top:6px"><button class="btn" style="padding:4px 10px" onclick="billModal('${a.patient_id}')">${ic('plus')} Record items</button><button class="btn g" style="padding:4px 10px" onclick="billView('${a.patient_id}')">${ic('file')} Bill</button><button class="btn g" style="padding:4px 10px" onclick="bedDays('${a.id}')">Edit days</button><button class="btn g" style="padding:4px 10px" onclick="bedFree('${a.id}')">Free bed</button></div></div>`});
   h+='</div>'});
- return h+'<p class="mu">Beds are assigned automatically on admission or when a delivery-type request is accepted. Add charges (food, medication, bandages and so on) while the patient is in the bed. They appear on the Accounting page and on the patient\'s Fees page.</p>'}
+ return h+'<p class="mu">Beds are assigned automatically on admission or when a delivery-type request is accepted. Use <b>Record items</b> to add the medicines, tests, supplies and services a patient uses. Stock goes down automatically and the cost is sent to Accounting straight away.</p>'}
 function roomsModal(){modal('Rooms',`<div class="mu" style="margin-bottom:6px">Give each bed a room name. Beds with the same name are shown together.</div>${(D.beds||[]).map(b=>`<label class="l">Bed ${b.bed_no}</label><input name="b${b.id}" value="${esc(b.room||'')}" maxlength="40" placeholder="e.g. Room 1">`).join('')}`,async f=>{
   for(const b of D.beds){const v=(f['b'+b.id]||'').trim()||null;if(v!==(b.room||null)){const {error}=await sb.from('beds').update({room:v}).eq('id',b.id);if(error)throw error}}toast('Rooms saved.');await loadDoc()})}
-function chargeModal(aid){const a=D.ap.find(x=>x.id===aid);if(!a)return;const its=(D.items||[]).filter(i=>i.active);
- modal('Add charge \u00b7 '+esc((P(a.patient_id)||{}).full_name||'')+' \u00b7 Bed '+a.bed_no,`<label class="l">Item</label><select name="item" id="cg-item" onchange="cgPick()"><option value="">Select...</option>${its.map(i=>`<option value="${i.id}" data-p="${i.unit_price}">${esc(i.name)} \u00b7 USD ${i.unit_price} ${esc(i.unit)}</option>`).join('')}<option value="other" data-p="">Other (type it in)</option></select><div id="cg-o" hidden><label class="l">Item name</label><input name="oname" maxlength="80"><label class="l">Price each (USD)</label><input name="oprice" type="number" min="0" step="0.01"></div><label class="l">Quantity</label><input name="qty" type="number" min="0.01" max="999" step="0.01" value="1" required><label class="l">Date</label><input name="date" type="date" value="${today()}" max="${today()}" required><label class="l">Note (optional)</label><input name="note" maxlength="300">`,async f=>{
-  const q=+f.qty,dt=f.date||today();if(!f.item)throw new Error('Choose an item.');if(!(q>0&&q<=999))throw new Error('Enter a quantity between 0.01 and 999.');
-  let row={patient_id:a.patient_id,appointment_id:a.id,qty:q,charged_on:dt,note:(f.note||'').trim()||null,created_by:me.id};
-  if(f.item==='other'){const nm=(f.oname||'').trim(),pr=+f.oprice;if(nm.length<2)throw new Error('Enter the item name.');if(!(pr>=0)||f.oprice==='')throw new Error('Enter the price.');Object.assign(row,{item_name:nm,unit_price:pr,category:'other'})}
-  else{const it=D.items.find(i=>i.id===f.item);Object.assign(row,{item_id:it.id,item_name:it.name,unit_price:it.unit_price,category:it.category})}
-  const {error}=await sb.from('bed_charges').insert(row);if(error)throw error;toast('Charge added: '+row.item_name+' x '+q);await loadDoc()},'Add charge')}
-function cgPick(){const sel=document.getElementById('cg-item'),o=document.getElementById('cg-o');if(o)o.hidden=sel.value!=='other'}
+function chargeModal(aid){const a=D.ap.find(x=>x.id===aid);if(a)billModal(a.patient_id)}
 function bedAssign(n){const d=bedDate||today(),pts=[...D.pts].sort((x,y)=>(x.full_name||'').localeCompare(y.full_name||''));
  modal('Assign Bed '+n+' \u00b7 '+fd(d),`<label class="l">Patient</label><select name="p" required><option value="">Select...</option>${pts.map(p=>`<option value="${p.id}">${esc(p.full_name||'Patient')}${p.patient_code?' \u00b7 '+esc(p.patient_code):''}</option>`).join('')}</select><label class="l">Starting date</label><input type="date" name="d" required value="${d}"><label class="l">Number of days</label><input type="number" name="n" min="1" max="60" value="1" required><label class="l">Note (optional)</label><input name="c" maxlength="300">`,async f=>{
   if(!f.p)throw new Error('Choose a patient.');
@@ -693,6 +922,68 @@ function bedDays(id){const a=D.ap.find(x=>x.id===id);if(!a)return;
   if(error)throw new Error(/no_overlap|conflicting key/i.test(error.message)?'Another patient has this bed on one of those days. Use fewer days.':error.message);toast('Stay updated to '+n+' day(s).');await loadDoc()})}
 async function bedFree(id){const a=D.ap.find(x=>x.id===id);if(!a||!confirm('Free Bed '+a.bed_no+' now? Use this when the patient has been dealt with.'))return;
  const {error}=await sb.from('appointments').update({bed_released_at:new Date().toISOString()}).eq('id',id);if(error)return alert(friendly(error));toast('Bed '+a.bed_no+' is now free.');loadDoc()}
+/* ---------- inventory and patient bills ---------- */
+let INV={q:'',cat:'',mov:null};
+const stayFor=(pid,d)=>D.ap.find(a=>a.patient_id===pid&&bedOcc(a,d||today()));
+const qtyF=n=>{const v=Number(n||0);return Number.isInteger(v)?String(v):v.toFixed(2).replace(/0+$/,'').replace(/\.$/,'')};
+const invState=i=>!i.track_stock?['Service','']:+i.stock_qty<=0?['Out of stock','hot']:+i.stock_qty<=+i.reorder_level?['Low stock','warnp']:['In stock','ok'];
+async function loadInv(){const {data,error}=await sb.from('inv_movements').select('*').order('created_at',{ascending:false}).limit(60);INV.mov=error?[]:(data||[]);if(view==='inventory'&&!sel)drawDoc()}
+function inventoryView(){
+ const adm=isAdmin(),its=D.items||[],q=INV.q.trim().toLowerCase();
+ const list=its.filter(i=>(!INV.cat||i.category===INV.cat)&&(!q||(i.name+' '+(i.description||'')).toLowerCase().includes(q))).sort((x,y)=>(y.active-x.active)||x.name.localeCompare(y.name));
+ const trk=its.filter(i=>i.active&&i.track_stock),low=trk.filter(i=>+i.stock_qty>0&&+i.stock_qty<=+i.reorder_level).length,out=trk.filter(i=>+i.stock_qty<=0).length,val=trk.reduce((n,i)=>n+Number(i.stock_qty)*Number(i.unit_price),0);
+ const cats=Object.keys(CAT_LB).filter(k=>its.some(i=>i.category===k));
+ let h=`<div class="pghd"><div><h2>Inventory and medical items</h2><div class="mu">Medicines, supplies, tests and services, with prices and stock levels.</div></div><div class="row"><button class="btn" onclick="billModal()">${ic('cart')} Record use for a patient</button>${adm?`<button class="btn g" onclick="itemModal()">${ic('plus')} Add item</button>`:''}</div></div>
+ <div class="kpis">${kpi('box','Items',its.filter(i=>i.active).length,'')}${kpi('alert','Low stock',low,low?'amber':'')}${kpi('x','Out of stock',out,out?'rose':'')}${kpi('trend','Stock value',money(val),'teal')}</div>
+ <div class="toolbar2"><div class="sbox">${ic('search')}<input type="search" placeholder="Search items" value="${esc(INV.q)}" oninput="INV.q=this.value;clearTimeout(INV.t);INV.t=setTimeout(()=>{drawDoc();const e=document.querySelector('.sbox input');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}},250)"></div><div class="chips"><button class="chip ${INV.cat?'':'on'}" onclick="INV.cat='';drawDoc()">All</button>${cats.map(k=>`<button class="chip ${INV.cat===k?'on':''}" onclick="INV.cat='${k}';drawDoc()">${esc(CAT_LB[k])}</button>`).join('')}</div></div>`;
+ h+=list.length?`<div class="tcard"><div class="tw"><table class="itbl"><thead><tr><th>Item</th><th>Category</th><th class="r">Price</th><th class="r">In stock</th><th>Status</th><th></th></tr></thead><tbody>${list.map(i=>{const st=invState(i),pc=i.track_stock&&+i.reorder_level>0?Math.min(100,Math.round(+i.stock_qty/(+i.reorder_level*3)*100)):100;return `<tr class="${i.active?'':'dim'}"><td class="n"><b>${esc(i.name)}</b>${i.description?`<div class="mu">${esc(i.description)}</div>`:''}${i.active?'':'<div class="mu">Hidden from staff</div>'}</td><td><span class="pill">${esc(CAT_LB[i.category]||i.category)}</span></td><td class="r">${money(i.unit_price)}<div class="mu">${esc(i.unit)}</div></td><td class="r">${i.track_stock?`<b>${qtyF(i.stock_qty)}</b><div class="sbar"><i style="width:${pc}%" class="${st[1]}"></i></div>`:'<span class="mu">Not counted</span>'}</td><td><span class="pill ${st[1]}">${st[0]}</span></td><td class="r"><div class="row" style="justify-content:flex-end;flex-wrap:nowrap">${adm&&i.track_stock?`<button class="btn g sm" onclick="receiveModal('${i.id}')">${ic('plus')} Stock</button>`:''}${adm?`<button class="ib" title="Edit" onclick="itemModal('${i.id}')">${ic('edit')}</button>`:''}${i.track_stock?`<button class="ib" title="Stock history" onclick="movModal('${i.id}')">${ic('clock')}</button>`:''}</div></td></tr>`}).join('')}</tbody></table></div></div>`:`<div class="card"><div class="mu">${its.length?'No items match your search.':'No items yet.'+(adm?' Add your medicines, supplies, tests and services with their prices.':'')}</div></div>`;
+ const mv=INV.mov;
+ h+=`<h3 class="sech">Recent stock movements</h3><div class="card">${mv==null?'<div class="mu">Loading...</div>':mv.length?mv.slice(0,12).map(movRow).join(''):'<div class="mu">No stock movements yet.</div>'}</div>`;
+ return h}
+const MOV_LB={opening:'Opening stock',received:'Stock received',used:'Used for patient',returned:'Returned to stock',adjusted:'Stock count correction'};
+function movRow(m){const it=(D.items||[]).find(i=>i.id===m.item_id)||{},p=m.patient_id?P(m.patient_id):null,c=+m.change;return `<div class="mrow"><span class="mch ${c<0?'neg':'pos'}">${c>0?'+':''}${qtyF(c)}</span><div style="flex:1;min-width:0"><b>${esc(it.name||'Item')}</b> <span class="mu">· ${MOV_LB[m.reason]||m.reason}${p?' · '+esc(p.full_name):''}</span>${m.note?`<div class="mu">${esc(m.note)}</div>`:''}</div><div class="mu" style="text-align:right;white-space:nowrap">${new Date(m.created_at).toLocaleString([],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}<div>Left: ${qtyF(m.balance_after)}</div></div></div>`}
+async function movModal(id){const it=D.items.find(x=>x.id===id);if(!it)return;const {data,error}=await sb.from('inv_movements').select('*').eq('item_id',id).order('created_at',{ascending:false}).limit(100);
+ const m=document.createElement('div');m.className='ov';m.innerHTML=`<div class="md"><div class="mh"><span>${esc(it.name)}</span><button class="ib" data-x>${ic('x')}</button></div><div class="mu" style="margin-bottom:10px">In stock now: <b>${qtyF(it.stock_qty)} ${esc(it.unit)}</b></div><div style="overflow:auto;padding-bottom:16px">${error?'<div class="fl">Could not load the history.</div>':(data||[]).map(movRow).join('')||'<div class="mu">No movements yet.</div>'}</div></div>`;
+ document.body.appendChild(m);m.querySelector('[data-x]').onclick=()=>m.remove();m.onclick=e=>{if(e.target===m)m.remove()}}
+function itemModal(id){const it=id?D.items.find(x=>x.id===id):null,trk=it?it.track_stock:true;
+ modal(it?'Edit item':'Add item',`<label class="l">Name</label><input name="name" required minlength="2" maxlength="80" value="${esc(it?it.name:'')}" placeholder="e.g. Paracetamol 500 mg"><label class="l">Category</label><select name="category">${Object.entries(CAT_LB).map(([k,v])=>`<option value="${k}"${it&&it.category===k?' selected':''}>${v}</option>`).join('')}</select><div class="two"><div><label class="l">Price (USD)</label><input name="price" type="number" min="0" max="100000" step="0.01" required value="${it?it.unit_price:''}"></div><div><label class="l">Per</label><input name="unit" maxlength="20" value="${esc(it?it.unit:'each')}" placeholder="each, tablet, bottle"></div></div><label class="l">Count stock for this item?</label><select name="track"${it?' disabled':''}><option value="1"${trk?' selected':''}>Yes, it is a physical item (medicine, supply)</option><option value="0"${trk?'':' selected'}>No, it is a service or test</option></select>${it?'<div class="mu">This cannot be changed after the item is created.</div>':''}<div class="two">${it?'':`<div><label class="l">Opening stock</label><input name="stock" type="number" min="0" max="1000000" step="0.01" value="0"></div>`}<div><label class="l">Warn when stock falls to</label><input name="reorder" type="number" min="0" max="1000000" step="1" value="${it?qtyF(it.reorder_level):5}"></div></div><label class="l">Description (optional)</label><input name="desc" maxlength="300" value="${esc(it&&it.description||'')}"><label class="l">Show to staff</label><select name="active"><option value="1"${!it||it.active?' selected':''}>Yes</option><option value="0"${it&&!it.active?' selected':''}>No (hide)</option></select>`,async f=>{
+  const row={name:f.name.trim(),category:f.category,unit_price:+f.price,unit:(f.unit||'each').trim()||'each',active:f.active==='1',reorder_level:Math.max(0,+f.reorder||0),description:(f.desc||'').trim()||null};
+  if(row.name.length<2)throw new Error('Enter the item name.');if(!(row.unit_price>=0&&row.unit_price<=100000)||f.price==='')throw new Error('Enter a valid price.');
+  if(!it){row.track_stock=f.track==='1';row.stock_qty=row.track_stock?Math.max(0,+f.stock||0):0}
+  const {error}=it?await sb.from('charge_items').update(row).eq('id',it.id):await sb.from('charge_items').insert(row);if(error)throw error;toast(it?'Item updated.':'Item added.');await loadDoc();loadInv()},it?'Save':'Add item')}
+function receiveModal(id){const it=D.items.find(x=>x.id===id);if(!it)return;
+ modal('Stock · '+esc(it.name),`<div class="mu">In stock now: <b>${qtyF(it.stock_qty)} ${esc(it.unit)}</b></div><div class="seg" style="margin-top:12px"><button type="button" class="btn on" data-m="add">Receive stock</button><button type="button" class="btn" data-m="count">Stock count</button></div><input type="hidden" name="mode" value="add"><label class="l" id="rc-l">Quantity received</label><input name="qty" type="number" min="0" max="1000000" step="0.01" required><label class="l">Note</label><input name="note" maxlength="300" placeholder="e.g. Delivery from supplier, invoice 1042"><div class="mu" id="rc-h">The quantity is added to the stock.</div>`,async f=>{
+  const q=+f.qty;if(f.qty===''||!(q>=0))throw new Error('Enter a quantity.');
+  if(f.mode==='add'){if(!(q>0))throw new Error('Enter how many were received.');const {error}=await sb.rpc('inv_receive',{p_item:id,p_qty:q,p_note:f.note||null});if(error)throw error;toast('Stock added. '+it.name+' now has '+qtyF(+it.stock_qty+q)+'.')}
+  else{if(!(f.note||'').trim())throw new Error('Give a reason for the correction.');const {error}=await sb.rpc('inv_count',{p_item:id,p_count:q,p_note:f.note});if(error)throw error;toast('Stock corrected to '+qtyF(q)+'.')}
+  await loadDoc();loadInv()},'Save');
+ const m=document.querySelector('.ov:last-child');m.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{m.querySelectorAll('[data-m]').forEach(x=>x.classList.toggle('on',x===b));m.querySelector('[name=mode]').value=b.dataset.m;const c=b.dataset.m==='count';m.querySelector('#rc-l').textContent=c?'Number counted on the shelf':'Quantity received';m.querySelector('#rc-h').textContent=c?'The stock is set to this number. A reason is required.':'The quantity is added to the stock.'})}
+let BL={lines:[]};
+function blItemOpts(v){const its=(D.items||[]).filter(i=>i.active).sort((a,b)=>a.name.localeCompare(b.name));const by={};its.forEach(i=>(by[i.category]=by[i.category]||[]).push(i));
+ return `<option value="">Choose an item...</option>`+Object.keys(CAT_LB).filter(k=>by[k]).map(k=>`<optgroup label="${esc(CAT_LB[k])}">${by[k].map(i=>`<option value="${i.id}"${v===i.id?' selected':''}${i.track_stock&&+i.stock_qty<=0?' disabled':''}>${esc(i.name)} · ${money(i.unit_price)} ${esc(i.unit)}${i.track_stock?' · '+qtyF(i.stock_qty)+' left':''}</option>`).join('')}</optgroup>`).join('')+`<option value="other"${v==='other'?' selected':''}>Other (type it in)</option>`}
+function blLine(l){if(l.item==='other')return {name:(l.oname||'').trim(),price:+l.oprice||0,qty:+l.qty||0};const it=(D.items||[]).find(i=>i.id===l.item);return it?{it,name:it.name,price:+it.unit_price,qty:+l.qty||0}:null}
+function blDraw(){const el=$('bl-lines');if(!el)return;let tot=0;
+ el.innerHTML=BL.lines.map((l,i)=>{const x=blLine(l),lt=x?x.price*x.qty:0;tot+=lt;const warn=x&&x.it&&x.it.track_stock&&x.qty>+x.it.stock_qty;return `<div class="bll"><div class="blr"><select onchange="BL.lines[${i}].item=this.value;blDraw()">${blItemOpts(l.item)}</select><input type="number" min="0.01" max="999" step="0.01" value="${esc(l.qty)}" aria-label="Quantity" oninput="BL.lines[${i}].qty=this.value;blTot()"><button type="button" class="ib" title="Remove" onclick="BL.lines.splice(${i},1);if(!BL.lines.length)BL.lines.push({item:'',qty:1});blDraw()">${ic('trash')}</button></div>${l.item==='other'?`<div class="two"><input placeholder="Item or service name" maxlength="80" value="${esc(l.oname||'')}" oninput="BL.lines[${i}].oname=this.value"><input type="number" min="0" step="0.01" placeholder="Price each (USD)" value="${esc(l.oprice||'')}" oninput="BL.lines[${i}].oprice=this.value;blTot()"></div>`:''}<div class="mu bllt" data-i="${i}">${x&&x.qty?qtyF(x.qty)+' × '+money(x.price)+' = <b>'+money(lt)+'</b>':''}${warn?' <span class="fl" style="display:inline">· only '+qtyF(x.it.stock_qty)+' in stock</span>':''}</div></div>`}).join('');
+ const t=$('bl-tot');if(t)t.textContent=money(tot)}
+function blTot(){let tot=0;BL.lines.forEach((l,i)=>{const x=blLine(l),lt=x?x.price*x.qty:0;tot+=lt;const e=document.querySelector('.bllt[data-i="'+i+'"]');if(e){const warn=x&&x.it&&x.it.track_stock&&x.qty>+x.it.stock_qty;e.innerHTML=x&&x.qty?qtyF(x.qty)+' × '+money(x.price)+' = <b>'+money(lt)+'</b>'+(warn?' <span class="fl" style="display:inline">· only '+qtyF(x.it.stock_qty)+' in stock</span>':''):''}});const t=$('bl-tot');if(t)t.textContent=money(tot)}
+function billModal(pid){BL={lines:[{item:'',qty:1}]};const d=today(),pts=[...D.pts].sort((x,y)=>{const a=stayFor(x.id,d),b=stayFor(y.id,d);return a&&!b?-1:b&&!a?1:a&&b?a.bed_no-b.bed_no:(x.full_name||'').localeCompare(y.full_name||'')});
+ const lab=p=>{const st=stayFor(p.id,d);return (st?'Bed '+st.bed_no+' · ':'')+(p.full_name||'Patient')+(p.patient_code?' · '+p.patient_code:'')};
+ modal('Record items used',`<label class="l">Patient</label><select name="p" required><option value="">Choose a patient...</option>${pts.map(p=>`<option value="${p.id}"${pid===p.id?' selected':''}>${esc(lab(p))}</option>`).join('')}</select><label class="l">Medicines, tests, supplies and services</label><div id="bl-lines"></div><button type="button" class="btn g" style="margin-top:4px" onclick="BL.lines.push({item:'',qty:1});blDraw()">${ic('plus')} Add another item</button><div class="bltot"><span>Total</span><b id="bl-tot">$0.00</b></div><div class="two"><div><label class="l">Date</label><input name="d" type="date" value="${d}" max="${d}" required></div><div><label class="l">Note (optional)</label><input name="note" maxlength="300"></div></div><div class="mu" style="margin-top:8px">Stock goes down automatically and the total is sent to Accounting as soon as you save.</div>`,async f=>{
+  if(!f.p)throw new Error('Choose a patient.');const dt=f.d||today();if(dt>today())throw new Error('The date cannot be in the future.');
+  const rows=[];let tot=0;for(const l of BL.lines){if(!l.item)continue;const x=blLine(l);if(!x)throw new Error('One of the items is no longer available. Remove it and try again.');
+   if(!(x.qty>0&&x.qty<=999))throw new Error('Enter a quantity between 0.01 and 999 for '+(x.name||'each item')+'.');
+   if(x.it&&x.it.track_stock&&x.qty>+x.it.stock_qty)throw new Error('Not enough '+x.it.name+' in stock. Only '+qtyF(x.it.stock_qty)+' left.');
+   if(l.item==='other'&&(x.name.length<2||!(x.price>=0)||l.oprice===''||l.oprice==null))throw new Error('Enter the name and price for the item you typed in.');
+   const st=stayFor(f.p,dt);rows.push({patient_id:f.p,appointment_id:st?st.id:null,qty:x.qty,charged_on:dt,note:(f.note||'').trim()||null,created_by:me.id,...(x.it?{item_id:x.it.id,item_name:x.it.name,unit_price:x.it.unit_price,category:x.it.category}:{item_name:x.name,unit_price:x.price,category:'other'})});tot+=x.price*x.qty}
+  if(!rows.length)throw new Error('Add at least one item.');
+  const {error}=await sb.from('bed_charges').insert(rows);if(error)throw new Error(/Not enough stock/i.test(error.message)?error.message+'. Nothing was saved.':error.message);
+  toast('Saved '+rows.length+' item'+(rows.length>1?'s':'')+' for '+((P(f.p)||{}).full_name||'the patient')+'. '+money(tot)+' sent to Accounting.');await loadDoc();if(view==='inventory')loadInv()},'Save and send to Accounting');
+ blDraw()}
+function billView(pid){const p=P(pid);if(!p)return;const cs=(D.chg||[]).filter(c=>c.patient_id===pid&&!c.voided).sort((a,b)=>b.charged_on.localeCompare(a.charged_on)||b.created_at.localeCompare(a.created_at));
+ const tot=cs.reduce((n,c)=>n+Number(c.total),0),due=cs.filter(c=>!c.paid).reduce((n,c)=>n+Number(c.total),0),st=stayFor(pid),adm=isAdmin();
+ const m=document.createElement('div');m.className='ov';m.innerHTML=`<div class="md"><div class="mh"><span>Bill · ${esc(p.full_name)}</span><button class="ib" data-x>${ic('x')}</button></div><div class="mu">${st?'Bed '+st.bed_no+' · ':''}${esc(p.patient_code||'')}</div><div style="overflow:auto;padding:10px 0 16px">${cs.length?`<table class="itbl"><thead><tr><th>Date</th><th>Item</th><th class="r">Qty</th><th class="r">Amount</th>${adm?'<th></th>':''}</tr></thead><tbody>${cs.map(c=>`<tr><td>${fd(c.charged_on)}</td><td class="n"><b>${esc(c.item_name)}</b><div class="mu">${esc(CAT_LB[c.category]||c.category)} · ${money(c.unit_price)} each${c.paid?' · paid':''}</div></td><td class="r">${qtyF(c.qty)}</td><td class="r">${money(c.total)}</td>${adm?`<td>${c.paid?'':`<button class="ib" title="Void" onclick="voidCharge('${c.id}','${pid}')">${ic('trash')}</button>`}</td>`:''}</tr>`).join('')}</tbody></table>`:'<div class="mu">Nothing recorded yet.</div>'}<div class="bltot"><span>Total</span><b>${money(tot)}</b></div><div class="bltot" style="border:0;padding-top:0"><span class="mu">Still to pay</span><b>${money(due)}</b></div><div class="okn">${ic('check')}<span>Every item is posted to Accounting automatically on the patient’s invoice.</span></div><div class="row" style="margin-top:12px"><button class="btn" onclick="this.closest('.ov').remove();billModal('${pid}')">${ic('plus')} Record more items</button></div></div></div>`;
+ document.body.appendChild(m);m.querySelector('[data-x]').onclick=()=>m.remove();m.onclick=e=>{if(e.target===m)m.remove()}}
+async function voidCharge(id,pid){if(!confirm('Void this item? It is taken off the bill and Accounting, and any stock is returned.'))return;const {error}=await sb.from('bed_charges').update({voided:true,voided_at:new Date().toISOString()}).eq('id',id);if(error)return alert(friendly(error));document.querySelectorAll('.ov').forEach(o=>o.remove());toast('Item voided.');await loadDoc();billView(pid)}
 const BED_TOTAL=15,BED_KEYS=['delivery','unbooked','bedding','suture'],BED_ACTIVE=['scheduled','waiting','with_nurse','with_doctor','lab','done','admitted'];
 const addD=(d,n)=>new Date(new Date(d+'T00:00:00Z').getTime()+n*864e5).toISOString().slice(0,10);
 const bedOcc=(a,d)=>!!a.bed_no&&!a.bed_released_at&&BED_ACTIVE.includes(a.status)&&d>=a.appt_date&&d<addD(a.appt_date,a.bed_days||1);
@@ -752,15 +1043,12 @@ function scheduleWidget(){const t=today(),items=D.ap.filter(a=>a.appt_date===t&&
  if(items.length>5)h+=`<div class="pr" onclick="nav('queue')"><div class="mu">+${items.length-5} more today</div><span class="pill">View queue</span></div>`;
  if(nextUp)h+=`<div class="mu" style="margin-top:8px">Next up: ${fd(nextUp.appt_date)}${nextUp.appt_time?' at '+ft(nextUp.appt_time):''} \u00b7 ${esc((P(nextUp.patient_id)||{}).full_name||'Patient')}</div>`;
  return `<div class="card">${h}</div>`}
-function activityWidget(){return `<div class="card"><h2 style="margin-top:0">Recent activity</h2>${D.ract.length?D.ract.map(x=>`<div class="li"><div><b>${esc(x.actor_name||'System')}</b> ${esc(x.action)}${x.patient_id?' \u00b7 '+esc((P(x.patient_id)||{}).full_name||'patient'):''}<div class="mu">${new Date(x.created_at).toLocaleString()}${x.detail?' \u00b7 '+esc(x.detail):''}</div></div></div>`).join(''):'<div class="mu">No recent activity.</div>'}</div>`}
 function recentWidget(){const list=D.rv.map(x=>P(x.patient_id)).filter(Boolean);return `<div class="card"><h2 style="margin-top:0">Recently viewed</h2>${list.length?list.map(p=>`<div class="pr" onclick="openPt('${p.id}')"><div><b>${esc(p.full_name)}</b><div class="mu">${esc(p.patient_code||'')}</div></div></div>`).join(''):'<div class="mu">No patients viewed yet.</div>'}</div>`}
 function remindersWidget(){const r=D.rem||[];return `<div class="card"><div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">My reminders</h2><button class="btn g" onclick="addReminder()">${ic('plus')} Add</button></div>${r.length?r.map(x=>`<div class="li"><div class="fl" style="color:${x.done?'var(--mu)':'var(--tx)'}">${ic(x.done?'check':'clock')}<div><b style="${x.done?'text-decoration:line-through':''}">${esc(x.title)}</b><div class="mu">${x.due_date?fd(x.due_date)+(x.due_time?' at '+ft(x.due_time):''):'No date'}${x.notes?' \u00b7 '+esc(x.notes):''}</div></div></div><div class="row"><button class="btn g" onclick="toggleReminder('${x.id}',${!x.done})">${x.done?'Undo':'Done'}</button><button class="ib" onclick="editReminder('${x.id}')">${ic('edit')}</button><button class="ib" onclick="delReminder('${x.id}')">${ic('x')}</button></div></div>`).join(''):'<div class="mu">No reminders yet.</div>'}</div>`}
 function addReminder(){modal('New reminder',fld('Title','title','text','','required maxlength="200"')+'<div class="two">'+fld('Date','due_date','date')+fld('Time','due_time','time')+'</div><label class="l">Notes</label><textarea name="notes" maxlength="500"></textarea>',async f=>{const {error}=await sb.from('staff_reminders').insert({staff_id:me.id,title:f.title.trim(),due_date:nz(f.due_date),due_time:nz(f.due_time),notes:nz(f.notes)});if(error)throw error;toast('Reminder added.');loadDoc()})}
 function editReminder(id){const x=D.rem.find(r=>r.id===id);if(!x)return;modal('Edit reminder',fld('Title','title','text',x.title,'required maxlength="200"')+'<div class="two">'+fld('Date','due_date','date',x.due_date||'')+fld('Time','due_time','time',x.due_time||'')+'</div><label class="l">Notes</label><textarea name="notes" maxlength="500">'+esc(x.notes||'')+'</textarea>',async f=>{const {error}=await sb.from('staff_reminders').update({title:f.title.trim(),due_date:nz(f.due_date),due_time:nz(f.due_time),notes:nz(f.notes)}).eq('id',id);if(error)throw error;toast('Reminder updated.');loadDoc()})}
 async function toggleReminder(id,done){const {error}=await sb.from('staff_reminders').update({done}).eq('id',id);if(error)return alert(friendly(error));loadDoc()}
 async function delReminder(id){if(!confirm('Delete this reminder?'))return;const {error}=await sb.from('staff_reminders').delete().eq('id',id);if(error)return alert(friendly(error));toast('Reminder deleted.');loadDoc()}
-async function loadAudit(){const {data}=await sb.from('audit_log').select('*').order('created_at',{ascending:false}).limit(200);D.audit=data||[];drawDoc()}
-function auditPanel(){if(!isAdmin())return '';return `<h2 style="margin-top:0">Audit log</h2><div class="mu" style="margin-bottom:8px">Important actions are recorded automatically and cannot be edited.</div>${(D.audit||[]).map(x=>`<div class="li"><div><b>${esc(x.actor_name||'System')}</b> ${esc(x.action)}${x.patient_id?' \u00b7 '+esc((P(x.patient_id)||{}).full_name||'patient'):''}<div class="mu">${new Date(x.created_at).toLocaleString()}${x.detail?' \u00b7 '+esc(x.detail):''}</div></div></div>`).join('')||'<div class="mu">No entries yet.</div>'}`}
 const isAdmin=()=>(me?.email||'').toLowerCase()==='malvirngomo8@gmail.com';
 function notify(pid){
  modal('Notify patient',`<label class="l">Type</label><select name="kind">${KINDS.map(k=>`<option value="${k[0]}">${k[1]}</option>`).join('')}</select><label class="l">Priority</label><select name="priority"><option value="routine">Routine</option><option value="important">Important</option><option value="urgent">Urgent</option></select>${fld('Title','title','text','','required maxlength="200"')}<label class="l">Details</label><textarea name="body" maxlength="2000"></textarea>`,async f=>{
@@ -789,12 +1077,12 @@ setInterval(()=>{Object.keys(PAV).forEach(k=>delete PAV[k])},50*60*1000);
 const dayLbl=d=>{const k=x=>new Date(x.getTime()-x.getTimezoneOffset()*6e4).toISOString().slice(0,10),t=k(new Date()),y=k(new Date(Date.now()-864e5)),v=k(d);return v===t?'Today':v===y?'Yesterday':d.toLocaleDateString([],{day:'numeric',month:'short',year:'numeric'})};
 function bubbles(pid){const ms=CH.msgs.filter(m=>m.patient_id===pid).sort((a,b)=>a.created_at.localeCompare(b.created_at));let last='',out='';
  ms.forEach(m=>{const d=new Date(m.created_at),k=dayLbl(d),mine=m.sender_id===me.id;if(k!==last){out+=`<div class="wad"><span>${k}</span></div>`;last=k}
-  out+=`<div class="bub ${mine?'me':''}">${mine||m.sender_id===pid?'':`<b class="wan">${esc(nm2(m.sender_id))}</b>`}${esc(m.body)}<span class="wat">${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}${mine?`<i class="${m.read?'rd':''}">${m.read?'\u2713\u2713':'\u2713'}</i>`:''}</span></div>`});
+  out+=`<div class="bub ${mine?'me':''}">${mine||m.sender_id===pid?'':`<b class="wan">${esc(nm2(m.sender_id))}</b>`}${m.audio_path?vnHtml(m):esc(m.body)}<span class="wat">${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}${mine?`<i class="${m.read?'rd':''}">${m.read?'\u2713\u2713':'\u2713'}</i>`:''}</span></div>`});
  return out||'<div class="wnote" style="margin:auto">No messages yet. Say hello.</div>'}
 const chatPeer=pid=>me.role==='doctor'?{id:pid,name:(D.pts.find(x=>x.id===pid)||{}).full_name||'Patient'}:{id:presIds(pid)[0]||'',name:'Maternity team'};
 function threadView(pid){
  const st=me.role==='doctor',arg=st?",'"+pid+"'":'',pe=chatPeer(pid);
- return `<div class="wa"><div class="wahd"><button class="ib" onclick="${st?'chatPt=null;drawDoc()':"nav('home')"}" title="Back">${ic('back')}</button>${avFor(pe.id,pe.name,40)}<div class="wt"><b>${esc(pe.name)}</b><small id="pres">${presTxt(presIds(pid))}</small></div><button class="ib" onclick="startCall(false${arg})" title="Voice call">${ic('phone')}</button><button class="ib" onclick="startCall(true${arg})" title="Video call">${ic('video')}</button></div><div class="chat" id="chat">${bubbles(pid)}</div><div class="wain"><input id="cin" placeholder="Type a message" autocomplete="off" onkeydown="if(event.key==='Enter')sendChat()"><button class="snd" onclick="sendChat()" title="Send">${ic('send')}</button></div></div><div class="wnote">Chat is not for emergencies.${st?'':' Use the emergency alert on Home.'}</div>`}
+ return `<div class="wa"><div class="wahd"><button class="ib" onclick="${st?'chatPt=null;drawDoc()':"nav('home')"}" title="Back">${ic('back')}</button>${avFor(pe.id,pe.name,40)}<div class="wt"><b>${esc(pe.name)}</b><small id="pres">${presTxt(presIds(pid))}</small></div><button class="ib" onclick="startCall(false${arg})" title="Voice call">${ic('phone')}</button><button class="ib" onclick="startCall(true${arg})" title="Video call">${ic('video')}</button></div><div class="chat" id="chat">${bubbles(pid)}</div><div class="wain" id="wain-chat"><input id="cin" placeholder="Type a message" autocomplete="off" onkeydown="if(event.key==='Enter')sendChat()"><button class="mic" onclick="recStart('chat')" title="Record a voice note" aria-label="Record a voice note">${ic('mic')}</button><button class="snd" onclick="sendChat()" title="Send">${ic('send')}</button></div></div><div class="wnote">Chat is not for emergencies.${st?'':' Use the emergency alert on Home.'}</div>`}
 function staffChat(){
  if(chatPt)return threadView(chatPt);
  const by={};CH.msgs.forEach(m=>{(by[m.patient_id]=by[m.patient_id]||[]).push(m)});
@@ -810,14 +1098,14 @@ async function loadGroup(){try{const {data:g}=await sb.from('chat_groups').selec
 const inGroup=()=>me&&(me.role==='doctor'?(view==='group'&&!sel):ptab==='group');
 function gBubbles(){let last='',out='';
  GR.msgs.forEach(m=>{const d=new Date(m.created_at),k=dayLbl(d),mine=m.sender_id===me.id;if(k!==last){out+=`<div class="wad"><span>${k}</span></div>`;last=k}
-  out+=`<div class="bub ${mine?'me':''}">${mine?'':`<b class="wan">${esc(m.sender_name||'Member')}${m.sender_role==='staff'?' \u00b7 staff':''}</b>`}${esc(m.body)}<span class="wat">${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div>`});
+  out+=`<div class="bub ${mine?'me':''}">${mine?'':`<b class="wan">${esc(m.sender_name||'Member')}${m.sender_role==='staff'?' \u00b7 staff':''}</b>`}${m.audio_path?vnHtml(m):esc(m.body)}<span class="wat">${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div>`});
  return out||'<div class="wnote" style="margin:auto">No messages yet.</div>'}
-function paintGroup(){const el=$('gchat');if(!el)return;el.innerHTML=gBubbles();el.scrollTop=el.scrollHeight}
+function paintGroup(){const el=$('gchat');if(!el)return;el.innerHTML=gBubbles();el.scrollTop=el.scrollHeight;vnSync()}
 function groupView(){
  const g=GR.g;if(!g)return '<h2 style="margin-top:0">Group chat</h2><div class="mu">Loading...</div>';
  const adm=isAdmin(),lock=g.admin_only&&!adm;
  setTimeout(paintGroup,0);
- return `<div class="wa"><div class="wahd"><button class="ib" onclick="${me.role==='doctor'?"nav('overview')":"nav('home')"}" title="Back">${ic('back')}</button><span class="av" style="--s:40px">${ic('users')}</span><div class="wt"><b>${esc(g.name)}</b><small>${g.admin_only?'Only admins can send messages':'Patients and staff'}</small></div></div>${adm?`<label class="wnote" style="display:flex;gap:8px;align-items:center;justify-content:center;background:var(--in)"><input type="checkbox" ${g.admin_only?'checked':''} onchange="setGroupLock(this.checked)" style="width:auto;margin:0"> Only admin can send messages</label>`:''}<div class="chat" id="gchat"></div>${lock?`<div class="wnote" style="background:#f0f2f5;color:#54656f">Only admins can send messages in this group.</div>`:`<div class="wain"><input id="gin" placeholder="Type a message" maxlength="2000" autocomplete="off" onkeydown="if(event.key==='Enter')sendGroup()"><button class="snd" onclick="sendGroup()" title="Send">${ic('send')}</button></div>`}</div><div class="wnote">Group updates are visible to all patients and staff. Do not share private health details here.</div>`}
+ return `<div class="wa"><div class="wahd"><button class="ib" onclick="${me.role==='doctor'?"nav('overview')":"nav('home')"}" title="Back">${ic('back')}</button><span class="av" style="--s:40px">${ic('users')}</span><div class="wt"><b>${esc(g.name)}</b><small>${g.admin_only?'Only admins can send messages':'Patients and staff'}</small></div></div>${adm?`<label class="wnote" style="display:flex;gap:8px;align-items:center;justify-content:center;background:var(--in)"><input type="checkbox" ${g.admin_only?'checked':''} onchange="setGroupLock(this.checked)" style="width:auto;margin:0"> Only admin can send messages</label>`:''}<div class="chat" id="gchat"></div>${lock?`<div class="wnote" style="background:#f0f2f5;color:#54656f">Only admins can send messages in this group.</div>`:`<div class="wain" id="wain-group"><input id="gin" placeholder="Type a message" maxlength="2000" autocomplete="off" onkeydown="if(event.key==='Enter')sendGroup()"><button class="mic" onclick="recStart('group')" title="Record a voice note" aria-label="Record a voice note">${ic('mic')}</button><button class="snd" onclick="sendGroup()" title="Send">${ic('send')}</button></div>`}</div><div class="wnote">Group updates are visible to all patients and staff. Do not share private health details here.</div>`}
 async function sendGroup(){
  const i=$('gin');if(!i||!GR.g)return;const body=i.value.trim();if(!body)return;i.value='';
  const {data,error}=await sb.from('group_messages').insert({group_id:GR.g.id,sender_id:me.id,body}).select().single();
@@ -832,7 +1120,7 @@ function onGroup(pl){
  if(GR.msgs.some(x=>x.id===m.id))return;GR.msgs.push(m);
  if(inGroup())paintGroup();else if(m.sender_id!==me.id)toast((m.sender_name||'Someone')+' posted in Group chat',()=>nav('group'))}
 function openChat(pid){view='chat';chatPt=pid;sel=null;drawDoc()}
-function paintChat(){const el=$('chat');if(!el)return;el.innerHTML=bubbles(me.role==='doctor'?chatPt:me.id);el.scrollTop=el.scrollHeight}
+function paintChat(){const el=$('chat');if(!el)return;el.innerHTML=bubbles(me.role==='doctor'?chatPt:me.id);el.scrollTop=el.scrollHeight;vnSync()}
 function afterChat(){refreshPres();loadPeerAv([chatPeer(me.role==='doctor'?chatPt:me.id).id]);paintChat();markThread(me.role==='doctor'?chatPt:me.id)}
 async function markThread(pid){
  const st=me.role==='doctor',un=CH.msgs.filter(m=>m.patient_id===pid&&!m.read&&(st?m.sender_id===pid:m.sender_id!==me.id));if(!un.length)return;
@@ -850,6 +1138,50 @@ async function sendChat(){
  const {data,error}=await sb.from('chat_messages').insert({patient_id:pid,sender_id:me.id,body}).select().single();
  if(error){i.value=body;return alert(error.message)}
  if(!CH.msgs.some(y=>y.id===data.id))CH.msgs.push(data);paintChat();i.focus()}
+/* ---------- voice notes ---------- */
+let REC=null,VNA=null,VNP='';const VNU={};
+const vnHtml=m=>`<div class="vn" data-vn="${esc(m.audio_path)}"><button type="button" class="vnp" onclick="vnPlay(this)" aria-label="Play voice note">${ic('play')}</button><div class="vnw"><i></i></div><span class="vnt">${fmtT(m.audio_secs||0)}</span></div>`;
+function vnSync(){document.querySelectorAll('.vn').forEach(v=>{const on=VNA&&v.dataset.vn===VNP&&!VNA.paused;v.classList.toggle('on',!!on);v.querySelector('.vnp').innerHTML=ic(on?'pause':'play')})}
+async function vnUrl(path){const c=VNU[path];if(c&&c.t>Date.now())return c.u;const {data,error}=await sb.storage.from('voice-notes').createSignedUrl(path,3600);if(error||!data)throw error||new Error('Voice note not found');VNU[path]={u:data.signedUrl,t:Date.now()+50*6e4};return data.signedUrl}
+async function vnPlay(btn){const box=btn.closest('.vn'),path=box.dataset.vn;
+ if(VNA&&VNP===path){if(VNA.paused)VNA.play().catch(()=>{});else VNA.pause();return}
+ if(VNA){VNA.pause();VNA=null}
+ btn.innerHTML='<span class="spin"></span>';
+ try{const a=new Audio(await vnUrl(path));VNA=a;VNP=path;
+  const bar=()=>document.querySelector('.vn[data-vn="'+CSS.escape(path)+'"]');
+  a.ontimeupdate=()=>{const b=bar();if(!b)return;const d=a.duration&&isFinite(a.duration)?a.duration:0;b.querySelector('.vnw i').style.width=(d?Math.min(100,a.currentTime/d*100):0)+'%';b.querySelector('.vnt').textContent=fmtT(Math.floor(a.currentTime))};
+  a.onplay=a.onpause=vnSync;a.onended=()=>{const b=bar();if(b){b.querySelector('.vnw i').style.width='0%'}VNA=null;VNP='';vnSync()};
+  await a.play()}catch(e){btn.innerHTML=ic('play');alert('This voice note could not be played. '+(e&&e.message?e.message:''))}}
+function recBar(){const k=REC&&REC.kind,w=$('wain-'+k);if(!w)return;w.classList.add('rec');w.innerHTML=`<button class="ib" onclick="recStop(false)" title="Delete recording" aria-label="Delete recording">${ic('trash')}</button><span class="rdot"></span><span class="rtm" id="rtm">0:00</span><span class="rhint">Recording… tap send when you finish</span><button class="snd" onclick="recStop(true)" title="Send voice note" aria-label="Send voice note">${ic('send')}</button>`}
+function recRestore(k){const w=$('wain-'+k);if(!w)return;w.classList.remove('rec');w.innerHTML=k==='chat'?`<input id="cin" placeholder="Type a message" autocomplete="off" onkeydown="if(event.key==='Enter')sendChat()"><button class="mic" onclick="recStart('chat')" title="Record a voice note" aria-label="Record a voice note">${ic('mic')}</button><button class="snd" onclick="sendChat()" title="Send">${ic('send')}</button>`:`<input id="gin" placeholder="Type a message" maxlength="2000" autocomplete="off" onkeydown="if(event.key==='Enter')sendGroup()"><button class="mic" onclick="recStart('group')" title="Record a voice note" aria-label="Record a voice note">${ic('mic')}</button><button class="snd" onclick="sendGroup()" title="Send">${ic('send')}</button>`}
+async function recStart(kind){
+ if(REC)return;if(!navigator.mediaDevices||!window.MediaRecorder)return alert('Voice notes are not supported on this browser. Please update it or use Chrome or Safari.');
+ if(kind==='group'&&!GR.g)return;if(kind==='chat'&&!(me.role==='doctor'?chatPt:me.id))return;
+ let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}})}catch(e){return alert('Allow microphone access to record a voice note. You can change this in your browser or phone settings.')}
+ const types=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus','audio/aac'],mt=types.find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t))||'';
+ let mr;try{mr=mt?new MediaRecorder(stream,{mimeType:mt}):new MediaRecorder(stream)}catch(e){stream.getTracks().forEach(t=>t.stop());return alert('Recording could not start on this device.')}
+ REC={kind,mr,stream,chunks:[],t0:Date.now(),send:false,pid:me.role==='doctor'?chatPt:me.id,gid:GR.g&&GR.g.id};
+ mr.ondataavailable=e=>{if(e.data&&e.data.size)REC&&REC.chunks.push(e.data)};
+ mr.onstop=()=>recDone();
+ mr.start(250);recBar();
+ REC.timer=setInterval(()=>{if(!REC)return;const sec=Math.floor((Date.now()-REC.t0)/1000),e=$('rtm');if(e)e.textContent=fmtT(sec);if(sec>=120)recStop(true)},250)}
+function recStop(send){if(!REC)return;REC.send=send;clearInterval(REC.timer);try{if(REC.mr.state!=='inactive')REC.mr.stop();else recDone()}catch(e){recDone()}}
+function recCancel(){if(REC)recStop(false)}
+async function recDone(){const r=REC;if(!r||r.done)return;r.done=true;REC=null;r.stream.getTracks().forEach(t=>t.stop());recRestore(r.kind);
+ const secs=Math.max(1,Math.min(300,Math.round((Date.now()-r.t0)/1000)));
+ if(!r.send)return;if(Date.now()-r.t0<800)return toast('Voice note too short. Hold on a little longer.');
+ const type=((r.chunks[0]&&r.chunks[0].type)||r.mr.mimeType||'audio/webm').split(';')[0],ext={'audio/webm':'webm','audio/mp4':'m4a','audio/ogg':'ogg','audio/aac':'aac','audio/mpeg':'mp3','audio/wav':'wav'}[type]||'webm';
+ const blob=new Blob(r.chunks,{type});if(blob.size>5*1024*1024)return alert('That voice note is too long to send. Keep it under 2 minutes.');
+ const id=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)),path=(r.kind==='chat'?'chat/'+r.pid:'group/'+r.gid)+'/'+id+'.'+ext;
+ toast('Sending voice note…');
+ const up=await sb.storage.from('voice-notes').upload(path,blob,{contentType:type,upsert:false});
+ if(up.error)return alert('The voice note could not be sent: '+up.error.message);
+ const body='\u{1F3A4} Voice note ('+fmtT(secs)+')';
+ if(r.kind==='chat'){const {data,error}=await sb.from('chat_messages').insert({patient_id:r.pid,sender_id:me.id,body,audio_path:path,audio_secs:secs}).select().single();
+  if(error)return alert(error.message);if(!CH.msgs.some(y=>y.id===data.id))CH.msgs.push(data);paintChat()}
+ else{const {data,error}=await sb.from('group_messages').insert({group_id:r.gid,sender_id:me.id,body,audio_path:path,audio_secs:secs}).select().single();
+  if(error)return alert(/row-level security/i.test(error.message)?'Only admins can send messages in this group right now.':error.message);if(!GR.msgs.some(x=>x.id===data.id))GR.msgs.push(data);paintGroup()}
+ document.querySelectorAll('.toast').forEach(t=>t.remove())}
 /* ---------- voice and video calls (WebRTC, signalling through the database) ---------- */
 let CALL=null,incoming=null,sigQ=Promise.resolve(),ringT=null,actx=null;
 const fmtT=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
@@ -1078,23 +1410,34 @@ function p360(){const p=P(ad.sel);if(!p){ad.sel=null;return ''}
  h+=portion('bell','Notifications sent',d.nt.length?d.nt.map(n=>li(`<b>${esc(n.title)}</b>${n.read?'':' \u00b7 unread'}${n.saved?' \u00b7 \u2605 saved':''}${n.remind_at&&!n.reminded?' \u00b7 \u{1F514} reminder':''}`,new Date(n.created_at).toLocaleString())).join(''):'<div class="mu">None.</div>');
  const last=d.ch[0];h+=portion('msg','Messages',`<div class="mu">${d.ch.length}${d.ch.length>=200?'+':''} messages${last?' \u00b7 last on '+new Date(last.created_at).toLocaleString():''}</div>`);
  return h}
+const kpi=(icn,label,val,tone,go,sub)=>`<div class="kpi ${tone||''} ${go?'click':''}" ${go?`role="button" tabindex="0" onclick="${go}" onkeydown="if(event.key==='Enter')this.click()"`:''}><span class="kic">${ic(icn)}</span><div class="kt"><b>${val}</b><span>${label}</span>${sub?`<em>${sub}</em>`:''}</div></div>`;
+const panel=(icn,title,body,act,cls)=>`<section class="pnl ${cls||''}"><header>${ic(icn)}<h3>${title}</h3>${act||''}</header><div class="pnb">${body}</div></section>`;
+const arow=(icn,tone,label,n,go)=>`<button class="arow ${n?tone:''}" onclick="${go}"><span class="aic">${ic(icn)}</span><span class="atx">${label}</span><span class="acn">${n}</span><span class="ach">›</span></button>`;
 function adminDash(){
  if(!isAdmin())return '';
  if(ad.sel)return p360();
+ if(RV.list===null)loadReviews();
  const t=today(),reg=D.staff,by=x=>reg.filter(s=>s.active!==false&&stTitle(s)===x).length,anti=D.pts.filter(p=>p.status==='antenatal');
  const un=anti.filter(p=>!teamOf(p.id).length),req=pendingReqs().length,conf=D.ap.filter(a=>overdue(a)).length,pri=D.pts.filter(p=>['critical','priority'].includes(riskOf(p).level)).length;
- const fees=(D.amb||[]).filter(a=>a.status!=='cancelled'),paid=fees.filter(a=>a.paid).reduce((n,a)=>n+Number(a.fee_usd),0),owed=fees.filter(a=>!a.paid).reduce((n,a)=>n+Number(a.fee_usd),0);
- const pendFees=D.ap.filter(a=>a.status==='pending').reduce((n,a)=>n+Number(a.fee_usd||0),0),accFees=D.ap.filter(a=>a.appt_date>=t&&['scheduled','admitted'].includes(a.status)).reduce((n,a)=>n+Number(a.fee_usd||0),0);
- const hr=new Date().getHours(),gr=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
- let h=`<h2 style="margin-top:0">${gr}, ${esc((me.full_name||'').split(' ')[0])}</h2><div class="mu" style="margin-bottom:12px">${fd(t)} \u00b7 Administrator dashboard</div>
- <div class="srch"><input type="search" id="adq" placeholder="Search a patient by name, ID, phone or email" value="${esc(ad.q)}" oninput="adSearch(this.value)" onkeydown="if(event.key==='Enter'){const f=adFind(this.value)[0];if(f)adOpen(f.id)}" autocomplete="off"><div id="adres" style="margin-top:8px">${adResults()}</div></div>`;
- h+=portion('alert','Needs attention',`<div class="stats">${tile('cal','Booking requests',req,"nav('bookings')",req>0)}${tile('check','Past appointments to confirm',conf,"nav('bookings')",conf>0)}${tile('alert','Without a care team',un.length,"aUn=true;nav('assign')",un.length>0)}${tile('alert','Open ambulance requests',ambN(),"nav('ambulance')",ambN()>0)}${tile('alert','High-priority alerts',D.al.length,"nav('overview')",D.al.length>0)}${tile('alert','Priority patients',pri,"nav('patients')",pri>0)}</div>`+(un.length?`<h3 style="margin:14px 0 6px">Assign a care team</h3>`+un.slice(0,5).map(p=>`<div class="pr" onclick="aUn=true;nav('assign')"><div><b>${esc(p.full_name)}</b> <span class="mu">${esc(p.patient_code)}</span></div><span class="pill hot">Assign</span></div>`).join('')+(un.length>5?`<div class="mu">+ ${un.length-5} more</div>`:''):''),req+conf+un.length+ambN()?[String(req+conf+un.length+ambN())+' open','hot']:['All clear']);
- h+=portion('clock','Today',`<div class="stats">${tile('cal','Appointments today',D.ap.filter(a=>a.appt_date===t&&!['cancelled','pending','rejected'].includes(a.status)).length,"nav('queue')")}${tile('clock','In the queue',qN(),"nav('queue')")}${tile('bed','Beds free',bedsFree(t)+' / '+BED_TOTAL,"nav('beds')")}${tile('bed','Admitted',D.pts.filter(p=>p.admitted_at).length,"nav('patients');pFilter='admitted';drawDoc()")}${tile('cal','Booked, coming up',D.ap.filter(a=>a.appt_date>t&&a.status==='scheduled').length,"nav('bookings')")}</div>`);
- h+=portion('cal','Doctor availability',availPanel());
- h+=portion('users','People',`<div class="stats">${tile('users','Patients',D.pts.length,"nav('patients')")}${tile('user','Doctors',by('Doctor'),"nav('staff')")}${tile('user','Midwives',by('Midwife'),"nav('staff')")}${tile('user','Nurses',by('Nurse'),"nav('staff')")}</div>`);
- h+=portion('file','Money',`<div class="stats">${tile('check','Ambulance fees paid','$'+paid,"nav('ambulance')")}${tile('alert','Ambulance fees unpaid','$'+owed,"nav('ambulance')",owed>0)}${tile('file','Fees in pending requests','$'+pendFees,"nav('bookings')")}${tile('file','Fees on upcoming bookings','$'+accFees,"nav('bookings')")}</div><div class="mu" style="margin-top:12px">Stay charges still unpaid: <b>${money((D.chg||[]).filter(c=>!c.voided&&!c.paid).reduce((n,c)=>n+Number(c.total),0))}</b></div><div class="row" style="margin-top:10px"><button class="btn w" onclick="accOpen()">${ic('lock')} Open full accounting</button></div>`);
+ const fees=(D.amb||[]).filter(a=>a.status!=='cancelled'),owed=fees.filter(a=>!a.paid).reduce((n,a)=>n+Number(a.fee_usd),0);
+ const unpaidChg=(D.chg||[]).filter(c=>!c.voided&&!c.paid).reduce((n,c)=>n+Number(c.total),0),todayChg=(D.chg||[]).filter(c=>!c.voided&&c.charged_on===t).reduce((n,c)=>n+Number(c.total),0);
+ const todays=D.ap.filter(a=>a.appt_date===t&&!['cancelled','pending','rejected'].includes(a.status)).sort((x,y)=>(x.appt_time||'').localeCompare(y.appt_time||''));
+ const trk=(D.items||[]).filter(i=>i.active&&i.track_stock),lowI=trk.filter(i=>+i.stock_qty<=+i.reorder_level).sort((x,y)=>x.stock_qty-y.stock_qty);
+ const pub=(RV.list||[]).filter(r=>r.status==='published'),avg=pub.length?pub.reduce((n,r)=>n+r.rating,0)/pub.length:0;
+ const hr=new Date().getHours(),gr=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening',open=req+conf+un.length+ambN()+D.al.length;
+ let h=`<div class="hero"><div class="hero-t"><span class="hero-k">${new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</span><h1>${gr}, ${esc((me.full_name||'').split(' ')[0])}</h1><p>${open?`<b>${open}</b> item${open>1?'s':''} need${open>1?'':'s'} your attention today.`:'Everything is up to date. Have a good shift.'}</p></div>
+ <div class="hero-s"><div class="sbox big">${ic('search')}<input type="search" id="adq" placeholder="Find a patient by name, ID, phone or email" value="${esc(ad.q)}" oninput="adSearch(this.value)" onkeydown="if(event.key==='Enter'){const f=adFind(this.value)[0];if(f)adOpen(f.id)}" autocomplete="off"></div><div id="adres" class="adres">${adResults()}</div></div></div>`;
+ h+=`<div class="kpis">${kpi('users','Patients',D.pts.length,'blue',"nav('patients')",anti.length+' antenatal')}${kpi('cal','Appointments today',todays.length,'teal',"nav('queue')",qN()+' in the queue')}${kpi('bed','Beds free',bedsFree(t)+'<small> / '+BED_TOTAL+'</small>','violet',"nav('beds')",D.pts.filter(p=>p.admitted_at).length+' admitted')}${kpi('clock','Booking requests',req,req?'amber':'',"nav('bookings')",req?'Waiting for you':'None waiting')}${kpi('box','Low stock',lowI.length,lowI.length?'rose':'',"nav('inventory')",trk.length+' items counted')}${kpi('star','Patient rating',pub.length?avg.toFixed(1):'–','gold',"nav('rvadmin')",pub.length+' review'+(pub.length===1?'':'s'))}</div>`;
+ const left=panel('alert','Needs attention',`<div class="alist">${arow('cal','amber','Booking requests to accept or reject',req,"nav('bookings')")}${arow('check','amber','Past appointments to confirm',conf,"nav('bookings')")}${arow('users','amber','Patients without a care team',un.length,"aUn=true;nav('assign')")}${arow('phone','rose','Open ambulance requests',ambN(),"nav('ambulance')")}${arow('alert','rose','Unacknowledged emergency alerts',D.al.length,"nav('overview')")}${arow('heart','rose','Priority and critical patients',pri,"nav('patients')")}</div>`,`<span class="pill ${open?'hot':'ok'}">${open?open+' open':'All clear'}</span>`)
+ +panel('cal','Doctor availability',availPanel(),'<span class="mu">30-minute slots · max 2 patients an hour</span>')
+ +panel('clock','Today’s appointments',todays.length?todays.slice(0,8).map(a=>`<div class="trow" onclick="openPt('${a.patient_id}')"><span class="ttm">${a.appt_time?ft(a.appt_time):'--:--'}</span><div style="flex:1;min-width:0"><b>${esc((P(a.patient_id)||{}).full_name||'Patient')}</b><div class="mu">${dsn(a)}</div></div><span class="pill">${apStat(a)}</span></div>`).join('')+(todays.length>8?`<button class="lnk" onclick="nav('queue')">See all ${todays.length} in the queue</button>`:''):'<div class="mu">No appointments today.</div>',`<button class="btn g sm" onclick="nav('queue')">Queue</button>`);
  const idle=reg.filter(x=>x.active!==false&&x.id!==me.id&&!(D.asg||[]).some(a=>a.staff_id===x.id));
- h+=portion('shield','Manage',`<div class="row"><button class="btn" onclick="nav('staff')">${ic('plus')} Add or manage staff</button><button class="btn g" onclick="nav('assign')">${ic('user')} Assign patients</button><button class="btn g" onclick="nav('audit')">${ic('shield')} Audit log</button></div>`+(idle.length?`<h3 style="margin:14px 0 6px">Staff with no patients (${idle.length})</h3>`+idle.map(x=>`<div class="pr" onclick="assignPatientsModal('${x.id}')"><div><b>${esc(x.full_name)}</b> <span class="pill">${stTitle(x)}</span></div><span class="pill">Assign patients</span></div>`).join(''):''));
+ const right=panel('grid','Quick actions',`<div class="qa"><button onclick="billModal()">${ic('cart')}<span>Record items for a patient</span></button><button onclick="nav('inventory')">${ic('box')}<span>Inventory</span></button><button onclick="nav('staff')">${ic('plus')}<span>Add or manage staff</span></button><button onclick="nav('assign')">${ic('user')}<span>Assign patients</span></button><button onclick="nav('beds')">${ic('bed')}<span>Beds</span></button><button onclick="accOpen()">${ic('lock')}<span>Accounting</span></button></div>`)
+ +panel('box','Stock alerts',lowI.length?lowI.slice(0,6).map(i=>`<div class="srow"><div style="flex:1;min-width:0"><b>${esc(i.name)}</b><div class="mu">${qtyF(i.stock_qty)} ${esc(i.unit)} left · warn at ${qtyF(i.reorder_level)}</div></div><button class="btn g sm" onclick="receiveModal('${i.id}')">${ic('plus')} Stock</button></div>`).join(''):`<div class="okn">${ic('check')}<span>All counted items are above their warning level.</span></div>`,`<button class="lnk" onclick="nav('inventory')">Open</button>`)
+ +panel('file','Money',`<div class="mny"><div><span>Charges recorded today</span><b>${money(todayChg)}</b></div><div><span>Unpaid patient charges</span><b class="${unpaidChg?'neg':''}">${money(unpaidChg)}</b></div><div><span>Ambulance fees unpaid</span><b class="${owed?'neg':''}">${money(owed)}</b></div></div><button class="btn w" style="margin-top:12px" onclick="accOpen()">${ic('lock')} Open accounting</button>`)
+ +panel('star','Patient reviews',RV.list===null?'<div class="mu">Loading...</div>':`<div class="rvmini">${stars(avg,16)}<b>${pub.length?avg.toFixed(1):'–'}</b><span class="mu">${pub.length} published</span></div>${pub.slice(0,2).map(r=>`<div class="rvq">“${esc((r.comment||'No comment').slice(0,110))}${(r.comment||'').length>110?'…':''}”<span>${esc(r.display_name)} · ${r.rating}★</span></div>`).join('')}`,`<button class="lnk" onclick="nav('rvadmin')">Manage</button>`)
+ +panel('users','Team',`<div class="team"><div><b>${by('Doctor')}</b><span>Doctors</span></div><div><b>${by('Midwife')}</b><span>Midwives</span></div><div><b>${by('Nurse')}</b><span>Nurses</span></div></div>${idle.length?`<div class="mu" style="margin:10px 0 6px">Staff with no patients</div>`+idle.slice(0,4).map(x=>`<div class="srow" style="cursor:pointer" onclick="assignPatientsModal('${x.id}')"><div style="flex:1"><b>${esc(x.full_name)}</b> <span class="pill">${stTitle(x)}</span></div><span class="lnk">Assign</span></div>`).join(''):''}`);
+ h+=`<div class="dgrid"><div class="dcol">${left}</div><div class="dcol">${right}</div></div>`;
  return h}
 // ===== Medical alerts and reports module =====
 const LV={3:['Critical','hot'],2:['High',''],1:['Watch','']};
@@ -1422,22 +1765,54 @@ function ptCare(){
  h+=`<div class="card"><h3>My medication</h3>${cur.length?cur.map(r=>`<div class="ms" style="display:block"><b>${esc(r.drug_name)}</b> <span class="mu">${esc(r.dose)} \u00b7 ${esc(r.frequency)}</span>${r.instructions?`<div>${esc(r.instructions)}</div>`:''}<div class="mu">From ${fd(r.start_date)}${r.end_date?' to '+fd(r.end_date):''}${r.followup_due?' \u00b7 Review '+fd(r.followup_due):''}</div></div>`).join(''):'<div class="mu">No medication is currently prescribed.</div>'}${old.length?`<details style="margin-top:8px"><summary class="mu" style="cursor:pointer">Earlier medication (${old.length})</summary>${old.map(r=>`<div class="ms" style="display:block"><b>${esc(r.drug_name)}</b> <span class="mu">${esc(r.dose)} \u00b7 ${esc(r.frequency)} \u00b7 ${r.status==='stopped'?'stopped '+fd(r.stopped_on):'course ended'}</span></div>`).join('')}</details>`:''}<div class="mu" style="margin-top:6px">Do not stop or change medication without speaking to your clinician.</div></div>`;
  return h}
 
+/* ---------- ratings and reviews ---------- */
+let RV={list:null,f:'all',draft:null};
+async function loadReviews(){if(RV.ld)return;RV.ld=true;let data,error;try{({data,error}=await sb.from('reviews').select('*').order('created_at',{ascending:false}).limit(300))}finally{RV.ld=false}if(!me)return;RV.list=error?[]:(data||[]);RV.err=!!error;me.role==='doctor'?((view==='rvadmin'||view==='admin')&&!sel&&!ad.sel&&drawDoc()):(ptab==='reviews'&&drawPt())}
+const stars=(n,sz)=>`<span class="stars" style="--sz:${sz||16}px" aria-label="${n} out of 5 stars">${[1,2,3,4,5].map(i=>`<svg viewBox="0 0 24 24" class="${i<=Math.round(n)?'on':''}">${I.star}</svg>`).join('')}</span>`;
+function rvSummary(l){const n=l.length,avg=n?l.reduce((a,r)=>a+r.rating,0)/n:0;
+ return `<div class="rvsum"><div class="rvbig"><b>${n?avg.toFixed(1):'–'}</b>${stars(avg,18)}<span class="mu">${n} review${n===1?'':'s'}</span></div><div class="rvbars">${[5,4,3,2,1].map(k=>{const c=l.filter(r=>r.rating===k).length;return `<div class="rvb"><span>${k}</span><i><em style="width:${n?Math.round(c/n*100):0}%"></em></i><span class="mu">${c}</span></div>`}).join('')}</div></div>`}
+function rvCard(r,adm){return `<div class="rvc ${r.status==='hidden'?'dim':''}"><div class="rvh"><span class="av" style="--s:36px">${esc(initials(r.display_name))}</span><div style="flex:1;min-width:0"><b>${esc(r.display_name)}</b>${r.patient_id===me.id?' <span class="pill">You</span>':''}${r.status==='hidden'?' <span class="pill hot">Hidden</span>':''}<div class="mu">${new Date(r.created_at).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})}${r.updated_at&&r.updated_at.slice(0,16)!==r.created_at.slice(0,16)?' · edited':''}</div></div>${stars(r.rating,15)}</div>${r.comment?`<p>${esc(r.comment)}</p>`:''}${r.admin_reply?`<div class="rvr"><b>Reply from Maternity Help</b><div>${esc(r.admin_reply)}</div></div>`:''}${adm?`<div class="row" style="margin-top:10px"><button class="btn g sm" onclick="rvStatus('${r.id}','${r.status==='hidden'?'published':'hidden'}')">${r.status==='hidden'?ic('eye')+' Publish':ic('x')+' Hide'}</button><button class="btn g sm" onclick="rvReply('${r.id}')">${ic('msg')} ${r.admin_reply?'Edit reply':'Reply'}</button><button class="btn g sm" onclick="rvDelete('${r.id}')">${ic('trash')} Delete</button></div>`:''}</div>`}
+function ptReviews(){
+ if(RV.list===null){loadReviews();return `<h2 style="margin-top:0">Reviews</h2><div class="card"><div class="mu"><span class="spin"></span> Loading reviews...</div></div>`}
+ const mine=RV.list.find(r=>r.patient_id===me.id),pub=RV.list.filter(r=>r.status==='published'),others=pub.filter(r=>r.patient_id!==me.id);
+ const d=RV.draft||{rating:mine?mine.rating:0,comment:mine?mine.comment||'':'',anonymous:mine?mine.anonymous:false};RV.draft=d;
+ return `<h2 style="margin-top:0">Ratings and reviews</h2><div class="mu" style="margin:-4px 0 12px">Read what other mothers say about their care, and share your own experience.</div>
+ <div class="card">${rvSummary(pub)}</div>
+ <div class="card"><h3>${mine?'Your review':'Rate your care'}</h3>${mine&&mine.status==='hidden'?'<div class="fl" style="margin-bottom:8px">'+ic('alert')+' Your review is hidden by the administrator and only you can see it.</div>':''}
+ <div class="starpick" role="radiogroup" aria-label="Your rating">${[1,2,3,4,5].map(i=>`<button type="button" role="radio" aria-checked="${d.rating===i}" aria-label="${i} star${i>1?'s':''}" class="${i<=d.rating?'on':''}" onclick="RV.draft.rating=${i};drawPt()"><svg viewBox="0 0 24 24">${I.star}</svg></button>`).join('')}<span class="mu">${['Tap a star','Poor','Fair','Good','Very good','Excellent'][d.rating]}</span></div>
+ <label class="l" for="rv-c">Your review (optional)</label><textarea id="rv-c" maxlength="1000" rows="4" placeholder="What went well? What could be better?" oninput="RV.draft.comment=this.value">${esc(d.comment)}</textarea>
+ <label class="ck"><input type="checkbox" ${d.anonymous?'checked':''} onchange="RV.draft.anonymous=this.checked"> Post without my name</label>
+ <div class="row" style="margin-top:6px"><button class="btn" onclick="rvSave(this)">${ic('check')} ${mine?'Update review':'Post review'}</button>${mine?`<button class="btn g" onclick="rvDelete('${mine.id}')">${ic('trash')} Delete</button>`:''}</div>
+ <div class="mu" style="margin-top:8px">Reviews are public to other patients. Do not include private health details.</div></div>
+ <h3 class="sech">What patients say (${others.length})</h3>${others.map(r=>rvCard(r,false)).join('')||'<div class="card"><div class="mu">No reviews from other patients yet.</div></div>'}`}
+async function rvSave(btn){const d=RV.draft;if(!d||!(d.rating>=1&&d.rating<=5))return alert('Tap a star to choose your rating.');
+ const mine=RV.list.find(r=>r.patient_id===me.id),row={rating:d.rating,comment:(d.comment||'').trim()||null,anonymous:!!d.anonymous};btn.disabled=true;
+ const {error}=mine?await sb.from('reviews').update(row).eq('id',mine.id):await sb.from('reviews').insert({...row,patient_id:me.id});btn.disabled=false;
+ if(error)return alert(friendly(error));RV.draft=null;toast(mine?'Review updated. Thank you.':'Thank you for your review.');loadReviews()}
+async function rvDelete(id){if(!confirm('Delete this review?'))return;const {error}=await sb.from('reviews').delete().eq('id',id);if(error)return alert(friendly(error));RV.draft=null;toast('Review deleted.');loadReviews()}
+async function rvStatus(id,st){const {error}=await sb.from('reviews').update({status:st}).eq('id',id);if(error)return alert(friendly(error));toast(st==='hidden'?'Review hidden from patients.':'Review published.');loadReviews()}
+function rvReply(id){const r=RV.list.find(x=>x.id===id);if(!r)return;modal('Reply to '+esc(r.display_name),`<div class="mu" style="margin-bottom:6px">Your reply is shown under the review to every patient. Leave it empty to remove the reply.</div><textarea name="t" maxlength="1000" rows="5">${esc(r.admin_reply||'')}</textarea>`,async f=>{const {error}=await sb.from('reviews').update({admin_reply:(f.t||'').trim()||null}).eq('id',id);if(error)throw error;toast('Reply saved.');loadReviews()},'Save reply')}
+function reviewsAdminView(){if(!isAdmin())return '';
+ if(RV.list===null){loadReviews();return `<h2 style="margin-top:0">Reviews</h2><div class="card"><div class="mu"><span class="spin"></span> Loading reviews...</div></div>`}
+ const all=RV.list,pub=all.filter(r=>r.status==='published'),hid=all.filter(r=>r.status==='hidden'),l=RV.f==='pub'?pub:RV.f==='hid'?hid:RV.f==='low'?all.filter(r=>r.rating<=2):all;
+ const chip=(k,t)=>`<button class="chip ${RV.f===k?'on':''}" onclick="RV.f='${k}';drawDoc()">${t}</button>`;
+ return `<div class="pghd"><div><h2>Patient reviews</h2><div class="mu">Hide reviews that break the rules, reply to patients or delete reviews.</div></div></div><div class="card">${rvSummary(pub)}<div class="mu" style="margin-top:8px">Rating shown to patients is based on published reviews only.</div></div><div class="chips" style="margin:4px 0 12px">${chip('all','All ('+all.length+')')}${chip('pub','Published ('+pub.length+')')}${chip('hid','Hidden ('+hid.length+')')}${chip('low','1 or 2 stars ('+all.filter(r=>r.rating<=2).length+')')}</div>${l.map(r=>rvCard(r,true)).join('')||'<div class="card"><div class="mu">No reviews here.</div></div>'}`}
 /* ---------- doctor availability (admin) ---------- */
 const AV_TIMES=(()=>{const a=[];for(let h=6;h<=22;h++){a.push(String(h).padStart(2,'0')+':00');if(h<22)a.push(String(h).padStart(2,'0')+':30')}return a})();
 async function loadAvail(){if(!isAdmin())return;const {data,error}=await sb.from('staff_availability').select('*').gte('avail_date',today()).order('avail_date').order('start_time').limit(500);D.av=error?[]:(data||[]);D.avErr=!!error;if(view==='admin'&&!ad.sel)drawDoc()}
 function avSlots(r){const [h1,m1]=r.start_time.split(':'),[h2,m2]=r.end_time.split(':');return Math.max(0,((+h2*60+ +m2)-(+h1*60+ +m1))/30)}
 function avBooked(r){return D.ap.filter(a=>a.staff_id===r.staff_id&&a.appt_date===r.avail_date&&a.appt_time&&a.appt_time>=r.start_time&&a.appt_time<r.end_time&&['pending','scheduled','waiting','with_nurse','with_doctor','lab'].includes(a.status)).length}
 function availPanel(){
- const docs=D.staff.filter(x=>x.active!==false),av=D.av,opt=(v)=>AV_TIMES.map(t=>`<option${t===v?' selected':''}>${t}</option>`).join('');
+ const docs=D.staff.filter(x=>x.active!==false&&stTitle(x)!=='Nurse'),av=D.av,opt=(v)=>AV_TIMES.map(t=>`<option${t===v?' selected':''}>${t}</option>`).join('');
  const days=av?Array.from(new Set(av.map(r=>r.avail_date))).slice(0,21):[];
  const form=`<div class="mu" style="margin-bottom:8px">Set the days and hours each doctor sees patients. Patients can only book inside these hours, in 30-minute slots (2 patients per hour).</div>
  <label class="l">Doctor / midwife</label><select id="avStaff">${docs.map(x=>`<option value="${x.id}">${esc(stTitle(x)+' '+x.full_name)}</option>`).join('')}</select>
  <div class="two"><div><label class="l">Date</label><input type="date" id="avDate" min="${today()}" value="${today()}"></div><div><label class="l">Repeat until (optional)</label><input type="date" id="avUntil" min="${today()}"></div></div>
  <div class="two"><div><label class="l">From</label><select id="avFrom">${opt('08:00')}</select></div><div><label class="l">To</label><select id="avTo">${opt('17:00')}</select></div></div>
- <label class="row" style="margin:8px 0"><input type="checkbox" id="avWk" checked style="width:auto"> Skip Saturdays and Sundays when repeating</label>
+ <label class="ck"><input type="checkbox" id="avWk" checked> Skip Saturdays and Sundays when repeating</label>
  <button class="btn" onclick="addAvail()">${ic('plus')} Add availability</button>`;
- const list=av==null?'<div class="mu">Loading...</div>':D.avErr?`<div class="fl">${ic('alert')} Availability could not be loaded.</div>`:!days.length?'<div class="mu">No availability set yet. Patients cannot book until you add some.</div>':days.map(d=>`<div style="margin-top:10px"><b>${dayLabel(d)}</b>${av.filter(r=>r.avail_date===d).map(r=>{const st=D.staff.find(x=>x.id===r.staff_id)||{},bk=avBooked(r),n=avSlots(r);return `<div class="li"><div>${esc(stTitle(st)+' '+(st.full_name||''))} \u00b7 ${ft(r.start_time)}\u2013${ft(r.end_time)}<div class="mu">${n} slots \u00b7 ${bk} booked or requested \u00b7 ${n-bk} free</div></div><button type="button" class="ib" title="Remove" onclick="rmAvail('${r.id}')">${ic('x')}</button></div>`}).join('')}</div>`).join('');
- return form+'<h3 style="margin:16px 0 0">Upcoming availability</h3>'+list}
+ const list=av==null?'<div class="mu">Loading...</div>':D.avErr?`<div class="fl">${ic('alert')} Availability could not be loaded.</div>`:!days.length?'<div class="mu">No availability set yet. Patients cannot book until you add some.</div>':days.map(d=>`<div style="margin-top:10px"><b>${dayLabel(d)}</b>${av.filter(r=>r.avail_date===d).map(r=>{const st=D.staff.find(x=>x.id===r.staff_id)||{},bk=avBooked(r),n=avSlots(r);return `<div class="avs"><div style="flex:1;min-width:0"><b>${esc(stTitle(st)+' '+(st.full_name||''))}</b><div class="mu">${ft(r.start_time)} to ${ft(r.end_time)} \u00b7 ${n} slots of 30 min \u00b7 max ${Math.round(n/2*10)/10>=1?'2 patients an hour':'1 patient'}</div><div class="sbar"><i style="width:${n?Math.round(bk/n*100):0}%" class="${bk>=n?'hot':''}"></i></div><div class="mu">${bk} booked or requested \u00b7 <b>${n-bk} free</b></div></div><button type="button" class="ib" title="Remove" onclick="rmAvail('${r.id}')">${ic('trash')}</button></div>`}).join('')}</div>`).join('');
+ return `<div class="avgrid"><div class="avform">${form}</div><div><h3 style="margin:0 0 4px">Upcoming availability</h3>${list}</div></div>`}
 async function addAvail(){
  const staff=$('avStaff').value,d0=$('avDate').value,until=$('avUntil').value||d0,from=$('avFrom').value,to=$('avTo').value,skip=$('avWk').checked;
  if(!staff||!d0)return alert('Choose a doctor and a date.');if(d0<today())return alert('Choose today or a future date.');
@@ -1533,7 +1908,8 @@ async function idleOut(){clearInterval(idleI);const m='You were signed out after
 // two-step sign-in
 async function mfaNeeded(){try{const {data}=await sb.auth.mfa.getAuthenticatorAssuranceLevel();return !!(data&&data.nextLevel==='aal2'&&data.currentLevel!=='aal2')}catch(e){return false}}
 function mfaPrompt(msg=''){document.body.classList.remove('in','nav','sos');
- app.innerHTML=`<div class="card auth"><div style="display:flex;justify-content:center"><img class="logo big" src="/logo.png" alt="Maternity Help"></div><h1>Two-step verification</h1><p class="tag">Enter the 6-digit code from your authenticator app</p><label class="l" for="mfc">Verification code</label><div class="f">${ic('lock')}<input id="mfc" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" onkeydown="if(event.key==='Enter')mfaLogin(document.getElementById('mfb'))"></div><button class="btn w" id="mfb" onclick="mfaLogin(this)">${ic('check')} Verify</button><p class="err" id="msg" role="alert">${esc(msg)}</p><div style="text-align:center"><button class="btn g" onclick="mfaBack()">Cancel</button></div></div>`;setTimeout(()=>{const i=$('mfc');i&&i.focus()},60)}
+ document.body.classList.add('authp');
+ app.innerHTML=authFrame(`<h1 class="axh">Two-step verification</h1><p class="axs">Enter the 6-digit code from your authenticator app.</p><label class="l" for="mfc">Verification code</label><div class="f">${ic('lock')}<input id="mfc" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" onkeydown="if(event.key==='Enter')mfaLogin(document.getElementById('mfb'))"></div><button class="btn w" id="mfb" onclick="mfaLogin(this)">${ic('check')} Verify</button><p class="err" id="msg" role="alert">${esc(msg)}</p><div style="text-align:center"><button class="btn g" onclick="mfaBack()">Cancel</button></div>`);setTimeout(()=>{const i=$('mfc');i&&i.focus()},60)}
 async function mfaLogin(btn){await busy(btn,async()=>{const code=($('mfc').value||'').replace(/\D/g,'');if(code.length!==6)return $('msg').textContent='Enter the 6-digit code.';
  const {data:fs}=await sb.auth.mfa.listFactors();const f=((fs&&fs.totp)||[])[0];if(!f)return $('msg').textContent='No authenticator is set up for this account. Contact the administrator.';
  const {error}=await sb.auth.mfa.challengeAndVerify({factorId:f.id,code});if(error)return $('msg').textContent='That code is not valid or has expired. Try again.';boot()})}
@@ -1556,7 +1932,7 @@ async function changePw(btn){await busy(btn,async()=>{
  SV.f.cur=SV.f.npw=SV.f.cpw='';['st-cur','st-new','st-cnf'].forEach(i=>{const e=$(i);if(e)e.value=''});pwMeter('');
  setMsg('m-pw','Password changed. Your other devices were signed out.',true);toast('Password changed');loadSessions()})}
 // profile
-async function profSave(btn){await busy(btn,async()=>{
+async function profSave(btn){if(isAdmin())return setMsg('m-prof','The administrator\u2019s name, email and phone number are locked.',false);await busy(btn,async()=>{
  const F=SV.f,name=(F.name??me.full_name??'').trim().replace(/\s+/g,' '),phone=(F.phone??me.phone??'').trim(),email=(F.email??me.email??'').trim().toLowerCase(),epw=F.epw||'',er=[];
  if(name.length<2||name.length>80)er.push('Enter your full name (2 to 80 characters).');
  if(phone&&!/^\+?[0-9][0-9\s()\-]{6,18}$/.test(phone))er.push('Enter a valid phone number, for example +263 77 123 4567.');
@@ -1619,15 +1995,15 @@ async function revokeSess(id,btn){await busy(btn,async()=>{const {error}=await s
 async function signOutOthers(btn){if(!confirm('Log out of all other devices? You will stay signed in here.'))return;await busy(btn,async()=>{const {error}=await sb.auth.signOut({scope:'others'});if(error)return toast('Could not log out other devices: '+error.message);toast('Other devices logged out');loadSessions()})}
 function testSound(){playSound(ST.notif.tone||'chime');toast(ST.notif.sound?'This is how notifications will sound.':'Test sound. Sound notifications are currently turned off.')}
 // page
-function settingsView(){setTimeout(settingsMount,0);const F=SV.f,pt=me.role!=='doctor',n=ST.notif;
+function settingsView(){setTimeout(settingsMount,0);const F=SV.f,pt=me.role!=='doctor',n=ST.notif,adm=isAdmin();
  const sw=(k,id,dis)=>`<label class="sw"><input type="checkbox" role="switch" aria-labelledby="${id}" ${(dis||n[k])?'checked':''} ${dis?'disabled':''} onchange="togN('${k}',this)"><i></i></label>`;
  const row=(id,t,d,c)=>`<div class="sr"><div class="t"><b id="${id}">${t}</b><span>${d}</span></div>${c}</div>`;
  const modes=[['light','Light','sun'],['dark','Dark','moon'],['system','System default','gear']];
  return `<h2 style="margin-top:0">Settings</h2><div class="mu" style="margin-bottom:14px">Manage your profile, appearance, notifications and account security.</div>
 <section class="sg" aria-labelledby="h-prof"><header>${ic('user')}<div><h3 id="h-prof">Profile</h3><p>Your photo and contact details. Your role and ID are set by the hospital.</p></div></header>
 <div class="sr"><div class="row" style="gap:14px;flex-wrap:nowrap"><span id="avbox">${avHtml(72)}</span><div class="t"><b>${esc(me.full_name)}</b><span>${esc(roleLabel())}${pt&&me.patient_code?' \u00b7 '+esc(me.patient_code):''}</span></div></div><div class="row"><button class="btn g" onclick="document.getElementById('avf').click()">${ic('cam')} Change photo</button><input id="avf" type="file" accept="image/jpeg,image/png,image/webp" hidden onchange="avUpload(this)" aria-label="Choose a profile photo"><button class="btn g" id="avrm" onclick="avRemove(this)" ${me.avatar_url?'':'hidden'}>Remove</button></div></div>
-<div class="sx"><div class="smsg" id="m-av" role="status" style="margin:0 0 8px"></div><div class="sgrid"><div><label class="l" for="st-name">Full name</label><input id="st-name" value="${esc(F.name??me.full_name??'')}" maxlength="80" autocomplete="name" oninput="SV.f.name=this.value"></div><div><label class="l" for="st-phone">Phone number</label><input id="st-phone" type="tel" value="${esc(F.phone??me.phone??'')}" maxlength="20" autocomplete="tel" oninput="SV.f.phone=this.value"></div><div><label class="l" for="st-email">Email address</label><input id="st-email" type="email" value="${esc(F.email??me.email??'')}" maxlength="120" autocomplete="email" oninput="SV.f.email=this.value"></div><div><label class="l" for="st-epw">Current password (only to change email)</label><div class="f"><input id="st-epw" type="password" autocomplete="current-password" value="${esc(F.epw||'')}" oninput="SV.f.epw=this.value">${eyeBtn('st-epw','password')}</div></div><div><label class="l" for="st-role">Role</label><input id="st-role" value="${esc(roleLabel())}" disabled></div>${pt?`<div><label class="l" for="st-id">Patient ID</label><input id="st-id" value="${esc(me.patient_code||'')}" disabled></div>`:`<div><label class="l" for="st-reg">Professional registration no.</label><input id="st-reg" value="${esc(me.professional_reg_no||'Not recorded')}" disabled></div>`}</div>
-<div class="row" style="margin-top:14px"><button class="btn" onclick="profSave(this)">${ic('check')} Save profile</button></div><div class="smsg" id="m-prof" role="status"></div></div></section>
+<div class="sx"><div class="smsg" id="m-av" role="status" style="margin:0 0 8px"></div>${adm?`<div class="lockn">${ic('lock')}<span>The administrator’s name, email and phone number are locked and cannot be changed here.</span></div>`:''}<div class="sgrid"><div><label class="l" for="st-name">Full name</label><input id="st-name" value="${esc(adm?me.full_name||'':F.name??me.full_name??'')}" maxlength="80" autocomplete="name" ${adm?'disabled':'oninput="SV.f.name=this.value"'}></div><div><label class="l" for="st-phone">Phone number</label><input id="st-phone" type="tel" value="${esc(adm?me.phone||'':F.phone??me.phone??'')}" maxlength="20" autocomplete="tel" ${adm?'disabled':'oninput="SV.f.phone=this.value"'}></div><div><label class="l" for="st-email">Email address</label><input id="st-email" type="email" value="${esc(adm?me.email||'':F.email??me.email??'')}" maxlength="120" autocomplete="email" ${adm?'disabled':'oninput="SV.f.email=this.value"'}></div>${adm?'':`<div><label class="l" for="st-epw">Current password (only to change email)</label><div class="f"><input id="st-epw" type="password" autocomplete="current-password" value="${esc(F.epw||'')}" oninput="SV.f.epw=this.value">${eyeBtn('st-epw','password')}</div></div>`}<div><label class="l" for="st-role">Role</label><input id="st-role" value="${esc(roleLabel())}" disabled></div>${pt?`<div><label class="l" for="st-id">Patient ID</label><input id="st-id" value="${esc(me.patient_code||'')}" disabled></div>`:`<div><label class="l" for="st-reg">Professional registration no.</label><input id="st-reg" value="${esc(me.professional_reg_no||'Not recorded')}" disabled></div>`}</div>
+${adm?'':`<div class="row" style="margin-top:14px"><button class="btn" onclick="profSave(this)">${ic('check')} Save profile</button></div>`}<div class="smsg" id="m-prof" role="status"></div></div></section>
 <section class="sg" aria-labelledby="h-app"><header>${ic('sun')}<div><h3 id="h-app">Appearance</h3><p>Choose how Maternity Help looks. Changes apply straight away and are remembered.</p></div></header><div class="mode" id="modes" role="radiogroup" aria-label="Theme">${modes.map(m=>`<button type="button" role="radio" data-m="${m[0]}" aria-checked="${themeMode===m[0]}" onclick="pickMode('${m[0]}')">${ic(m[2])}<span>${m[1]}</span></button>`).join('')}</div><div class="mu" id="mode-now" style="padding:0 16px 14px">${themeMode==='system'?'Following your device. Currently '+sysTheme()+'.':''}</div></section>
 <section class="sg" aria-labelledby="h-not"><header>${ic('bell')}<div><h3 id="h-not">Notifications</h3><p>Choose what you hear about. Changes save automatically.</p></div></header>
 ${pt?row('n-appt','Appointment reminders','Upcoming, missed and rescheduled appointments.',sw('appt','n-appt'))+row('n-chk','Checkup reminders','When an antenatal or postnatal checkup is due.',sw('checkup','n-chk'))+row('n-med','Medication reminders','Reminders about your prescribed medication.',sw('med','n-med')):''}
@@ -1640,6 +2016,19 @@ ${row('n-emg','Emergency alerts','Ambulance and emergency alerts are always on t
 <section class="sg" aria-labelledby="h-ses"><header>${ic('phone')}<div><h3 id="h-ses">Active sessions</h3><p>Devices where you are logged in. Sign out any you do not recognise.</p></div></header><div id="sec-sess"></div></section>
 <section class="sg" aria-labelledby="h-idl"><header>${ic('clock')}<div><h3 id="h-idl">Automatic logout</h3><p>Sign out automatically when you have not used the app for a while.</p></div></header><div class="sr"><div class="t"><b id="n-idl">Log out after inactivity</b><span>Recommended on shared or hospital devices.</span></div><select id="st-idle" aria-labelledby="n-idl" style="width:auto" onchange="setIdle(this.value)">${IDLES.map(v=>`<option value="${v}"${ST.idle===v?' selected':''}>${v?v+' minutes':'Never'}</option>`).join('')}</select></div></section>`}
 function settingsMount(){if(!$('sec-sess'))return;renderSess();renderMfa();pwMeter(SV.f.npw||'');if(Date.now()-SV.t>30000){loadSessions();loadFactors()}}
+
+// ===== Admin settings security check =====
+let SETOK=false;
+function setLock(){return `<div class="card lockc"><div class="lki">${ic('shield')}</div><h2>Settings are protected</h2><div class="mu">Confirm the administrator username and password to open Settings.</div><button class="btn" onclick="setGate(()=>{SETOK=true;drawDoc()})">${ic('lock')} Confirm and open</button></div>`}
+function setGate(next){document.querySelectorAll('#setov').forEach(e=>e.remove());
+ const m=document.createElement('div');m.id='setov';m.className='ov ovc';
+ m.innerHTML=`<div class="md mdc" role="dialog" aria-modal="true" aria-labelledby="set-h"><div class="lki">${ic('shield')}</div><div class="mh" style="justify-content:center"><span id="set-h">Security check</span></div><div class="mu" style="text-align:center">Enter the administrator username and password to open Settings.</div><label class="l" for="set-u">Username</label><div class="f">${ic('user')}<input id="set-u" autocomplete="off" autocapitalize="none" spellcheck="false"></div><label class="l" for="set-p">Password</label><div class="f">${ic('lock')}<input id="set-p" type="password" autocomplete="off" inputmode="numeric">${eyeBtn('set-p','password')}</div><div class="row" style="margin-top:16px"><button class="btn" style="flex:1" data-go>${ic('check')} Confirm</button><button class="btn g" data-x>Cancel</button></div><div class="smsg" id="m-set" role="alert"></div></div>`;
+ document.body.appendChild(m);const q=x=>m.querySelector(x),go=async()=>{const b=q('[data-go]');await busy(b,async()=>{const u=$('set-u').value.trim(),pw=$('set-p').value;if(!u||!pw)return setMsg('m-set','Enter the username and the password.',false);
+  const {data,error}=await sb.rpc('settings_unlock',{p_user:u,p_pass:pw});if(error)return setMsg('m-set',/not allowed/i.test(error.message)?'Only the administrator can open Settings.':'Could not check the details: '+error.message,false);
+  if(data&&data.ok){m.remove();next&&next();return}
+  if(data&&data.locked_minutes)return setMsg('m-set','Too many wrong attempts. Try again in '+data.locked_minutes+' minute(s).',false);
+  setMsg('m-set','Wrong username or password.'+(data&&data.left!=null?' '+data.left+' attempt(s) left.':''),false);$('set-p').value='';$('set-p').focus()})};
+ m.querySelectorAll('[data-x]').forEach(x=>x.onclick=()=>m.remove());m.onclick=e=>{if(e.target===m)m.remove()};q('[data-go]').onclick=go;m.addEventListener('keydown',e=>{if(e.key==='Enter')go();if(e.key==='Escape')m.remove()});setTimeout(()=>{const i=$('set-u');i&&i.focus()},50)}
 
 // ===== Accounting =====
 let acp='month',acPid=null,ACC={ok:false,asked:false};
@@ -1675,13 +2064,9 @@ function accountingView(){if(!isAdmin())return '<div class="card">Only the admin
  h+=portion('file','Billed by category',cl.length?bars2(cl):'<div class="mu">Nothing billed in this period.</div>');
  h+=portion('users','Unpaid accounts (all time)',owing.length?owing.slice(0,25).map(([pid,v])=>`<div class="pr" onclick="stmtOpen('${pid}')"><div><b>${esc((P(pid)||{}).full_name||'Patient')}</b><div class="mu">${v.n} unpaid item(s)</div></div><span class="pill hot">${money(v.t)}</span></div>`).join(''):'<div class="mu">Every account is paid.</div>',owing.length?[money(owing.reduce((n,x)=>n+x[1].t,0))+' owed','hot']:null);
  h+=portion('check','Recent payments',pays.length?pays.map(x=>`<div class="li"><div><b>${esc((P(x.pid)||{}).full_name||'Patient')}</b><div class="mu">${esc(x.desc)} \u00b7 ${new Date(x.at).toLocaleDateString()}${x.method?' \u00b7 '+esc(PAY_LB[x.method]||x.method):''}</div></div><span>${money(x.amt)}</span></div>`).join(''):'<div class="mu">No payments recorded yet.</div>');
- h+=portion('plus','Price list for hospital stays',`<div class="mu" style="margin-bottom:8px">Items staff can charge to a patient in a bed. The starting prices are examples. Set your real prices.</div>`+(D.items||[]).map(i=>`<div class="li" style="${i.active?'':'opacity:.55'}"><div><b>${esc(i.name)}</b><div class="mu">${esc(CAT_LB[i.category]||i.category)} \u00b7 ${esc(i.unit)}${i.active?'':' \u00b7 hidden'}</div></div><div class="row"><span>${money(i.unit_price)}</span><button class="btn g" style="padding:4px 10px" onclick="itemModal('${i.id}')">Edit</button></div></div>`).join('')+`<div class="row" style="margin-top:10px"><button class="btn" onclick="itemModal()">${ic('plus')} Add item</button></div>`);
+ h+=portion('box','Items and prices',`<div class="mu" style="margin-bottom:10px">Medicines, supplies, tests and services, their prices and stock, are managed on the Inventory page. Anything recorded for a patient is billed here automatically.</div><button class="btn g" onclick="nav('inventory')">${ic('box')} Open inventory</button>`);
  h+=`<div class="row" style="margin-top:6px"><button class="btn g" onclick="exportLedger()">Download ledger (CSV)</button></div><p class="mu">Totals count appointment fees on accepted bookings, hospital stay charges and ambulance fees. Voided charges are left out.</p>`;
  return h}
-function itemModal(id){const it=id?D.items.find(x=>x.id===id):null;
- modal(it?'Edit item':'Add item',`<label class="l">Name</label><input name="name" required minlength="2" maxlength="80" value="${esc(it?it.name:'')}"><label class="l">Category</label><select name="category">${Object.entries(CAT_LB).map(([k,v])=>`<option value="${k}"${it&&it.category===k?' selected':''}>${v}</option>`).join('')}</select><label class="l">Price (USD)</label><input name="price" type="number" min="0" step="0.01" required value="${it?it.unit_price:''}"><label class="l">Per</label><input name="unit" maxlength="20" value="${esc(it?it.unit:'each')}"><label class="l">Show to staff</label><select name="active"><option value="1"${!it||it.active?' selected':''}>Yes</option><option value="0"${it&&!it.active?' selected':''}>No (hide)</option></select>`,async f=>{
-  const row={name:f.name.trim(),category:f.category,unit_price:+f.price,unit:(f.unit||'each').trim(),active:f.active==='1'};if(!(row.unit_price>=0))throw new Error('Enter a valid price.');
-  const {error}=it?await sb.from('charge_items').update(row).eq('id',it.id):await sb.from('charge_items').insert(row);if(error)throw error;toast('Price list updated.');await loadDoc()})}
 function exportLedger(){const L=ledger().filter(x=>inPeriod(x.date));csvDown([['Date','Patient ID','Patient','Type','Description','Amount USD','Status','Paid on','Method']].concat(L.map(x=>{const p=P(x.pid)||{};return [x.date,p.patient_code,p.full_name,x.cat,x.desc,x.amt.toFixed(2),x.paid?'Paid':'Unpaid',x.at?x.at.slice(0,10):'',x.method?PAY_LB[x.method]||x.method:'']})),'ledger-'+today()+'.csv')}
 function stmtOpen(pid){acPid=pid;document.querySelectorAll('#rptov').forEach(e=>e.remove());const p=P(pid);if(!p)return;const L=ledger().filter(x=>x.pid===pid),due=L.filter(x=>!x.paid),tot=L.reduce((n,x)=>n+x.amt,0),paid=tot-due.reduce((n,x)=>n+x.amt,0);
  const m=document.createElement('div');m.id='rptov';m.className='ov';m.style.cssText='align-items:flex-start;overflow:auto;padding:16px;background:var(--bg)';

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<meta name="theme-color" content="#0d1117">
+<meta name="theme-color" content="#0b1220">
 <link rel="icon" type="image/png" href="/icons/icon-64.png">
 <script>(function(){try{var m=localStorage.getItem("themeMode")||localStorage.getItem("theme")||"system";var t=m==="light"||m==="dark"?m:(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme="dark"}})()</script>
 <style>
@@ -37,31 +37,38 @@ a{color:var(--accent)}
 .num{text-align:right;white-space:nowrap}
 .hidden{display:none !important}
 
-/* shell */
-.app{display:grid;grid-template-columns:220px 1fr;min-height:100%}
-.nav{background:var(--surface);border-right:1px solid var(--line);color:var(--muted);padding:20px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
-.brand{font-family:var(--sans);font-weight:700;font-size:1.05rem;color:var(--ink);padding:0 8px 16px;display:flex;flex-direction:column;gap:2px}
-.brand small{display:block;font-family:var(--sans);font-size:.8rem;color:var(--muted);font-weight:400}
-.nav button{all:unset;cursor:pointer;padding:9px 12px;border-radius:var(--r);color:var(--muted);font-weight:500}
-.nav button:hover{background:var(--sunk);color:var(--ink)}
-.nav button[aria-current="page"]{background:var(--glow);color:var(--al);font-weight:600}
-.nav button:focus-visible{outline:2px solid var(--accent)}
-.who{margin-top:auto;font-size:.85rem;color:var(--muted);padding:10px 12px;border-top:1px solid var(--line)}
+/* shell: sidebar on every screen size */
+.app{display:grid;grid-template-columns:256px minmax(0,1fr);min-height:100%}
+.nav{background:var(--surface);border-right:1px solid var(--line);color:var(--muted);padding:16px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.02rem;color:var(--ink);padding:2px 6px 14px}
+.brand small{display:block;font-size:.8rem;color:var(--muted);font-weight:500}
+.bmark{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none;background:linear-gradient(135deg,#2f6fe4,#14b8a6);color:#fff}.bmark svg{width:18px;height:18px}
+.navx{display:none;margin-left:auto;background:none;border:0;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px}
+.nitems{display:flex;flex-direction:column;gap:2px}
+.ngrp{font-size:.7rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);padding:14px 12px 4px;opacity:.85}
+.nav svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.nav button[data-nav],.nav a.back{all:unset;display:flex;align-items:center;gap:11px;cursor:pointer;padding:9px 12px;border-radius:11px;color:var(--muted);font-weight:500;font-size:.93rem;position:relative;box-sizing:border-box;width:100%}
+.nav button[data-nav]:hover,.nav a.back:hover{background:var(--sunk);color:var(--ink)}
+.nav button[aria-current="page"]{background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--al);font-weight:600}
+.nav button[aria-current="page"]::before{content:'';position:absolute;left:-12px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:#14b8a6}
+.nav button:focus-visible,.nav a.back:focus-visible{outline:2px solid var(--accent)}
+.nav a.back{margin-top:10px}
+.who{margin-top:auto;font-size:.85rem;color:var(--muted);padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--sunk)}
 .who b{color:var(--ink);font-weight:600;display:block}
-.nav a.back{color:var(--muted);padding:9px 12px;border-radius:var(--r);text-decoration:none;white-space:nowrap;font-weight:500}
-.nav a.back:hover{background:var(--sunk);color:var(--ink)}
 .linkbtn{background:none;border:0;padding:0;color:inherit;text-decoration:underline;cursor:pointer}
 main{min-width:0;padding:24px 28px 60px}
+.mtop{display:none}.scrim{display:none}
 .top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;justify-content:space-between;margin-bottom:20px}
 .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 @media (max-width:860px){
   .app{grid-template-columns:1fr}
-  .nav{position:sticky;top:0;z-index:5;height:auto;flex-direction:row;overflow-x:auto;padding:10px;gap:2px;align-items:center}
-  .brand{padding:0 10px 0 4px;white-space:nowrap;font-size:1rem}
-  .brand small{display:none}
-  .nav button{white-space:nowrap}
-  .who{margin:0 0 0 auto;border:0;white-space:nowrap}
-  .who b{display:none}
+  .nav{position:fixed;left:0;top:0;bottom:0;z-index:40;width:280px;height:100%;transform:translateX(-102%);transition:transform .22s ease;box-shadow:0 20px 50px rgba(0,0,0,.35);padding-top:calc(16px + env(safe-area-inset-top,0px))}
+  body.navopen .nav{transform:none}
+  body.navopen .scrim{display:block;position:fixed;inset:0;background:rgba(5,8,14,.55);z-index:35}
+  .navx{display:block}
+  .mtop{display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:20;margin:-16px -14px 14px;padding:10px 14px;background:color-mix(in srgb,var(--surface) 90%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .hamb{background:none;border:1px solid var(--line);border-radius:10px;width:38px;height:38px;display:grid;place-items:center;color:var(--ink);cursor:pointer}
+  .hamb svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
   main{padding:16px 14px 60px}
 }
 
@@ -171,6 +178,16 @@ dialog::backdrop{background:rgba(5,8,14,.6)}
 .logohead{display:flex;justify-content:center;margin-bottom:10px}.logohead img{width:56px;height:56px;border-radius:12px;object-fit:contain}
 .loading{color:var(--muted);padding:20px 0}
 @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+
+/* v4 look, shared with the main app */
+:root{--bg:#0b1220;--surface:#111a2b;--sunk:#0d1626;--line:#1e2a3e;--ink:#e6ebf3;--muted:#8d99ad;--accent:#4f8cf7;--ah:#3b78e6;--al:#8db4ff;--glow:#13213a;--r:12px}
+:root[data-theme="light"]{--bg:#f3f6fb;--surface:#ffffff;--sunk:#f6f8fc;--line:#e3e8f0;--ink:#0f172a;--muted:#64748b;--accent:#1f5fd6;--ah:#174cb0;--al:#1f5fd6;--glow:#e9f0fd}
+h1,h2,h3{text-transform:none;letter-spacing:-.01em}h1{font-size:1.45rem}
+.panel,.statement,.figures{border-radius:16px;box-shadow:0 1px 2px rgba(15,23,42,.05),0 1px 3px rgba(15,23,42,.06)}
+.btn{border-radius:10px}.btn.primary:hover{background:var(--ah);border-color:var(--ah)}
+.tabs{border-bottom-color:var(--line)}
+body::after{content:'MALVIRN GOMO';position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-28deg);font:800 clamp(44px,9vw,130px)/1 var(--sans);letter-spacing:.14em;color:var(--ink);opacity:.03;pointer-events:none;user-select:none;-webkit-user-select:none;z-index:60;white-space:nowrap}
+@media print{body::after{opacity:.06;color:#000}}
 </style>
 </head>
 <body>
@@ -310,29 +327,49 @@ async function loadLookups() { S.look = await rpc("acc_lookups"); }
 
 /* ---------- shell ---------- */
 const NAV = [
-  ["dashboard", "Dashboard"], ["invoices", "Invoices"], ["payments", "Payments"], ["expenses", "Expenses"], ["suppliers", "Suppliers"], ["cashbanks", "Cash and banks"], ["insurance", "Insurance"], ["payroll", "Payroll"], ["refunds", "Refunds and adjustments"],
+  ["dashboard", "Dashboard"], ["invoices", "Invoices"], ["payments", "Payments"], ["expenses", "Expenses"], ["cashbanks", "Cash and banks"], ["insurance", "Insurance"], ["payroll", "Payroll"], ["refunds", "Refunds and adjustments"],
   ["ledger", "General ledger"], ["journal", "Journal entries"], ["accounts", "Chart of accounts"],
   ["periods", "Periods"], ["transactions", "Quick entry"], ["settings", "Settings"]
 ];
+const NAV_GROUPS = [["Overview", ["dashboard", "notifications"]], ["Money in", ["invoices", "payments", "insurance", "refunds"]], ["Money out", ["expenses", "payroll", "cashbanks"]],
+  ["Books", ["ledger", "journal", "accounts", "periods", "transactions"]], ["Insights", ["reports", "budgets", "taxes"]], ["System", ["settings"]]];
+const NI = { dashboard: '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+  notifications: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>', invoices: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+  payments: '<rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/>', insurance: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+  refunds: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>', expenses: '<path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+  payroll: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  cashbanks: '<path d="M3 22h18"/><path d="M6 18v-7"/><path d="M10 18v-7"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="m12 2 8 5H4z"/>', ledger: '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>',
+  journal: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>', accounts: '<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>',
+  periods: '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>', transactions: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  reports: '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>', budgets: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  taxes: '<path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>', settings: '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>' };
+const nicon = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${NI[k] || NI.transactions}</svg>`;
+function navOpen(on) { document.body.classList.toggle("navopen", !!on); }
 function renderShell() {
   const pages = NAV.filter(([k]) => (k !== "transactions" || canPost()) && (k !== "payroll" || isCtl()));
+  const lb = Object.fromEntries(pages), used = new Set();
+  const btn = k => { used.add(k); return `<button type="button" data-nav="${k}">${nicon(k)}<span class="nl">${esc(lb[k])}</span></button>`; };
+  let items = NAV_GROUPS.map(([g, ks]) => { const h = ks.filter(k => lb[k]).map(btn).join(""); return h ? `<div class="ngrp">${g}</div>${h}` : ""; }).join("");
+  const rest = pages.filter(([k]) => !used.has(k)); if (rest.length) items += `<div class="ngrp">More</div>` + rest.map(([k]) => btn(k)).join("");
   $("#root").innerHTML = `
   <div class="app">
-    <nav class="nav" aria-label="Accounting">
-      <div class="brand">Maternity Help<small>Accounts</small></div>
-      ${pages.map(([k, l]) => `<button type="button" data-nav="${k}">${l}</button>`).join("")}
-      <a class="back" href="/">Back to Maternity Help</a>
+    <nav class="nav" id="side" aria-label="Accounting">
+      <div class="brand"><span class="bmark">${nicon("expenses")}</span><span>Maternity Help<small>Accounts</small></span><button type="button" class="navx" aria-label="Close menu" onclick="navOpen(false)">✕</button></div>
+      <div class="nitems">${items}</div>
+      <a class="back" href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg><span class="nl">Back to Maternity Help</span></a>
       <div class="who"><b>${esc(S.access.name || "Signed in")}</b>${esc(roleLabel(role()))}<br>
-        <button type="button" id="signout" class="linkbtn">Sign out</button> \u00b7 <button type="button" id="theme-tg" class="linkbtn">Theme</button></div>
+        <button type="button" id="signout" class="linkbtn">Sign out</button> · <button type="button" id="theme-tg" class="linkbtn">Theme</button></div>
     </nav>
+    <div class="scrim" onclick="navOpen(false)"></div>
     <main>
+      <div class="mtop"><button type="button" class="hamb" aria-label="Open menu" onclick="navOpen(true)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg></button><b>Accounts</b></div>
       <div class="top"><h1 id="page-title"></h1><div class="toolbar" id="toolbar"></div></div>
       <div id="view"></div>
     </main>
   </div>`;
-  $$("[data-nav]").forEach(b => b.addEventListener("click", () => go(b.dataset.nav)));
+  $$("[data-nav]").forEach(b => b.addEventListener("click", () => { navOpen(false); go(b.dataset.nav); }));
   $("#signout").addEventListener("click", async () => { await sb.auth.signOut(); });
-  $("#theme-tg").addEventListener("click", () => { const t = document.documentElement.dataset.theme === "light" ? "dark" : "light"; document.documentElement.dataset.theme = t; try { localStorage.setItem("themeMode", t); } catch (e) {} const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = t === "light" ? "#f5f6f8" : "#0d1117"; });
+  $("#theme-tg").addEventListener("click", () => { const t = document.documentElement.dataset.theme === "light" ? "dark" : "light"; document.documentElement.dataset.theme = t; try { localStorage.setItem("themeMode", t); } catch (e) {} const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = t === "light" ? "#f3f6fb" : "#0b1220"; });
 }
 function roleLabel(r) { return { viewer: "Viewer", accountant: "Accountant", controller: "Financial controller" }[r] || ""; }
 function go(page) {
@@ -401,7 +438,7 @@ async function renderDashboard() {
       <div><div class="k">Cash and bank</div><div class="v">${money(d.cash_bank.total)}</div><div class="s">${d.cash_bank.accounts.length} account(s)</div></div>
       <div><div class="k">Pending invoices</div><div class="v">${money(inv.pending_amount)}</div><div class="s">${inv.pending_count} not yet due</div></div>
       <div><div class="k">Overdue invoices</div><div class="v ${Number(inv.overdue_amount) > 0 ? "neg" : ""}">${money(inv.overdue_amount)}</div><div class="s">${inv.overdue_count} past due</div></div>
-      <div><div class="k">Unpaid supplier bills</div><div class="v">${money(bills.unpaid_amount)}</div><div class="s">${bills.unpaid_count} open, ${bills.overdue_count} overdue</div></div>
+      <div><div class="k">Expenses</div><div class="v">${money(s.expenses)}</div><div class="s">In this period</div></div>
       <div><div class="k">Owed by medical aid</div><div class="v">${money(rc.insurance)}</div><div class="s">${money(rc.credits)} patient credit to refund</div></div>
     </div>
 
@@ -820,14 +857,15 @@ async function periodBalances(p) {
 }
 
 /* ---------- transactions ---------- */
-const TX_TABS = [["receipt", "Receive payment"], ["refund", "Refund patient"], ["invoice", "Patient invoice"], ["bill", "Supplier bill"], ["paybill", "Pay a bill"], ["expense", "Expense"], ["suppliers", "Suppliers"]];
+const TX_TABS = [["receipt", "Receive payment"], ["refund", "Refund patient"], ["invoice", "Patient invoice"], ["expense", "Expense"]];
 async function renderTransactions() {
   setTitle("Transactions");
   if (!canPost()) { $("#view").innerHTML = `<div class="panel">Only accountants can record transactions.</div>`; return; }
   await loadLookups();
   $("#view").innerHTML = `<div class="tabs" role="tablist">${TX_TABS.map(([k, l]) => `<button role="tab" data-tx="${k}" aria-selected="${S.tx.tab === k}">${l}</button>`).join("")}</div><div id="tx-body"></div>`;
   $$("[data-tx]").forEach(b => b.addEventListener("click", () => { S.tx.tab = b.dataset.tx; renderTransactions(); }));
-  ({ receipt: txReceipt, refund: txRefund, invoice: txInvoice, bill: txBill, paybill: txPayBill, expense: txExpense, suppliers: txSuppliers })[S.tx.tab]();
+  if (!TX_TABS.some(t => t[0] === S.tx.tab)) S.tx.tab = "receipt";
+  ({ receipt: txReceipt, refund: txRefund, invoice: txInvoice, expense: txExpense })[S.tx.tab]();
 }
 function txDone(msg) { toast(msg); renderTransactions(); }
 function moneyField(name, label = "Amount", value = "") { return `<label class="f"><span>${label}</span><input name="${name}" inputmode="decimal" required pattern="\\d{1,12}(\\.\\d{1,2})?" value="${esc(value)}" placeholder="0.00"></label>`; }
