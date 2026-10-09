@@ -1,0 +1,6 @@
+-- Booking includes today: slots later today can be booked, slots whose time has passed show as 'past'.
+-- Applied 2026-10-09. Functions replaced: slot_board, open_slots, public_availability, appt_guard.
+-- See the applied definitions in the database; summary of the rule:
+--   date range starts at today (Africa/Harare) instead of tomorrow;
+--   today's slots at or before the current time are 'past' and cannot be booked;
+--   patients may request today only for a time that has not passed.
