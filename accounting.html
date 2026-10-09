@@ -1403,7 +1403,7 @@ async function showReceipt(id, kind = "receipt", row = null, back = null) {
     const x = row || {};
     const body = openModal(`Refund ${x.no || ""}`, `<div class="stack"><div class="grid g3"><div><div class="muted">Patient</div><b>${esc(x.patient || "")}</b></div><div><div class="muted">Date</div><b>${fd(x.date)}</b></div><div><div class="muted">Status</div>${pill(x.status)}</div>
       <div><div class="muted">Amount</div><b>${money(x.amount)}</b></div><div><div class="muted">Paid out by</div><b>${esc(mlabel(x.method))}</b></div><div><div class="muted">Reason</div><b>${esc(x.reason || "")}</b></div></div>
-      <div class="row">${isCtl() && x.status === "posted" ? `<button class="btn danger" id="rv" type="button">Reverse refund</button>` : ""}${back ? `<button class="btn" id="bk" type="button">Back</button>` : ""}</div></div>`);
+      <div class="row"><a class="btn primary" href="/receipt.html?k=refund&id=${encodeURIComponent(id)}" target="_blank" rel="noopener" style="text-decoration:none">Print receipt</a>${isCtl() && x.status === "posted" ? `<button class="btn danger" id="rv" type="button">Reverse refund</button>` : ""}${back ? `<button class="btn" id="bk" type="button">Back</button>` : ""}</div></div>`);
     const rv = $("#rv", body); if (rv) rv.addEventListener("click", () => reasonForm(`Reverse ${x.no}`, "The refund entry is reversed with a new entry. Nothing is deleted.", "Reverse refund",
       async reason => { await rpc("acc_reverse_payment", { p_kind: "refund", p_id: id, p_reason: reason }); toast("Refund reversed"); closeModal(); refreshPage(); }, () => showReceipt(id, kind, row, back)));
     if (back) $("#bk", body).addEventListener("click", back); return;
@@ -1417,7 +1417,7 @@ async function showReceipt(id, kind = "receipt", row = null, back = null) {
       <div><div class="muted">Invoice</div><b>${inv ? esc(inv.invoice_no) : "Patient credit"}</b>${inv ? `<div class="muted">Balance now ${money(inv.balance)}</div>` : ""}</div>
       <div><div class="muted">Received by</div><b>${esc(d.received_by || "")}</b></div></div>
     ${r.status === "reversed" ? `<p class="neg">Reversed${r.reversed_on ? " on " + fd(r.reversed_on) : ""}${r.reversal_reason ? ": " + esc(r.reversal_reason) : ""}</p>` : ""}
-    <div class="row">${pdfButtons("rct")}${isCtl() && r.status === "posted" && !r.automatic ? `<button class="btn danger" id="rv" type="button">Reverse payment</button>` : ""}${back ? `<button class="btn" id="bk" type="button">Back</button>` : ""}</div>
+    <div class="row"><a class="btn primary" href="/receipt.html?k=receipt&id=${encodeURIComponent(id)}" target="_blank" rel="noopener" style="text-decoration:none">Print receipt</a>${pdfButtons("rct")}${isCtl() && r.status === "posted" && !r.automatic ? `<button class="btn danger" id="rv" type="button">Reverse payment</button>` : ""}${back ? `<button class="btn" id="bk" type="button">Back</button>` : ""}</div>
     ${r.automatic && r.status === "posted" ? `<p class="muted">This payment came from a Maternity Help record, so change it there instead.</p>` : ""}</div>`);
   bindPdf(body, "rct", () => receiptPdf(d), `${r.receipt_no}.pdf`);
   const rv = $("#rv", body); if (rv) rv.addEventListener("click", () => reasonForm(`Reverse ${r.receipt_no}`, "The payment is reversed with a new accounting entry and the invoice balance goes back up. Nothing is deleted.", "Reverse payment",

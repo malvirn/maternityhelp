@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Receipt | Maternity Help</title>
+<meta name="theme-color" content="#e9e4d8">
+<link rel="icon" type="image/png" href="/icons/icon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#fffdf6;--ink:#1d1b17;--mute:#5e5a50;--rule:#bdb6a6;--bg:#e9e4d8;color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font:15px/1.5 'Courier Prime','Courier New',Courier,monospace;padding:16px 12px 40px;min-height:100vh}
+body.embed{padding:10px 8px 24px}
+.bar{max-width:600px;margin:0 auto 12px;display:flex;gap:8px;flex-wrap:wrap}
+.bar button,.bar a{font:700 14px 'Courier Prime',monospace;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);padding:9px 14px;border-radius:4px;cursor:pointer;text-decoration:none}
+.bar button.pri{background:var(--ink);color:var(--paper)}
+body.embed .bar{display:none}
+.paper{position:relative;max-width:600px;margin:0 auto;background:var(--paper);padding:30px 30px 34px;box-shadow:0 1px 2px rgba(0,0,0,.12),0 10px 28px rgba(60,50,30,.18);overflow:hidden}
+.paper::before,.paper::after{content:'';position:absolute;left:0;right:0;height:10px;background:radial-gradient(circle at 6px -2px,var(--bg) 6px,transparent 6.5px) 0 0/12px 10px repeat-x}
+.paper::before{top:0}.paper::after{bottom:0;transform:rotate(180deg)}
+.hd{text-align:center;border-bottom:2px dashed var(--rule);padding-bottom:14px;margin-bottom:14px}
+.hd img{width:74px;height:74px;object-fit:contain;filter:grayscale(1) contrast(1.15);margin-bottom:6px}
+.hd h1{font:400 26px/1.15 'Special Elite','Courier Prime',monospace;letter-spacing:.06em;margin:0}
+.hd .sub{color:var(--mute);font-size:13px;margin-top:2px}
+.title{text-align:center;font:700 19px 'Courier Prime',monospace;letter-spacing:.32em;margin:6px 0 14px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;font-size:14.5px}
+.kv span{color:var(--mute)}.kv b{font-weight:700;text-align:right;word-break:break-word}
+hr{border:0;border-top:2px dashed var(--rule);margin:14px 0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:700;border-bottom:1.5px solid var(--ink);padding:4px 2px;text-transform:uppercase;font-size:12.5px;letter-spacing:.06em}
+td{padding:5px 2px;vertical-align:top;border-bottom:1px dotted var(--rule)}
+.r{text-align:right;white-space:nowrap}
+.tot{display:flex;justify-content:space-between;align-items:baseline;font-size:15px;margin-top:6px}
+.tot.big{font-size:20px;font-weight:700;border-top:1.5px solid var(--ink);border-bottom:3px double var(--ink);padding:6px 0;margin-top:10px}
+.foot{text-align:center;margin-top:18px;font-size:13.5px;color:var(--mute)}
+.foot .ty{font:400 17px 'Special Elite','Courier Prime',monospace;color:var(--ink);margin-bottom:4px}
+.stamp{position:absolute;top:22px;right:18px;transform:rotate(-12deg);border:3px solid #b42318;color:#b42318;font:700 17px 'Courier Prime',monospace;letter-spacing:.2em;padding:3px 10px;border-radius:6px;opacity:.85}
+.stamp.ok{border-color:#1e6b3a;color:#1e6b3a}
+.msg{max-width:600px;margin:40px auto;background:var(--paper);padding:24px;text-align:center}
+body::after{content:'MALVIRN GOMO';position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-28deg);font:800 clamp(44px,9vw,120px)/1 'Courier Prime',monospace;letter-spacing:.14em;color:#000;opacity:.035;pointer-events:none;z-index:9;white-space:nowrap}
+@media print{
+  @page{margin:12mm}
+  html,body{background:#fff}body{padding:0}
+  .bar{display:none}
+  .paper{box-shadow:none;max-width:none;padding:0}
+  .paper::before,.paper::after{display:none}
+  body::after{opacity:.05}
+}
+@media(max-width:480px){.paper{padding:26px 16px 30px}.hd h1{font-size:22px}.stamp{top:16px;right:8px;font-size:14px}}
+@media screen{body.embed::after{display:none}}
+</style>
+</head>
+<body>
+<div class="bar"><button class="pri" id="print" type="button">Print receipt</button><button id="back" type="button">Back</button></div>
+<div id="out"><div class="msg">Loading receipt…</div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+"use strict";
+const sb = supabase.createClient('https://swbvlpplhuezdlbzuuhh.supabase.co', 'sb_publishable_yNNbCu6kVC00rZ-qKzT0ew_JOK77dEZ');
+const q = new URLSearchParams(location.search), kind = q.get('k') === 'refund' ? 'refund' : 'receipt', id = q.get('id') || '';
+if (q.get('embed') === '1') document.body.classList.add('embed');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const MLB = { cash: 'Cash', bank: 'Bank transfer', ecocash: 'EcoCash', innbucks: 'InnBucks', insurance: 'Medical aid / insurance', other: 'Other' };
+let CUR = 'USD';
+const money = n => CUR + ' ' + Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+const qty = n => { const v = Number(n || 0); return Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/0+$/, '').replace(/\.$/, ''); };
+const fd = s => s ? new Date(String(s).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+const ft = s => s ? new Date(s).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '';
+document.getElementById('print').onclick = () => window.print();
+document.getElementById('back').onclick = () => { if (history.length > 1) history.back(); else location.href = '/'; };
+function fail(t) { document.getElementById('out').innerHTML = `<div class="msg"><b>${esc(t)}</b><p>Sign in to Maternity Help on this device, then open the receipt again.</p><a href="/">Open Maternity Help</a></div>`; }
+async function run() {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return fail('This receipt link is not valid.');
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return fail('You are not signed in.');
+  const { data, error } = await sb.rpc('receipt_doc', { p_kind: kind, p_id: id });
+  if (error) return fail(/not allowed/i.test(error.message) ? 'You do not have permission to see this receipt.' : /not found/i.test(error.message) ? 'Receipt not found.' : 'The receipt could not be loaded.');
+  render(data);
+}
+function render(d) {
+  const h = d.hospital || {}, x = d.doc || {}, p = d.patient || {}, inv = d.invoice, items = d.items || [], rf = d.kind === 'refund';
+  CUR = h.currency || 'USD';
+  const tax = [h.tin ? 'TIN ' + h.tin : '', h.vat_number ? 'VAT ' + h.vat_number : '', h.bp_number ? 'BP ' + h.bp_number : ''].filter(Boolean).join(' · ');
+  const st = x.status === 'reversed' ? '<div class="stamp">REVERSED</div>' : '<div class="stamp ok">' + (rf ? 'REFUNDED' : 'PAID') + '</div>';
+  document.title = (rf ? 'Refund ' : 'Receipt ') + (x.no || '') + ' | Maternity Help';
+  document.getElementById('out').innerHTML = `<div class="paper">${st}
+    <div class="hd"><img src="/logo.png" alt="Maternity Help logo"><h1>${esc(h.name || 'Maternity Help')}</h1><div class="sub">Maternity care and hospital services</div>${tax ? `<div class="sub">${esc(tax)}</div>` : ''}</div>
+    <div class="title">${rf ? 'REFUND RECEIPT' : 'OFFICIAL RECEIPT'}</div>
+    <div class="kv"><span>Receipt no.</span><b>${esc(x.no)}</b><span>Date</span><b>${fd(x.date)}${x.created_at ? ' ' + ft(x.created_at) : ''}</b>
+      <span>${rf ? 'Refunded to' : 'Received from'}</span><b>${esc(p.name || '')}</b>${p.code ? `<span>Patient ID</span><b>${esc(p.code)}</b>` : ''}${p.phone ? `<span>Phone</span><b>${esc(p.phone)}</b>` : ''}
+      ${inv && inv.no ? `<span>Invoice</span><b>${esc(inv.no)}</b>` : ''}</div>
+    <hr>
+    <table><thead><tr><th>Description</th><th class="r">Qty</th><th class="r">Price</th><th class="r">Amount</th></tr></thead>
+    <tbody>${items.map(i => `<tr><td>${esc(i.desc)}${i.date ? `<div style="color:var(--mute);font-size:12.5px">${fd(i.date)}</div>` : ''}</td><td class="r">${qty(i.qty)}</td><td class="r">${Number(i.unit || 0).toFixed(2)}</td><td class="r">${Number(i.amount || 0).toFixed(2)}</td></tr>`).join('')}</tbody></table>
+    ${inv && inv.total != null ? `<div class="tot"><span>Invoice total</span><span>${money(inv.total)}</span></div>` : ''}
+    <div class="tot big"><span>${rf ? 'AMOUNT REFUNDED' : 'AMOUNT PAID'}</span><span>${money(x.amount)}</span></div>
+    <div class="kv" style="margin-top:10px"><span>Payment method</span><b>${esc(MLB[x.method] || x.method || '-')}</b>${x.reference ? `<span>Reference</span><b>${esc(x.reference)}</b>` : ''}${x.reason ? `<span>Reason</span><b>${esc(x.reason)}</b>` : ''}
+      ${inv && inv.balance != null ? `<span>Balance still due</span><b>${money(inv.balance)}</b>` : ''}<span>${rf ? 'Paid out by' : 'Received by'}</span><b>${esc(d.by || 'Maternity Help')}</b></div>
+    <hr>
+    <div class="foot"><div class="ty">Thank you</div>Keep this receipt for your records.<br>Printed ${fd(new Date().toISOString())} ${ft(new Date())}<div style="letter-spacing:.3em;margin-top:10px;font-weight:700">${esc(x.no)}</div></div></div>`;
+  if (q.get('print') === '1') setTimeout(() => window.print(), 400);
+}
+run().catch(() => fail('The receipt could not be loaded.'));
+</script>
+</body>
+</html>
